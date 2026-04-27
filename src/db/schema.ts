@@ -1,0 +1,208 @@
+import {
+  pgTable,
+  text,
+  timestamp,
+  integer,
+  primaryKey,
+  pgEnum,
+  uuid,
+  boolean,
+  index,
+} from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import type { AdapterAccountType } from "next-auth/adapters";
+
+export const userRole = pgEnum("user_role", ["member", "tech", "admin"]);
+export const initiativeStatus = pgEnum("initiative_status", [
+  "draft",
+  "open",
+  "in_progress",
+  "done",
+  "archived",
+]);
+export const subscriptionRole = pgEnum("subscription_role", [
+  "subscriber",
+  "participant",
+  "owner",
+]);
+
+export const users = pgTable("user", {
+  id: text("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name"),
+  email: text("email").notNull().unique(),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
+  role: userRole("role").notNull().default("member"),
+  department: text("department"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const accounts = pgTable(
+  "account",
+  {
+    userId: text("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    type: text("type").$type<AdapterAccountType>().notNull(),
+    provider: text("provider").notNull(),
+    providerAccountId: text("providerAccountId").notNull(),
+    refresh_token: text("refresh_token"),
+    access_token: text("access_token"),
+    expires_at: integer("expires_at"),
+    token_type: text("token_type"),
+    scope: text("scope"),
+    id_token: text("id_token"),
+    session_state: text("session_state"),
+  },
+  (a) => [primaryKey({ columns: [a.provider, a.providerAccountId] })]
+);
+
+export const sessions = pgTable("session", {
+  sessionToken: text("sessionToken").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  expires: timestamp("expires", { mode: "date" }).notNull(),
+});
+
+export const verificationTokens = pgTable(
+  "verificationToken",
+  {
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
+);
+
+export const initiatives = pgTable(
+  "initiative",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ownerId: text("owner_id")
+      .notNull()
+      .references(() => users.id),
+    title: text("title").notNull(),
+    summary: text("summary").notNull(),
+    body: text("body").notNull().default(""),
+    status: initiativeStatus("status").notNull().default("draft"),
+    capacity: integer("capacity"),
+    timeCommitment: text("time_commitment"),
+    startsAt: timestamp("starts_at"),
+    endsAt: timestamp("ends_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("initiative_status_idx").on(t.status)]
+);
+
+export const subscriptions = pgTable(
+  "subscription",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    role: subscriptionRole("role").notNull().default("subscriber"),
+    joinedAt: timestamp("joined_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.initiativeId] })]
+);
+
+export const updates = pgTable("update", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  initiativeId: uuid("initiative_id")
+    .notNull()
+    .references(() => initiatives.id, { onDelete: "cascade" }),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => users.id),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const comments = pgTable("comment", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  initiativeId: uuid("initiative_id")
+    .notNull()
+    .references(() => initiatives.id, { onDelete: "cascade" }),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => users.id),
+  parentId: uuid("parent_id"),
+  body: text("body").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const tags = pgTable("tag", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
+  name: text("name").notNull(),
+});
+
+export const initiativeTags = pgTable(
+  "initiative_tag",
+  {
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.initiativeId, t.tagId] })]
+);
+
+export const notificationPrefs = pgTable(
+  "notification_pref",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind] })]
+);
+
+export const initiativesRelations = relations(initiatives, ({ one, many }) => ({
+  owner: one(users, { fields: [initiatives.ownerId], references: [users.id] }),
+  subscriptions: many(subscriptions),
+  updates: many(updates),
+  comments: many(comments),
+  tags: many(initiativeTags),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, { fields: [subscriptions.userId], references: [users.id] }),
+  initiative: one(initiatives, {
+    fields: [subscriptions.initiativeId],
+    references: [initiatives.id],
+  }),
+}));
+
+export const updatesRelations = relations(updates, ({ one }) => ({
+  initiative: one(initiatives, {
+    fields: [updates.initiativeId],
+    references: [initiatives.id],
+  }),
+  author: one(users, { fields: [updates.authorId], references: [users.id] }),
+}));
+
+export const commentsRelations = relations(comments, ({ one }) => ({
+  initiative: one(initiatives, {
+    fields: [comments.initiativeId],
+    references: [initiatives.id],
+  }),
+  author: one(users, { fields: [comments.authorId], references: [users.id] }),
+}));
+
+export const initiativeTagsRelations = relations(initiativeTags, ({ one }) => ({
+  initiative: one(initiatives, {
+    fields: [initiativeTags.initiativeId],
+    references: [initiatives.id],
+  }),
+  tag: one(tags, { fields: [initiativeTags.tagId], references: [tags.id] }),
+}));
