@@ -1,64 +1,84 @@
 import NextAuth from "next-auth";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
-import { users, accounts, sessions, verificationTokens } from "@/db/schema";
-import { sendMagicLink } from "@/lib/email";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
-const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN;
 const techEmails = (process.env.TECH_TEAM_EMAILS ?? "")
   .split(",")
   .map((s) => s.trim().toLowerCase())
   .filter(Boolean);
 
+const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.toLowerCase();
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
-  session: { strategy: "database" },
-  pages: { signIn: "/signin", verifyRequest: "/signin?check=1" },
+  session: { strategy: "jwt" },
+  pages: { signIn: "/signin" },
   providers: [
-    {
-      id: "email",
-      type: "email",
+    Credentials({
       name: "Email",
-      maxAge: 24 * 60 * 60,
-      from: process.env.EMAIL_FROM!,
-      server: {},
-      options: {},
-      sendVerificationRequest: async ({ identifier, url }) => {
-        await sendMagicLink(identifier, url);
+      credentials: {
+        email: { label: "Email", type: "email" },
+        name: { label: "Display name", type: "text" },
       },
-    } as any,
+      authorize: async (creds) => {
+        const email = String(creds?.email ?? "").trim().toLowerCase();
+        if (!email || !email.includes("@")) return null;
+        if (allowedDomain && !email.endsWith(`@${allowedDomain}`)) return null;
+
+        const wantedRole = techEmails.includes(email) ? "tech" : "member";
+        const fallbackName =
+          String(creds?.name ?? "").trim() || email.split("@")[0];
+
+        const existing = await db
+          .select()
+          .from(users)
+          .where(eq(users.email, email))
+          .limit(1);
+
+        if (existing[0]) {
+          if (existing[0].role !== wantedRole && wantedRole === "tech") {
+            await db
+              .update(users)
+              .set({ role: wantedRole })
+              .where(eq(users.id, existing[0].id));
+          }
+          return {
+            id: existing[0].id,
+            email,
+            name: existing[0].name ?? fallbackName,
+            role: wantedRole === "tech" ? "tech" : existing[0].role,
+          } as any;
+        }
+
+        const [created] = await db
+          .insert(users)
+          .values({ email, name: fallbackName, role: wantedRole })
+          .returning();
+
+        return {
+          id: created.id,
+          email,
+          name: created.name ?? fallbackName,
+          role: created.role,
+        } as any;
+      },
+    }),
   ],
   callbacks: {
-    async signIn({ user }) {
-      const email = user.email?.toLowerCase();
-      if (!email) return false;
-      if (allowedDomain && !email.endsWith(`@${allowedDomain.toLowerCase()}`)) {
-        return false;
+    async jwt({ token, user }) {
+      if (user) {
+        (token as any).id = (user as any).id;
+        (token as any).role = (user as any).role;
       }
-      return true;
+      return token;
     },
-    async session({ session, user }) {
+    async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = user.id;
-        (session.user as any).role = (user as any).role ?? "member";
+        (session.user as any).id = (token as any).id;
+        (session.user as any).role = (token as any).role ?? "member";
       }
       return session;
-    },
-  },
-  events: {
-    async createUser({ user }) {
-      const email = user.email?.toLowerCase();
-      if (!email) return;
-      const role = techEmails.includes(email) ? "tech" : "member";
-      if (role !== "member") {
-        await db.update(users).set({ role }).where(eq(users.id, user.id!));
-      }
     },
   },
 });
@@ -66,7 +86,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 export async function requireUser() {
   const session = await auth();
   if (!session?.user) throw new Error("UNAUTHORIZED");
-  return session.user as { id: string; email: string; name?: string; role: "member" | "tech" | "admin" };
+  return session.user as {
+    id: string;
+    email: string;
+    name?: string;
+    role: "member" | "tech" | "admin";
+  };
 }
 
 export async function requireTech() {

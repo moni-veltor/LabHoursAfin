@@ -5,9 +5,18 @@ Internal initiatives board. The tech team posts ideas, investigations, and side 
 ## Stack
 
 - Next.js 15 (App Router) + React 19 + TypeScript + Tailwind
-- Drizzle ORM + Postgres (Supabase or Neon)
-- Auth.js (NextAuth v5) email magic links via Resend
+- Drizzle ORM + Postgres (Neon or Supabase)
+- Auth.js (NextAuth v5) credentials sign-in (email + display name, no password)
+- Optional: Resend for email notifications
 - Vercel for hosting
+
+## Auth model
+
+Sign-in is intentionally low-friction for an internal tool: enter your email + name and you're in. No password, no magic link.
+
+- Optionally lock sign-in to one domain via `ALLOWED_EMAIL_DOMAIN`
+- Optionally auto-promote specific emails to "tech" role via `TECH_TEAM_EMAILS`
+- Anyone can browse + subscribe; only `tech`/`admin` can create initiatives
 
 ## Roles
 
@@ -29,11 +38,12 @@ Internal initiatives board. The tech team posts ideas, investigations, and side 
    ```bash
    cp .env.example .env.local
    ```
-   Fill in:
+   Required:
    - `DATABASE_URL` — your Postgres connection string
    - `AUTH_SECRET` — `openssl rand -base64 32`
-   - `RESEND_API_KEY` — from resend.com (verify your sender domain)
-   - `EMAIL_FROM` — e.g. `Lab Board <noreply@yourcompany.com>`
+
+   Optional:
+   - `RESEND_API_KEY` + `EMAIL_FROM` — enables email notifications. Leave unset to disable.
    - `ALLOWED_EMAIL_DOMAIN` — e.g. `yourcompany.com` (locks signup to your org)
    - `TECH_TEAM_EMAILS` — comma-separated list of tech-team emails (auto-elevated on first signin)
 
