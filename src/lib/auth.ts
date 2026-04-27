@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { authConfig } from "@/lib/auth.config";
 
 const techEmails = (process.env.TECH_TEAM_EMAILS ?? "")
   .split(",")
@@ -12,8 +13,7 @@ const techEmails = (process.env.TECH_TEAM_EMAILS ?? "")
 const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.toLowerCase();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: { signIn: "/signin" },
+  ...authConfig,
   providers: [
     Credentials({
       name: "Email",
@@ -65,22 +65,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        (token as any).id = (user as any).id;
-        (token as any).role = (user as any).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        (session.user as any).id = (token as any).id;
-        (session.user as any).role = (token as any).role ?? "member";
-      }
-      return session;
-    },
-  },
 });
 
 export async function requireUser() {

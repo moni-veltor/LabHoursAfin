@@ -1,21 +1,7 @@
-import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
-export default auth((req) => {
-  const { pathname } = req.nextUrl;
-  const isPublic =
-    pathname.startsWith("/signin") ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/_next") ||
-    pathname === "/favicon.ico";
-
-  if (!req.auth && !isPublic) {
-    const url = new URL("/signin", req.url);
-    url.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(url);
-  }
-  return NextResponse.next();
-});
+export default NextAuth(authConfig).auth;
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
