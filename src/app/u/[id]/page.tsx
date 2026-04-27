@@ -4,6 +4,8 @@ import { initiatives, subscriptions, users, comments, updates } from "@/db/schem
 import { eq, and, desc, inArray, count } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
 import { Avatar } from "@/components/avatar";
+import { SkillBadges } from "@/components/skill-badges";
+import Link from "next/link";
 
 export default async function ProfilePage({
   params,
@@ -31,6 +33,9 @@ export default async function ProfilePage({
           category: initiatives.category,
           format: initiatives.format,
           difficulty: initiatives.difficulty,
+          coverImage: initiatives.coverImage,
+          crossTeam: initiatives.crossTeam,
+          outcomeBody: initiatives.outcomeBody,
           timeCommitment: initiatives.timeCommitment,
           capacity: initiatives.capacity,
           createdAt: initiatives.createdAt,
@@ -70,8 +75,22 @@ export default async function ProfilePage({
             <Stat label="Owns" n={owned.length} />
             <Stat label="Participating" n={participating.length} />
             <Stat label="Following" n={following.length} />
-            <Stat label="Comments" n={commentCount[0]?.c ?? 0} />
-            <Stat label="Updates" n={updateCount[0]?.c ?? 0} />
+            <Stat label="Comments" n={Number(commentCount[0]?.c ?? 0)} />
+            <Stat label="Updates" n={Number(updateCount[0]?.c ?? 0)} />
+          </div>
+          <div className="mt-3">
+            <SkillBadges
+              stats={{
+                joined: participating.length,
+                owned: owned.length,
+                outcomesPosted: rows.filter(
+                  (r) =>
+                    r.outcomeBody &&
+                    mySubs.find((s) => s.id === r.id && s.role === "owner")
+                ).length,
+                comments: Number(commentCount[0]?.c ?? 0),
+              }}
+            />
           </div>
         </div>
         <span
@@ -121,6 +140,8 @@ function Section({
     category: string;
     format: string;
     difficulty: string;
+    coverImage: string | null;
+    crossTeam: boolean;
     timeCommitment: string | null;
     capacity: number | null;
     createdAt: Date;
@@ -144,6 +165,8 @@ function Section({
             category={r.category as any}
             format={r.format as any}
             difficulty={r.difficulty as any}
+            coverImage={r.coverImage}
+            crossTeam={r.crossTeam}
             ownerName={r.ownerName}
             timeCommitment={r.timeCommitment}
             capacity={r.capacity}

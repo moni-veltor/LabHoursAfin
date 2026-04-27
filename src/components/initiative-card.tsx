@@ -24,6 +24,8 @@ type Props = {
   createdAt: Date;
   tags: string[];
   featured?: boolean;
+  coverImage?: string | null;
+  crossTeam?: boolean;
 };
 
 const statusStyles: Record<string, string> = {
@@ -39,12 +41,19 @@ export function InitiativeCard(p: Props) {
   return (
     <Link
       href={`/initiatives/${p.id}`}
-      className={`group block rounded-xl border bg-white p-5 transition hover:shadow-sm ${
+      className={`group block overflow-hidden rounded-xl border bg-white transition hover:shadow-sm ${
         p.featured
           ? "border-brand-accent/60 ring-1 ring-brand-accent/30"
           : "border-stone-200 hover:border-brand-primary/40"
       }`}
     >
+      {p.coverImage && (
+        <div
+          className="h-32 w-full bg-cover bg-center transition-transform duration-300 group-hover:scale-[1.02]"
+          style={{ backgroundImage: `url(${p.coverImage})` }}
+        />
+      )}
+      <div className="p-5">
       <div className="flex items-center gap-2">
         <span className={`inline-block h-2 w-2 rounded-full ${cat.dot}`} />
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cat.badge}`}>
@@ -53,6 +62,11 @@ export function InitiativeCard(p: Props) {
         {p.featured && (
           <span className="inline-flex items-center gap-1 rounded-full bg-brand-accent-50 px-2 py-0.5 text-xs font-medium text-brand-accent-dark">
             ★ Featured
+          </span>
+        )}
+        {p.crossTeam && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-success-50 px-2 py-0.5 text-xs font-medium text-brand-success-dark">
+            cross-team
           </span>
         )}
         <span
@@ -96,6 +110,7 @@ export function InitiativeCard(p: Props) {
           ))}
         </div>
       )}
+      </div>
     </Link>
   );
 }

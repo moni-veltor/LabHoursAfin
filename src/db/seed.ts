@@ -57,6 +57,10 @@ type SeedInitiative = {
   timeCommitment: string;
   requiresApproval?: boolean;
   featured?: boolean;
+  crossTeam?: boolean;
+  isTemplate?: boolean;
+  coverImage?: string;
+  recordings?: string;
   outcomeBody?: string;
   outcomeLinks?: string;
   tags: string[];
@@ -90,6 +94,8 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     capacity: 4,
     requiresApproval: true,
     featured: true,
+    crossTeam: true,
+    coverImage: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&q=70&auto=format&fit=crop",
     timeCommitment: "~3 hrs/week for 2 weeks",
     tags: ["core-banking", "pairing"],
     subscribers: [
@@ -424,6 +430,10 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     capacity: 10,
     timeCommitment: "~1 hr/week × 4 weeks",
     tags: ["learning", "infra"],
+    coverImage: "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=1200&q=70&auto=format&fit=crop",
+    isTemplate: true,
+    recordings:
+      "https://example.com/lab-hours/db-club-week-1\nhttps://example.com/lab-hours/db-club-week-4-recap",
     outcomeBody:
       "10 colleagues completed the club. Notes published in #lab-hours. Two participants are now contributing to the data quality dashboard initiative.",
     outcomeLinks:
@@ -459,9 +469,13 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     capacity: 12,
     timeCommitment: "Single 90-min workshop",
     tags: ["snowflake", "sql", "learning"],
+    coverImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=70&auto=format&fit=crop",
+    isTemplate: true,
     outcomeBody:
       "11 of 12 attendees finished a working query. Recording shared in #lab-hours. Two follow-up sessions requested.",
     outcomeLinks:
+      "https://example.com/lab-hours/snowflake-recording",
+    recordings:
       "https://example.com/lab-hours/snowflake-recording",
     subscribers: [
       { email: "rafa.morales@afinbank.com", role: "participant" },
@@ -566,6 +580,10 @@ async function main() {
         timeCommitment: s.timeCommitment,
         requiresApproval: s.requiresApproval ?? false,
         featured: s.featured ?? false,
+        crossTeam: s.crossTeam ?? false,
+        isTemplate: s.isTemplate ?? false,
+        coverImage: s.coverImage,
+        recordings: s.recordings,
         outcomeBody: s.outcomeBody,
         outcomeLinks: s.outcomeLinks,
       })

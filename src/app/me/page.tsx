@@ -34,6 +34,8 @@ export default async function MyBoardPage() {
       category: initiatives.category,
       format: initiatives.format,
       difficulty: initiatives.difficulty,
+      coverImage: initiatives.coverImage,
+      crossTeam: initiatives.crossTeam,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
       createdAt: initiatives.createdAt,
@@ -56,7 +58,15 @@ export default async function MyBoardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold tracking-tight">My board</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">My board</h1>
+        <a
+          href="/me/portfolio"
+          className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
+        >
+          View my portfolio →
+        </a>
+      </div>
 
       <Section title="Owned by me" rows={owner} />
       <Section title="Participating" rows={participating} />
@@ -78,6 +88,8 @@ function Section({
     category: string;
     format: string;
     difficulty: string;
+    coverImage: string | null;
+    crossTeam: boolean;
     timeCommitment: string | null;
     capacity: number | null;
     createdAt: Date;
@@ -101,6 +113,8 @@ function Section({
             category={r.category as any}
             format={r.format as any}
             difficulty={r.difficulty as any}
+            coverImage={r.coverImage}
+            crossTeam={r.crossTeam}
             ownerName={r.ownerName}
             timeCommitment={r.timeCommitment}
             capacity={r.capacity}

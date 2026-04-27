@@ -13,7 +13,7 @@ export function Reactions({
   mine,
   signedIn,
 }: {
-  targetType: "update" | "comment";
+  targetType: "update" | "comment" | "outcome";
   targetId: string;
   initiativeId: string;
   counts: Counts;
@@ -31,7 +31,7 @@ export function Reactions({
             action={async () => {
               "use server";
               if (!signedIn) return;
-              await toggleReaction(targetType, targetId, e, initiativeId);
+              await toggleReaction(targetType as any, targetId, e, initiativeId);
             }}
           >
             <button

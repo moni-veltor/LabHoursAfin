@@ -10,7 +10,7 @@ const ALLOWED_EMOJIS = ["🎉", "❤️", "👍", "🔥", "💡"] as const;
 type Emoji = (typeof ALLOWED_EMOJIS)[number];
 
 export async function toggleReaction(
-  targetType: "update" | "comment",
+  targetType: "update" | "comment" | "outcome",
   targetId: string,
   emoji: string,
   initiativeId: string

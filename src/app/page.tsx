@@ -15,6 +15,8 @@ import {
   type Category,
 } from "@/lib/categories";
 import { SearchInput } from "@/components/search-input";
+import { RecommendStrip } from "@/components/recommend";
+import { auth } from "@/lib/auth";
 
 type Search = {
   status?: string;
@@ -29,6 +31,8 @@ export default async function HomePage({
   searchParams: Promise<Search>;
 }) {
   const sp = await searchParams;
+  const session = await auth();
+  const meId = (session?.user as { id?: string } | undefined)?.id;
 
   const filters = [ne(initiatives.status, "archived")];
   if (sp.status) filters.push(eq(initiatives.status, sp.status as any));
@@ -73,6 +77,8 @@ export default async function HomePage({
       format: initiatives.format,
       difficulty: initiatives.difficulty,
       featured: initiatives.featured,
+      crossTeam: initiatives.crossTeam,
+      coverImage: initiatives.coverImage,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
       createdAt: initiatives.createdAt,
@@ -130,6 +136,10 @@ export default async function HomePage({
       <CategoryTabs current={sp.category} />
       <StatusBar current={sp} />
 
+      {meId && !sp.q && !sp.category && !sp.status && !sp.tag && (
+        <RecommendStrip userId={meId} />
+      )}
+
       {featured.length > 0 && (
         <section>
           <h2 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-brand-accent-dark">
@@ -152,6 +162,8 @@ export default async function HomePage({
                 participantCount={participantCount.get(r.id) ?? 0}
                 createdAt={r.createdAt}
                 tags={tagsByInitiative.get(r.id) ?? []}
+                coverImage={r.coverImage}
+                crossTeam={r.crossTeam}
                 featured
               />
             ))}
@@ -185,6 +197,8 @@ export default async function HomePage({
                 participantCount={participantCount.get(r.id) ?? 0}
                 createdAt={r.createdAt}
                 tags={tagsByInitiative.get(r.id) ?? []}
+                coverImage={r.coverImage}
+                crossTeam={r.crossTeam}
               />
             ))}
           </div>

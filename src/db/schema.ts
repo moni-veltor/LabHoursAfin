@@ -128,6 +128,12 @@ export const initiatives = pgTable(
     endsAt: timestamp("ends_at"),
     requiresApproval: boolean("requires_approval").notNull().default(false),
     featured: boolean("featured").notNull().default(false),
+    crossTeam: boolean("cross_team").notNull().default(false),
+    isTemplate: boolean("is_template").notNull().default(false),
+    coverImage: text("cover_image"),
+    recordings: text("recordings"),
+    aiSummary: text("ai_summary"),
+    aiSummaryAt: timestamp("ai_summary_at"),
     outcomeBody: text("outcome_body"),
     outcomeLinks: text("outcome_links"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -137,6 +143,7 @@ export const initiatives = pgTable(
     index("initiative_status_idx").on(t.status),
     index("initiative_category_idx").on(t.category),
     index("initiative_featured_idx").on(t.featured),
+    index("initiative_template_idx").on(t.isTemplate),
   ]
 );
 

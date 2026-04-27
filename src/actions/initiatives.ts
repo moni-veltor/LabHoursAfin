@@ -38,6 +38,12 @@ const InitiativeSchema = z.object({
     .union([z.literal("on"), z.literal("true"), z.literal("false"), z.literal("")])
     .optional()
     .transform((v) => v === "on" || v === "true"),
+  crossTeam: z
+    .union([z.literal("on"), z.literal("true"), z.literal("false"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
+  coverImage: z.string().max(500).optional(),
+  recordings: z.string().max(2000).optional(),
 });
 
 async function upsertTags(raw?: string) {
@@ -96,6 +102,9 @@ export async function createInitiative(formData: FormData) {
     timeCommitment: emptyToUndef(formData.get("timeCommitment")),
     tags: emptyToUndef(formData.get("tags")),
     requiresApproval: (formData.get("requiresApproval") as any) ?? "",
+    crossTeam: (formData.get("crossTeam") as any) ?? "",
+    coverImage: emptyToUndef(formData.get("coverImage")),
+    recordings: emptyToUndef(formData.get("recordings")),
   });
 
   const [created] = await db
@@ -116,6 +125,9 @@ export async function createInitiative(formData: FormData) {
       capacity: parsed.capacity,
       timeCommitment: parsed.timeCommitment,
       requiresApproval: parsed.requiresApproval,
+      crossTeam: parsed.crossTeam,
+      coverImage: parsed.coverImage,
+      recordings: parsed.recordings,
     })
     .returning();
 

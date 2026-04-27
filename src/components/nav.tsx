@@ -23,6 +23,14 @@ export async function Nav() {
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/" className="text-stone-700 hover:text-brand-primary">Browse</Link>
           <Link href="/showcase" className="text-stone-700 hover:text-brand-primary">Showcase</Link>
+          {canPost && (
+            <Link
+              href="/templates"
+              className="text-stone-700 hover:text-brand-primary"
+            >
+              Templates
+            </Link>
+          )}
           {user && (
             <Link href="/me" className="text-stone-700 hover:text-brand-primary">My board</Link>
           )}
@@ -42,6 +50,9 @@ export async function Nav() {
               New initiative
             </Link>
           )}
+          <span className="hidden rounded-md border border-stone-200 px-2 py-1 font-mono text-xs text-stone-400 sm:inline">
+            ⌘K
+          </span>
           {user ? (
             <form
               action={async () => {

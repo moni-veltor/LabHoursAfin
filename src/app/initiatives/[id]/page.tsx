@@ -38,6 +38,11 @@ import {
 import { isAdmin } from "@/lib/admin";
 import { UserChip } from "@/components/avatar";
 import { Reactions, REACTION_EMOJIS } from "@/components/reactions";
+import { CoverImage } from "@/components/cover-image";
+import { Recordings } from "@/components/recordings";
+import { saveAsTemplate, unsaveAsTemplate } from "@/actions/templates";
+import { generateAiSummary, draftOutcomeWithAi } from "@/actions/ai";
+import { aiEnabled } from "@/lib/ai";
 
 export default async function InitiativePage({
   params,
@@ -122,13 +127,11 @@ export default async function InitiativePage({
 
   const updateIds = ups.map((u) => u.u.id);
   const commentIds = cmts.map((c) => c.c.id);
-  const allTargets = [...updateIds, ...commentIds];
-  const reactionRows = allTargets.length
-    ? await db
-        .select()
-        .from(reactions)
-        .where(inArray(reactions.targetId, allTargets))
-    : [];
+  const allTargets = [...updateIds, ...commentIds, initiative.id];
+  const reactionRows = await db
+    .select()
+    .from(reactions)
+    .where(inArray(reactions.targetId, allTargets));
 
   type RBucket = { counts: Record<string, number>; mine: Set<string> };
   const buckets = new Map<string, RBucket>();
@@ -142,7 +145,10 @@ export default async function InitiativePage({
     b.counts[r.emoji] = (b.counts[r.emoji] ?? 0) + 1;
     if (me?.id && r.userId === me.id) b.mine.add(r.emoji);
   }
-  const getReactions = (kind: "update" | "comment", tid: string): RBucket =>
+  const getReactions = (
+    kind: "update" | "comment" | "outcome",
+    tid: string
+  ): RBucket =>
     buckets.get(`${kind}:${tid}`) ?? { counts: {}, mine: new Set() };
 
   const participantCount = subs.filter(
@@ -162,6 +168,9 @@ export default async function InitiativePage({
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
       <div className="space-y-8">
+        {initiative.coverImage && (
+          <CoverImage src={initiative.coverImage} alt={initiative.title} height={240} />
+        )}
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <CategoryBadge category={initiative.category as Category} />
@@ -173,9 +182,19 @@ export default async function InitiativePage({
                 ★ Featured
               </span>
             )}
+            {initiative.crossTeam && (
+              <span className="rounded-full bg-brand-success-50 px-2 py-0.5 font-medium text-brand-success-dark">
+                Cross-team
+              </span>
+            )}
             {initiative.requiresApproval && (
               <span className="rounded-full bg-brand-primary-50 px-2 py-0.5 text-brand-primary">
                 Application required
+              </span>
+            )}
+            {initiative.isTemplate && (
+              <span className="rounded-full bg-stone-200 px-2 py-0.5 text-stone-700">
+                Template
               </span>
             )}
             <span className="text-stone-500">·</span>
@@ -235,11 +254,23 @@ export default async function InitiativePage({
           </article>
         )}
 
+        <Recordings raw={initiative.recordings} />
+
+        {canEdit && (
+          <AiSummarySection
+            initiative={initiative}
+            aiEnabled={aiEnabled}
+          />
+        )}
+
         {(showcasable || canEdit) && (
           <OutcomeSection
             initiative={initiative}
             canEdit={!!canEdit}
             showcasable={showcasable}
+            aiEnabled={aiEnabled}
+            getReactions={getReactions}
+            signedIn={!!me}
           />
         )}
 
@@ -476,6 +507,21 @@ export default async function InitiativePage({
           </div>
         )}
 
+        <div className="rounded-xl border border-stone-200 bg-white p-4">
+          <h3 className="text-sm font-semibold">Tools</h3>
+          <ul className="mt-3 space-y-2 text-sm">
+            <li>
+              <a
+                href={`/api/initiatives/${initiative.id}/ics`}
+                className="flex items-center gap-2 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 hover:border-brand-primary/40 hover:text-brand-primary"
+              >
+                <span className="inline-block h-2 w-2 rounded-full bg-brand-primary" />
+                Add to calendar (.ics)
+              </a>
+            </li>
+          </ul>
+        </div>
+
         {canEdit && (
           <div className="rounded-xl border border-stone-200 bg-white p-4">
             <h3 className="text-sm font-semibold">Owner controls</h3>
@@ -502,6 +548,18 @@ export default async function InitiativePage({
               </select>
               <button className="w-full rounded-md border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-50">
                 Update status
+              </button>
+            </form>
+            <form
+              className="mt-2"
+              action={async () => {
+                "use server";
+                if (initiative.isTemplate) await unsaveAsTemplate(initiative.id);
+                else await saveAsTemplate(initiative.id);
+              }}
+            >
+              <button className="w-full rounded-md border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-50">
+                {initiative.isTemplate ? "Remove from templates" : "Save as template"}
               </button>
             </form>
           </div>
@@ -597,20 +655,85 @@ function Facts({
   );
 }
 
+function AiSummarySection({
+  initiative,
+  aiEnabled,
+}: {
+  initiative: any;
+  aiEnabled: boolean;
+}) {
+  return (
+    <section className="rounded-xl border border-brand-primary-100 bg-brand-primary-50 p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-primary">
+          AI weekly summary
+        </h2>
+        <form
+          action={async () => {
+            "use server";
+            await generateAiSummary(initiative.id);
+          }}
+        >
+          <button className="rounded-md bg-brand-primary px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-primary-dark disabled:opacity-50">
+            {initiative.aiSummary ? "Refresh summary" : "Generate summary"}
+          </button>
+        </form>
+      </div>
+      {!aiEnabled && (
+        <p className="mt-2 text-xs text-brand-primary">
+          AI is not configured. Set <code>ANTHROPIC_API_KEY</code> in Vercel.
+        </p>
+      )}
+      {initiative.aiSummary ? (
+        <p className="mt-3 whitespace-pre-wrap text-sm text-stone-800">
+          {initiative.aiSummary}
+        </p>
+      ) : (
+        <p className="mt-3 text-sm text-brand-primary/80">
+          Click to summarise the latest updates into one paragraph.
+        </p>
+      )}
+    </section>
+  );
+}
+
 function OutcomeSection({
   initiative,
   canEdit,
   showcasable,
+  aiEnabled,
+  getReactions,
+  signedIn,
 }: {
   initiative: any;
   canEdit: boolean;
   showcasable: boolean;
+  aiEnabled: boolean;
+  getReactions: (kind: "update" | "comment" | "outcome", tid: string) => {
+    counts: Record<string, number>;
+    mine: Set<string>;
+  };
+  signedIn: boolean;
 }) {
   return (
     <section className="rounded-xl border border-brand-success-100 bg-brand-success-50 p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success-dark">
-        Outcomes
-      </h2>
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success-dark">
+          Outcomes
+        </h2>
+        {canEdit && aiEnabled && (
+          <form
+            action={async () => {
+              "use server";
+              await draftOutcomeWithAi(initiative.id);
+            }}
+          >
+            <button className="rounded-md border border-brand-success bg-white px-2.5 py-1 text-xs font-medium text-brand-success-dark hover:bg-brand-success-100">
+              ✨ Draft with AI
+            </button>
+          </form>
+        )}
+      </div>
       {showcasable ? (
         <>
           {initiative.outcomeBody && (
@@ -638,6 +761,19 @@ function OutcomeSection({
                 ))}
             </ul>
           )}
+          {(() => {
+            const r = getReactions("outcome", initiative.id);
+            return (
+              <Reactions
+                targetType={"outcome" as any}
+                targetId={initiative.id}
+                initiativeId={initiative.id}
+                counts={r.counts}
+                mine={r.mine}
+                signedIn={signedIn}
+              />
+            );
+          })()}
         </>
       ) : (
         <p className="mt-2 text-sm text-brand-success-dark">
