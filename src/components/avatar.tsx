@@ -9,13 +9,13 @@ export function initials(name?: string | null, email?: string | null) {
 }
 
 const palette = [
-  "bg-blue-100 text-blue-900",
-  "bg-emerald-100 text-emerald-900",
-  "bg-amber-100 text-amber-900",
-  "bg-rose-100 text-rose-900",
-  "bg-fuchsia-100 text-fuchsia-900",
-  "bg-purple-100 text-purple-900",
-  "bg-stone-200 text-stone-900",
+  "bg-brand-primary/15 text-brand-primary-glow ring-1 ring-brand-primary/30",
+  "bg-brand-success/15 text-brand-success ring-1 ring-brand-success/30",
+  "bg-brand-accent/15 text-brand-accent ring-1 ring-brand-accent/30",
+  "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30",
+  "bg-fuchsia-500/15 text-fuchsia-300 ring-1 ring-fuchsia-500/30",
+  "bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/30",
+  "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30",
 ];
 
 function colorFor(seed: string) {
@@ -36,7 +36,7 @@ export function Avatar({
   const cls = colorFor(email ?? name ?? "?");
   return (
     <span
-      className={`inline-flex items-center justify-center rounded-full font-medium ${cls}`}
+      className={`inline-flex items-center justify-center rounded-full font-mono font-medium ${cls}`}
       style={{
         width: size,
         height: size,
@@ -69,7 +69,7 @@ export function UserChip({
   );
   if (id) {
     return (
-      <Link href={`/u/${id}`} className="hover:underline">
+      <Link href={`/u/${id}`} className="hover:text-brand-primary-glow hover:underline">
         {inner}
       </Link>
     );

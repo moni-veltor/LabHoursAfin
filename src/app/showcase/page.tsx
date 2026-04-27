@@ -32,13 +32,13 @@ export default async function ShowcasePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Showcase</h1>
-        <p className="mt-1 text-stone-600">
+        <p className="mt-1 text-muted">
           What we shipped, learned, or wrapped up. The wall of done.
         </p>
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-stone-300 bg-white py-16 text-center text-stone-500">
+        <div className="rounded-xl border border-dashed border-line bg-surface py-16 text-center text-muted">
           Nothing on the wall yet — owners post outcomes when they wrap an initiative.
         </div>
       ) : (
@@ -53,23 +53,23 @@ export default async function ShowcasePage() {
               <Link
                 key={r.id}
                 href={`/initiatives/${r.id}`}
-                className="group flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-5 transition hover:border-stone-300 hover:shadow-sm"
+                className="group flex flex-col gap-3 rounded-xl border border-line bg-surface p-5 transition hover:border-line hover:shadow-sm"
               >
                 <div className="flex items-center gap-2">
                   <span className={`inline-block h-2 w-2 rounded-full ${cat.dot}`} />
                   <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cat.badge}`}>
                     {cat.label}
                   </span>
-                  <span className="ml-auto text-xs text-stone-400">
+                  <span className="ml-auto text-xs text-dim">
                     {formatDate(r.updatedAt)}
                   </span>
                 </div>
                 <h3 className="text-lg font-semibold tracking-tight group-hover:underline">
                   {r.title}
                 </h3>
-                <p className="text-sm text-stone-600 line-clamp-3">{r.summary}</p>
+                <p className="text-sm text-muted line-clamp-3">{r.summary}</p>
                 {r.outcomeBody && (
-                  <p className="rounded-md border-l-2 border-brand-success bg-brand-success-50 px-3 py-2 text-xs text-stone-700 line-clamp-4">
+                  <p className="rounded-md border-l-2 border-brand-success bg-brand-success-950 px-3 py-2 text-xs text-ink-text line-clamp-4">
                     {r.outcomeBody}
                   </p>
                 )}
@@ -78,14 +78,14 @@ export default async function ShowcasePage() {
                     {links.slice(0, 3).map((l) => (
                       <span
                         key={l}
-                        className="truncate rounded-md bg-stone-100 px-2 py-0.5 text-xs text-stone-600"
+                        className="truncate rounded-md bg-raised px-2 py-0.5 text-xs text-muted"
                       >
                         {new URL(l).hostname}
                       </span>
                     ))}
                   </div>
                 )}
-                <p className="mt-auto text-xs text-stone-500">
+                <p className="mt-auto text-xs text-muted">
                   by {r.ownerName ?? "—"}
                 </p>
               </Link>

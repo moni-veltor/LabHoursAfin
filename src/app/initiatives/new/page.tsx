@@ -23,9 +23,9 @@ export default async function NewInitiativePage({
     isAdmin(user.email);
   if (!allowed) {
     return (
-      <div className="rounded-xl border border-stone-200 bg-white p-8">
+      <div className="rounded-xl border border-line bg-surface p-8">
         <h1 className="text-xl font-semibold">Tech team only</h1>
-        <p className="mt-2 text-stone-600">
+        <p className="mt-2 text-muted">
           Only the tech team (Monica, Mohammed, Emmanuel) can post initiatives.
           Have an idea? Pitch it to one of them.
         </p>
@@ -75,11 +75,11 @@ export default async function NewInitiativePage({
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="text-2xl font-bold tracking-tight">New initiative</h1>
-      <p className="mt-1 text-stone-600">
+      <p className="mt-1 text-muted">
         Share what the team is exploring, building, or could use help with.
       </p>
       {templateNotice && (
-        <p className="mt-3 rounded-md border border-brand-accent-100 bg-brand-accent-50 px-3 py-2 text-sm text-brand-accent-dark">
+        <p className="mt-3 rounded-md border border-brand-accent/30 bg-brand-accent-950 px-3 py-2 text-sm text-brand-accent">
           Cloning from template: <strong>{templateNotice.title}</strong>
         </p>
       )}

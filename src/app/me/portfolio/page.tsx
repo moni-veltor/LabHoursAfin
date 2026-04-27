@@ -80,23 +80,23 @@ export default async function PortfolioPage() {
         <PrintButton />
       </div>
 
-      <header className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-6">
+      <header className="flex items-center gap-4 rounded-xl border border-line bg-surface p-6">
         <Avatar name={user.name} email={user.email} size={64} />
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold tracking-tight">
             {user.name ?? user.email}
           </h2>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-muted">
             {user.department ?? "—"} · {user.email}
           </p>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="mt-1 text-xs text-muted">
             Lab Hours portfolio · generated {formatDate(new Date())}
           </p>
         </div>
       </header>
 
-      <section className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+      <section className="rounded-xl border border-line bg-surface p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
           Badges
         </h2>
         <div className="mt-3">
@@ -104,7 +104,7 @@ export default async function PortfolioPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 rounded-xl border border-stone-200 bg-white p-6 sm:grid-cols-4">
+      <section className="grid gap-3 rounded-xl border border-line bg-surface p-6 sm:grid-cols-4">
         <Stat label="Owned" value={stats.owned} />
         <Stat label="Joined" value={stats.joined} />
         <Stat label="Outcomes shipped" value={stats.outcomesPosted} />
@@ -123,8 +123,8 @@ export default async function PortfolioPage() {
 function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-wide text-stone-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-brand-primary">{value}</div>
+      <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-brand-primary-glow">{value}</div>
     </div>
   );
 }
@@ -147,8 +147,8 @@ function Section({
   showOutcome?: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-stone-200 bg-white p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+    <section className="rounded-xl border border-line bg-surface p-6">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
         {title}
       </h2>
       <ul className="mt-3 space-y-3">
@@ -156,7 +156,7 @@ function Section({
           const cat = CATEGORIES[r.category as Category];
           return (
             <li key={r.id} className="border-l-2 pl-3" style={{ borderColor: "currentColor" }}>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span
                   className={`rounded-full px-2 py-0.5 font-medium ${cat.badge}`}
                 >
@@ -165,11 +165,11 @@ function Section({
                 <span>· {r.status.replace("_", " ")}</span>
                 <span>· {formatDate(r.createdAt)}</span>
               </div>
-              <p className="mt-1 font-medium text-stone-900">{r.title}</p>
-              <p className="mt-0.5 text-sm text-stone-600">{r.summary}</p>
+              <p className="mt-1 font-medium text-ink-text">{r.title}</p>
+              <p className="mt-0.5 text-sm text-muted">{r.summary}</p>
               {showOutcome && r.outcomeBody && (
-                <p className="mt-2 rounded-md bg-brand-success-50 px-3 py-2 text-sm text-stone-800">
-                  <span className="font-medium text-brand-success-dark">Outcome: </span>
+                <p className="mt-2 rounded-md bg-brand-success-950 px-3 py-2 text-sm text-ink-text">
+                  <span className="font-medium text-brand-success">Outcome: </span>
                   {r.outcomeBody}
                 </p>
               )}

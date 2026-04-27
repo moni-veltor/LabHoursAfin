@@ -9,7 +9,7 @@ export function CoverImage({ src, alt, className, height = 200 }: Props) {
   if (!src) return null;
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-xl bg-stone-100 ${className ?? ""}`}
+      className={`relative w-full overflow-hidden rounded-xl bg-raised ${className ?? ""}`}
       style={{ height }}
     >
       <img

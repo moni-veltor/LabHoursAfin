@@ -18,9 +18,9 @@ export default async function AdminPage() {
   if (!me) redirect("/signin?callbackUrl=/admin");
   if (!isAdmin(me.email)) {
     return (
-      <div className="rounded-xl border border-stone-200 bg-white p-8">
+      <div className="rounded-xl border border-line bg-surface p-8">
         <h1 className="text-xl font-semibold">Admins only</h1>
-        <p className="mt-2 text-stone-600">
+        <p className="mt-2 text-muted">
           You don't have access to the admin dashboard.
         </p>
       </div>
@@ -119,7 +119,7 @@ export default async function AdminPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin</h1>
-        <p className="mt-1 text-stone-600">
+        <p className="mt-1 text-muted">
           Quick stats on engagement and where Lab Hours is being used.
         </p>
       </div>
@@ -175,7 +175,7 @@ export default async function AdminPage() {
 
       <section className="grid gap-6 lg:grid-cols-2">
         <Card title="Engagement averages">
-          <ul className="space-y-2 text-sm text-stone-700">
+          <ul className="space-y-2 text-sm text-ink-text">
             <li>
               Avg subscribers per initiative:{" "}
               <strong>{avgPerInit}</strong>
@@ -192,7 +192,7 @@ export default async function AdminPage() {
                 <a href={`/initiatives/${r.id}`} className="truncate hover:underline">
                   {r.title}
                 </a>
-                <span className="shrink-0 text-xs text-stone-500">
+                <span className="shrink-0 text-xs text-muted">
                   {r.status.replace("_", " ")}
                 </span>
               </li>
@@ -206,17 +206,17 @@ export default async function AdminPage() {
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
-      <div className="text-xs uppercase tracking-wide text-stone-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-brand-primary">{value}</div>
+    <div className="rounded-xl border border-line bg-surface p-4">
+      <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
+      <div className="mt-1 text-2xl font-semibold text-brand-primary-glow">{value}</div>
     </div>
   );
 }
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-5">
-      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+    <div className="rounded-xl border border-line bg-surface p-5">
+      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
         {title}
       </h3>
       {children}
@@ -225,7 +225,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 }
 
 function Sparkline({ rows }: { rows: { label: string; value: number }[] }) {
-  if (rows.length === 0) return <p className="text-sm text-stone-500">No data yet.</p>;
+  if (rows.length === 0) return <p className="text-sm text-muted">No data yet.</p>;
   const max = Math.max(...rows.map((r) => r.value), 1);
   const w = 600;
   const h = 80;
@@ -252,7 +252,7 @@ function Sparkline({ rows }: { rows: { label: string; value: number }[] }) {
           />
         ))}
       </svg>
-      <ul className="mt-2 flex justify-between text-[10px] text-stone-500">
+      <ul className="mt-2 flex justify-between text-[10px] text-muted">
         {rows.map((r) => (
           <li key={r.label}>{r.label.slice(5)}</li>
         ))}
@@ -267,7 +267,7 @@ function BarList({
   rows: { label: string; value: number; dot?: string }[];
 }) {
   if (rows.length === 0)
-    return <p className="text-sm text-stone-500">No data yet.</p>;
+    return <p className="text-sm text-muted">No data yet.</p>;
   const max = Math.max(...rows.map((r) => r.value), 1);
   return (
     <ul className="space-y-2">
@@ -281,9 +281,9 @@ function BarList({
                 {r.dot && <span className={`inline-block h-2 w-2 rounded-full ${r.dot}`} />}
                 {r.label}
               </span>
-              <span className="text-stone-500">{r.value}</span>
+              <span className="text-muted">{r.value}</span>
             </div>
-            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-stone-100">
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-raised">
               <div
                 className="h-full bg-brand-primary"
                 style={{ width: `${Math.max(4, (r.value / max) * 100)}%` }}

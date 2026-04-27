@@ -21,7 +21,7 @@ export function Reactions({
   signedIn: boolean;
 }) {
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
+    <div className="mt-3 flex flex-wrap gap-1.5">
       {REACTION_EMOJIS.map((e) => {
         const c = counts[e] ?? 0;
         const isMine = mine.has(e);
@@ -39,14 +39,14 @@ export function Reactions({
               disabled={!signedIn}
               className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition ${
                 isMine
-                  ? "border-brand-primary bg-brand-primary text-white"
+                  ? "border-brand-primary bg-brand-primary text-white shadow-glow"
                   : c > 0
-                  ? "border-stone-200 bg-stone-50 text-stone-700 hover:border-brand-primary/40"
-                  : "border-transparent bg-transparent text-stone-400 hover:bg-brand-primary-50 hover:text-brand-primary"
+                  ? "border-line bg-raised text-muted hover:border-brand-primary/40 hover:text-ink-text"
+                  : "border-transparent bg-transparent text-dim hover:bg-raised hover:text-muted"
               } ${!signedIn ? "cursor-not-allowed opacity-60" : ""}`}
             >
               <span>{e}</span>
-              {c > 0 && <span className="font-medium">{c}</span>}
+              {c > 0 && <span className="font-mono font-medium">{c}</span>}
             </button>
           </form>
         );

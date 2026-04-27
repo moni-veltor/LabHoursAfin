@@ -14,9 +14,9 @@ export function Recordings({ raw }: { raw: string | null }) {
     .filter((s) => s.startsWith("http"));
   if (links.length === 0) return null;
   return (
-    <section className="rounded-xl border border-stone-200 bg-white p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
-        Recordings & resources
+    <section className="rounded-xl border border-line bg-surface p-6">
+      <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+        Recordings &amp; resources
       </h2>
       <ul className="mt-3 space-y-2">
         {links.map((l) => (
@@ -25,11 +25,13 @@ export function Recordings({ raw }: { raw: string | null }) {
               href={l}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-sm transition hover:border-brand-primary/40 hover:text-brand-primary"
+              className="group flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 text-sm transition hover:border-brand-primary/40 hover:bg-brand-primary-950"
             >
-              <span className="inline-block h-2 w-2 rounded-full bg-brand-primary" />
-              <span className="font-medium">{hostname(l)}</span>
-              <span className="truncate text-xs text-stone-500">{l}</span>
+              <span className="inline-block h-2 w-2 rounded-full bg-brand-primary group-hover:bg-brand-primary-glow" />
+              <span className="font-medium text-ink-text">{hostname(l)}</span>
+              <span className="ml-auto truncate font-mono text-[10px] text-dim">
+                {l}
+              </span>
             </a>
           </li>
         ))}

@@ -10,37 +10,37 @@ const TIERS: { test: (s: Stats) => boolean; label: string; emoji: string; cls: s
     test: (s) => s.outcomesPosted >= 1,
     label: "Shipper",
     emoji: "🚀",
-    cls: "bg-brand-success-50 text-brand-success-dark border-brand-success-100",
+    cls: "border-brand-success/40 bg-brand-success-950 text-brand-success",
   },
   {
     test: (s) => s.owned >= 1,
     label: "Owner",
     emoji: "🏗️",
-    cls: "bg-brand-primary-50 text-brand-primary border-brand-primary-100",
+    cls: "border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow",
   },
   {
     test: (s) => s.joined >= 5,
     label: "Lab Rat",
     emoji: "🧪",
-    cls: "bg-brand-accent-50 text-brand-accent-dark border-brand-accent-100",
+    cls: "border-brand-accent/40 bg-brand-accent-950 text-brand-accent",
   },
   {
     test: (s) => s.joined >= 3,
     label: "Regular",
     emoji: "✨",
-    cls: "bg-brand-primary-50 text-brand-primary border-brand-primary-100",
+    cls: "border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow",
   },
   {
     test: (s) => s.joined >= 1,
     label: "Curious",
     emoji: "👀",
-    cls: "bg-stone-100 text-stone-700 border-stone-200",
+    cls: "border-line bg-raised text-muted",
   },
   {
     test: (s) => s.comments >= 5,
     label: "Discussor",
     emoji: "💬",
-    cls: "bg-stone-100 text-stone-700 border-stone-200",
+    cls: "border-line bg-raised text-muted",
   },
 ];
 
@@ -48,7 +48,7 @@ export function SkillBadges({ stats }: { stats: Stats }) {
   const badges = TIERS.filter((t) => t.test(stats));
   if (badges.length === 0)
     return (
-      <p className="text-xs text-stone-500">
+      <p className="text-xs text-muted">
         No badges yet — join an initiative to earn your first.
       </p>
     );
@@ -57,7 +57,7 @@ export function SkillBadges({ stats }: { stats: Stats }) {
       {badges.map((b) => (
         <li
           key={b.label}
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${b.cls}`}
+          className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider ${b.cls}`}
         >
           <span>{b.emoji}</span>
           <span>{b.label}</span>

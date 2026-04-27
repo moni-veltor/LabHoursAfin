@@ -20,7 +20,7 @@ export default async function MyBoardPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold tracking-tight">My board</h1>
-        <p className="text-stone-600">You haven't subscribed to anything yet.</p>
+        <p className="text-muted">You haven't subscribed to anything yet.</p>
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default async function MyBoardPage() {
         <h1 className="text-2xl font-bold tracking-tight">My board</h1>
         <a
           href="/me/portfolio"
-          className="rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50"
+          className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-ink-text hover:bg-line"
         >
           View my portfolio →
         </a>
@@ -99,7 +99,7 @@ function Section({
   if (rows.length === 0) return null;
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
         {title}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">

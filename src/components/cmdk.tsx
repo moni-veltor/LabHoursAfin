@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type Item = { id: string; title: string; category: string };
@@ -44,9 +43,7 @@ export function CmdK({ items }: { items: Item[] }) {
   const filteredInitiatives = useMemo(() => {
     if (!q) return items.slice(0, 8);
     const needle = q.toLowerCase();
-    return items
-      .filter((i) => i.title.toLowerCase().includes(needle))
-      .slice(0, 8);
+    return items.filter((i) => i.title.toLowerCase().includes(needle)).slice(0, 8);
   }, [q, items]);
 
   const filteredLinks = useMemo(() => {
@@ -59,25 +56,28 @@ export function CmdK({ items }: { items: Item[] }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-stone-900/30 px-4 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-ink/70 px-4 pt-[12vh] backdrop-blur-md"
       onClick={() => setOpen(false)}
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-xl border border-stone-200 bg-white shadow-xl"
+        className="w-full max-w-lg overflow-hidden rounded-xl border border-line bg-surface shadow-glow-soft"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="border-b border-stone-200 px-3">
-          <input
-            ref={inputRef}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search initiatives, jump anywhere..."
-            className="w-full bg-transparent py-3 text-sm focus:outline-none"
-          />
+        <div className="border-b border-line bg-raised px-3">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs text-brand-primary-glow">$</span>
+            <input
+              ref={inputRef}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="type a command or initiative..."
+              className="w-full bg-transparent py-3 text-sm text-ink-text placeholder:text-dim focus:outline-none"
+            />
+          </div>
         </div>
-        <div className="max-h-[60vh] overflow-auto">
+        <div className="max-h-[60vh] overflow-auto py-1">
           {filteredLinks.length > 0 && (
-            <Group title="Navigate">
+            <Group title="navigate">
               {filteredLinks.map((l) => (
                 <Row
                   key={l.href}
@@ -86,13 +86,14 @@ export function CmdK({ items }: { items: Item[] }) {
                     router.push(l.href);
                   }}
                 >
-                  {l.label}
+                  <span className="font-mono text-xs text-dim">↗</span>
+                  <span>{l.label}</span>
                 </Row>
               ))}
             </Group>
           )}
           {filteredInitiatives.length > 0 && (
-            <Group title="Initiatives">
+            <Group title="initiatives">
               {filteredInitiatives.map((i) => (
                 <Row
                   key={i.id}
@@ -101,8 +102,9 @@ export function CmdK({ items }: { items: Item[] }) {
                     router.push(`/initiatives/${i.id}`);
                   }}
                 >
+                  <span className="font-mono text-xs text-dim">›</span>
                   <span className="truncate">{i.title}</span>
-                  <span className="ml-auto rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600">
+                  <span className="ml-auto rounded border border-line bg-raised px-1.5 py-0.5 font-mono text-[10px] text-muted">
                     {i.category.replace(/_/g, " ")}
                   </span>
                 </Row>
@@ -110,12 +112,12 @@ export function CmdK({ items }: { items: Item[] }) {
             </Group>
           )}
           {filteredInitiatives.length === 0 && filteredLinks.length === 0 && (
-            <p className="px-4 py-6 text-center text-sm text-stone-500">No matches.</p>
+            <p className="px-4 py-6 text-center text-sm text-muted">No matches.</p>
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
-          <span>↑↓ navigate · enter open · esc close</span>
-          <span className="font-mono">⌘K</span>
+        <div className="flex items-center justify-between border-t border-line bg-raised px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-dim">
+          <span>↑↓ navigate · ↵ open · esc close</span>
+          <span className="text-brand-primary-glow">⌘K</span>
         </div>
       </div>
     </div>
@@ -125,7 +127,7 @@ export function CmdK({ items }: { items: Item[] }) {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="px-3 pt-2 text-xs font-medium uppercase tracking-wide text-stone-400">
+      <div className="px-3 pt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-dim">
         {title}
       </div>
       <ul className="py-1">{children}</ul>
@@ -144,7 +146,7 @@ function Row({
     <li>
       <button
         onClick={onSelect}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-brand-primary-50 hover:text-brand-primary"
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted hover:bg-brand-primary-950 hover:text-ink-text"
       >
         {children}
       </button>

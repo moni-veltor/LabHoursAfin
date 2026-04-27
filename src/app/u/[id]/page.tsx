@@ -64,11 +64,11 @@ export default async function ProfilePage({
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center gap-4 rounded-xl border border-stone-200 bg-white p-6">
+      <header className="flex items-center gap-4 rounded-xl border border-line bg-surface p-6">
         <Avatar name={user.name} email={user.email} size={64} />
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{user.name ?? user.email}</h1>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-muted">
             {user.department ?? "—"} · {user.email}
           </p>
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
@@ -96,10 +96,10 @@ export default async function ProfilePage({
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
             user.role === "admin"
-              ? "bg-brand-accent-50 text-brand-accent-dark"
+              ? "bg-brand-accent-950 text-brand-accent"
               : user.role === "tech"
-              ? "bg-brand-primary-50 text-brand-primary"
-              : "bg-stone-200 text-stone-700"
+              ? "bg-brand-primary-950 text-brand-primary-glow"
+              : "bg-raised text-ink-text"
           }`}
         >
           {user.role}
@@ -111,7 +111,7 @@ export default async function ProfilePage({
       <Section title="Following" rows={following} />
 
       {owned.length === 0 && participating.length === 0 && following.length === 0 && (
-        <div className="rounded-xl border border-dashed border-stone-300 bg-white py-16 text-center text-stone-500">
+        <div className="rounded-xl border border-dashed border-line bg-surface py-16 text-center text-muted">
           {(user.name ?? user.email)} hasn't joined anything yet.
         </div>
       )}
@@ -121,7 +121,7 @@ export default async function ProfilePage({
 
 function Stat({ label, n }: { label: string; n: number }) {
   return (
-    <span className="rounded-md bg-stone-100 px-2 py-1 text-stone-700">
+    <span className="rounded-md bg-raised px-2 py-1 text-ink-text">
       <strong className="font-semibold">{n}</strong> {label}
     </span>
   );
@@ -151,7 +151,7 @@ function Section({
   if (rows.length === 0) return null;
   return (
     <section>
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
         {title}
       </h2>
       <div className="grid gap-3 sm:grid-cols-2">

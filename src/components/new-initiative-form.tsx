@@ -86,39 +86,42 @@ export function NewInitiativeForm({
 
   return (
     <>
-      <section className="rounded-xl border border-brand-primary-100 bg-brand-primary-50 p-5">
-        <div className="flex items-center gap-2">
-          <span className="rounded-md bg-brand-primary px-2 py-0.5 text-xs font-medium text-white">
-            AI assist
-          </span>
-          <h2 className="text-sm font-semibold text-brand-primary">
-            Pitch it in a sentence and I'll draft the rest
-          </h2>
+      <section className="relative overflow-hidden rounded-xl border border-brand-primary/30 bg-surface p-5">
+        <div className="lh-mesh absolute inset-0 opacity-30" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <span className="rounded-md border border-brand-primary/40 bg-brand-primary-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
+              ✦ ai assist
+            </span>
+            <h2 className="text-sm font-semibold text-ink-text">
+              Pitch it in a sentence and I'll draft the rest
+            </h2>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <input
+              value={pitch}
+              onChange={(e) => setPitch(e.target.value)}
+              placeholder='e.g. "A 4-week reading club on distributed systems for non-engineers"'
+              className="w-full rounded-md border border-line bg-raised px-3 py-2 text-sm placeholder:text-dim focus:border-brand-primary focus:outline-none"
+            />
+            <button
+              type="button"
+              disabled={drafting || !pitch.trim()}
+              onClick={runDraft}
+              className="shrink-0 rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white shadow-glow transition hover:bg-brand-primary-dark disabled:opacity-50"
+            >
+              {drafting ? "Drafting…" : "Draft with AI →"}
+            </button>
+          </div>
+          {!aiEnabled && (
+            <p className="mt-2 font-mono text-[11px] text-dim">
+              AI not configured. Set <code className="rounded border border-line bg-raised px-1 py-0.5 text-brand-primary-glow">ANTHROPIC_API_KEY</code> to enable.
+            </p>
+          )}
+          {draftError && (
+            <p className="mt-2 text-xs text-rose-300">{draftError}</p>
+          )}
         </div>
-        <div className="mt-3 flex gap-2">
-          <input
-            value={pitch}
-            onChange={(e) => setPitch(e.target.value)}
-            placeholder='e.g. "A 4-week reading club on distributed systems for non-engineers"'
-            className="w-full rounded-md border border-brand-primary-100 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none"
-          />
-          <button
-            type="button"
-            disabled={drafting || !pitch.trim()}
-            onClick={runDraft}
-            className="shrink-0 rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark disabled:opacity-50"
-          >
-            {drafting ? "Drafting…" : "Draft with AI"}
-          </button>
-        </div>
-        {!aiEnabled && (
-          <p className="mt-2 text-xs text-brand-primary/80">
-            AI is not configured. Set <code>ANTHROPIC_API_KEY</code> in Vercel to enable.
-          </p>
-        )}
-        {draftError && (
-          <p className="mt-2 text-xs text-rose-600">{draftError}</p>
-        )}
       </section>
 
       <form ref={formRef} action={createInitiative} className="mt-6 space-y-6">
@@ -224,30 +227,30 @@ export function NewInitiativeForm({
             defaultValue={initial.prerequisites}
             placeholder="e.g. comfortable with Python; or 'no coding experience needed'"
           />
-          <label className="flex items-start gap-3 rounded-md border border-stone-200 bg-stone-50 p-3 text-sm">
+          <label className="flex items-start gap-3 rounded-md border border-line bg-raised p-3 text-sm">
             <input
               type="checkbox"
               name="requiresApproval"
               defaultChecked={initial.requiresApproval}
-              className="mt-0.5 h-4 w-4 rounded border-stone-300"
+              className="mt-0.5 h-4 w-4 rounded border-line"
             />
             <span>
-              <span className="font-medium">Application required to join</span>
-              <span className="block text-xs text-stone-600">
+              <span className="font-medium text-ink-text">Application required to join</span>
+              <span className="block text-xs text-muted">
                 Follow updates is instant; joining as a participant needs your approval.
               </span>
             </span>
           </label>
-          <label className="flex items-start gap-3 rounded-md border border-stone-200 bg-stone-50 p-3 text-sm">
+          <label className="flex items-start gap-3 rounded-md border border-line bg-raised p-3 text-sm">
             <input
               type="checkbox"
               name="crossTeam"
               defaultChecked={initial.crossTeam}
-              className="mt-0.5 h-4 w-4 rounded border-stone-300"
+              className="mt-0.5 h-4 w-4 rounded border-line"
             />
             <span>
-              <span className="font-medium">Cross-team initiative</span>
-              <span className="block text-xs text-stone-600">
+              <span className="font-medium text-ink-text">Cross-team initiative</span>
+              <span className="block text-xs text-muted">
                 Mark when this explicitly bridges multiple departments or functions.
               </span>
             </span>
@@ -289,15 +292,15 @@ export function NewInitiativeForm({
           />
         </Section>
 
-        <div className="flex items-center justify-between rounded-xl border border-stone-200 bg-white p-4">
-          <p className="text-xs text-stone-500">
+        <div className="flex items-center justify-between rounded-xl border border-line bg-surface p-4">
+          <p className="text-xs text-muted">
             You'll be added as the owner. Subscribers can join, follow, and comment.
           </p>
           <button
             type="submit"
-            className="rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark"
+            className="rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-white shadow-glow transition hover:bg-brand-primary-dark"
           >
-            Publish initiative
+            Publish initiative →
           </button>
         </div>
       </form>
@@ -315,10 +318,12 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border border-stone-200 bg-white">
-      <header className="border-b border-stone-200 px-5 py-3">
-        <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-        {hint && <p className="text-xs text-stone-500">{hint}</p>}
+    <section className="rounded-xl border border-line bg-surface">
+      <header className="border-b border-line px-5 py-3">
+        <h2 className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-muted">
+          {title}
+        </h2>
+        {hint && <p className="mt-0.5 text-xs text-dim">{hint}</p>}
       </header>
       <div className="space-y-4 p-5">{children}</div>
     </section>
@@ -345,12 +350,12 @@ function Field({
   defaultValue?: string;
 }) {
   const cls =
-    "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-brand-primary focus:outline-none";
+    "mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm placeholder:text-dim focus:border-brand-primary focus:outline-none";
   return (
     <div>
-      <label className="block text-sm font-medium">
+      <label className="block font-mono text-[11px] uppercase tracking-wider text-muted">
         {label}
-        {required && <span className="ml-1 text-rose-600">*</span>}
+        {required && <span className="ml-1 text-rose-400">*</span>}
       </label>
       {textarea ? (
         <textarea
@@ -390,15 +395,15 @@ function Select({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium">
+      <label className="block font-mono text-[11px] uppercase tracking-wider text-muted">
         {label}
-        {required && <span className="ml-1 text-rose-600">*</span>}
+        {required && <span className="ml-1 text-rose-400">*</span>}
       </label>
       <select
         name={name}
         required={required}
         defaultValue={defaultValue ?? ""}
-        className="mt-1 w-full rounded-md border border-stone-300 bg-white px-3 py-2 text-sm focus:border-brand-primary focus:outline-none"
+        className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm focus:border-brand-primary focus:outline-none"
       >
         {!defaultValue && !required && <option value="">—</option>}
         {required && (

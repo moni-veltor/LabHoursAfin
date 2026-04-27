@@ -174,48 +174,48 @@ export default async function InitiativePage({
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <CategoryBadge category={initiative.category as Category} />
-            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-700">
+            <span className="rounded-full bg-raised px-2 py-0.5 text-ink-text">
               {initiative.status.replace("_", " ")}
             </span>
             {initiative.featured && (
-              <span className="rounded-full bg-brand-accent-50 px-2 py-0.5 font-medium text-brand-accent-dark">
+              <span className="rounded-full bg-brand-accent-950 px-2 py-0.5 font-medium text-brand-accent">
                 ★ Featured
               </span>
             )}
             {initiative.crossTeam && (
-              <span className="rounded-full bg-brand-success-50 px-2 py-0.5 font-medium text-brand-success-dark">
+              <span className="rounded-full bg-brand-success-950 px-2 py-0.5 font-medium text-brand-success">
                 Cross-team
               </span>
             )}
             {initiative.requiresApproval && (
-              <span className="rounded-full bg-brand-primary-50 px-2 py-0.5 text-brand-primary">
+              <span className="rounded-full bg-brand-primary-950 px-2 py-0.5 text-brand-primary-glow">
                 Application required
               </span>
             )}
             {initiative.isTemplate && (
-              <span className="rounded-full bg-stone-200 px-2 py-0.5 text-stone-700">
+              <span className="rounded-full bg-raised px-2 py-0.5 text-ink-text">
                 Template
               </span>
             )}
-            <span className="text-stone-500">·</span>
-            <span className="text-stone-500">by</span>
+            <span className="text-muted">·</span>
+            <span className="text-muted">by</span>
             <UserChip
               id={row.ownerId}
               name={row.ownerName}
               email={row.ownerEmail}
               size={18}
             />
-            <span className="text-stone-500">· {formatDate(initiative.createdAt)}</span>
+            <span className="text-muted">· {formatDate(initiative.createdAt)}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight">{initiative.title}</h1>
-          <p className="text-lg text-stone-700">{initiative.summary}</p>
+          <p className="text-lg text-ink-text">{initiative.summary}</p>
           {tagRows.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {tagRows.map((t) => (
                 <a
                   key={t.slug}
                   href={`/?tag=${t.slug}`}
-                  className="rounded-md bg-stone-100 px-2 py-0.5 text-xs text-stone-700 hover:bg-stone-200"
+                  className="rounded-md bg-raised px-2 py-0.5 text-xs text-ink-text hover:bg-line"
                 >
                   {t.name}
                 </a>
@@ -227,29 +227,29 @@ export default async function InitiativePage({
         <Facts initiative={initiative} participantCount={participantCount} />
 
         {initiative.outcomes && (
-          <section className="rounded-xl border border-stone-200 bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+          <section className="rounded-xl border border-line bg-surface p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
               What you'll do / outcomes
             </h2>
-            <p className="mt-2 whitespace-pre-wrap text-stone-800">
+            <p className="mt-2 whitespace-pre-wrap text-ink-text">
               {initiative.outcomes}
             </p>
           </section>
         )}
 
         {initiative.prerequisites && (
-          <section className="rounded-xl border border-stone-200 bg-white p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+          <section className="rounded-xl border border-line bg-surface p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
               Skills helpful
             </h2>
-            <p className="mt-2 whitespace-pre-wrap text-stone-800">
+            <p className="mt-2 whitespace-pre-wrap text-ink-text">
               {initiative.prerequisites}
             </p>
           </section>
         )}
 
         {initiative.body && (
-          <article className="prose-tight rounded-xl border border-stone-200 bg-white p-6 text-stone-800">
+          <article className="prose-tight rounded-xl border border-line bg-surface p-6 text-ink-text">
             <ReactMarkdown>{initiative.body}</ReactMarkdown>
           </article>
         )}
@@ -279,7 +279,7 @@ export default async function InitiativePage({
           {canEdit && (
             <form
               action={postUpdate}
-              className="mt-3 rounded-xl border border-stone-200 bg-white p-4"
+              className="mt-3 rounded-xl border border-line bg-surface p-4"
             >
               <input type="hidden" name="initiativeId" value={initiative.id} />
               <textarea
@@ -287,7 +287,7 @@ export default async function InitiativePage({
                 required
                 rows={3}
                 placeholder="Share progress with subscribers..."
-                className="w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none"
+                className="w-full resize-y rounded-md border border-line px-3 py-2 text-sm focus:border-stone-900 focus:outline-none"
               />
               <div className="mt-2 flex justify-end">
                 <button className="rounded-md bg-brand-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-primary-dark">
@@ -298,20 +298,20 @@ export default async function InitiativePage({
           )}
           <ul className="mt-3 space-y-3">
             {ups.length === 0 && (
-              <li className="text-sm text-stone-500">No updates yet.</li>
+              <li className="text-sm text-muted">No updates yet.</li>
             )}
             {ups.map(({ u, authorId, authorName, authorEmail }) => {
               const r = getReactions("update", u.id);
               return (
                 <li
                   key={u.id}
-                  className="rounded-xl border border-stone-200 bg-white p-4"
+                  className="rounded-xl border border-line bg-surface p-4"
                 >
-                  <div className="flex items-center justify-between text-xs text-stone-500">
+                  <div className="flex items-center justify-between text-xs text-muted">
                     <UserChip id={authorId} name={authorName} email={authorEmail} />
                     <span>{timeAgo(u.createdAt)}</span>
                   </div>
-                  <div className="mt-2 prose-tight text-sm text-stone-800">
+                  <div className="mt-2 prose-tight text-sm text-ink-text">
                     <ReactMarkdown>{u.body}</ReactMarkdown>
                   </div>
                   <Reactions
@@ -333,7 +333,7 @@ export default async function InitiativePage({
           {me && (
             <form
               action={addComment}
-              className="mt-3 rounded-xl border border-stone-200 bg-white p-4"
+              className="mt-3 rounded-xl border border-line bg-surface p-4"
             >
               <input type="hidden" name="initiativeId" value={initiative.id} />
               <textarea
@@ -341,10 +341,10 @@ export default async function InitiativePage({
                 required
                 rows={3}
                 placeholder="Ask a question, share an idea..."
-                className="w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none"
+                className="w-full resize-y rounded-md border border-line px-3 py-2 text-sm focus:border-stone-900 focus:outline-none"
               />
               <div className="mt-2 flex justify-end">
-                <button className="rounded-md border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-800 hover:bg-stone-50">
+                <button className="rounded-md border border-line px-3 py-1.5 text-sm font-medium text-ink-text hover:bg-line">
                   Comment
                 </button>
               </div>
@@ -352,17 +352,17 @@ export default async function InitiativePage({
           )}
           <ul className="mt-3 space-y-3">
             {cmts.length === 0 && (
-              <li className="text-sm text-stone-500">Be the first to comment.</li>
+              <li className="text-sm text-muted">Be the first to comment.</li>
             )}
             {cmts.map(({ c, authorId, authorName, authorEmail }) => {
               const r = getReactions("comment", c.id);
               return (
-                <li key={c.id} className="rounded-xl border border-stone-200 bg-white p-4">
-                  <div className="flex items-center justify-between text-xs text-stone-500">
+                <li key={c.id} className="rounded-xl border border-line bg-surface p-4">
+                  <div className="flex items-center justify-between text-xs text-muted">
                     <UserChip id={authorId} name={authorName} email={authorEmail} />
                     <span>{timeAgo(c.createdAt)}</span>
                   </div>
-                  <p className="mt-2 whitespace-pre-wrap text-sm text-stone-800">
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-ink-text">
                     {c.body}
                   </p>
                   <Reactions
@@ -381,17 +381,17 @@ export default async function InitiativePage({
       </div>
 
       <aside className="space-y-4">
-        <div className="rounded-xl border border-stone-200 bg-white p-4">
+        <div className="rounded-xl border border-line bg-surface p-4">
           <h3 className="text-sm font-semibold">Get involved</h3>
           {!me ? (
-            <p className="mt-2 text-sm text-stone-500">Sign in to subscribe.</p>
+            <p className="mt-2 text-sm text-muted">Sign in to subscribe.</p>
           ) : myRole === "owner" ? (
-            <p className="mt-3 text-sm text-stone-700">
+            <p className="mt-3 text-sm text-ink-text">
               You're the owner.
             </p>
           ) : myRole === "pending" ? (
             <div className="mt-3 space-y-2">
-              <p className="text-sm text-stone-700">
+              <p className="text-sm text-ink-text">
                 Application sent. Awaiting approval.
               </p>
               <form
@@ -400,14 +400,14 @@ export default async function InitiativePage({
                   await unsubscribe(initiative.id);
                 }}
               >
-                <button className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm hover:bg-stone-50">
+                <button className="w-full rounded-md border border-line px-3 py-2 text-sm hover:bg-line">
                   Withdraw application
                 </button>
               </form>
             </div>
           ) : subscribed ? (
             <div className="mt-3 space-y-2">
-              <p className="text-sm text-stone-700">
+              <p className="text-sm text-ink-text">
                 You're {myRole === "participant" ? "participating" : "following"}.
               </p>
               <form
@@ -416,7 +416,7 @@ export default async function InitiativePage({
                   await unsubscribe(initiative.id);
                 }}
               >
-                <button className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm hover:bg-stone-50">
+                <button className="w-full rounded-md border border-line px-3 py-2 text-sm hover:bg-line">
                   Leave
                 </button>
               </form>
@@ -443,7 +443,7 @@ export default async function InitiativePage({
                   await subscribe(initiative.id, "subscriber");
                 }}
               >
-                <button className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm hover:bg-stone-50">
+                <button className="w-full rounded-md border border-line px-3 py-2 text-sm hover:bg-line">
                   Follow updates
                 </button>
               </form>
@@ -462,7 +462,7 @@ export default async function InitiativePage({
                 </form>
               )}
               {capacityFull && (
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-muted">
                   At capacity. You can still follow updates.
                 </p>
               )}
@@ -471,8 +471,8 @@ export default async function InitiativePage({
         </div>
 
         {canEdit && pending.length > 0 && (
-          <div className="rounded-xl border border-brand-accent-100 bg-brand-accent-50 p-4">
-            <h3 className="text-sm font-semibold text-brand-accent-dark">
+          <div className="rounded-xl border border-brand-accent/30 bg-brand-accent-950 p-4">
+            <h3 className="text-sm font-semibold text-brand-accent">
               Pending applications ({pending.length})
             </h3>
             <ul className="mt-3 space-y-2 text-sm">
@@ -496,7 +496,7 @@ export default async function InitiativePage({
                         await declineParticipant(initiative.id, p.userId);
                       }}
                     >
-                      <button className="rounded-md border border-stone-300 bg-white px-2 py-1 text-xs hover:bg-stone-50">
+                      <button className="rounded-md border border-line bg-surface px-2 py-1 text-xs hover:bg-line">
                         Decline
                       </button>
                     </form>
@@ -507,13 +507,13 @@ export default async function InitiativePage({
           </div>
         )}
 
-        <div className="rounded-xl border border-stone-200 bg-white p-4">
+        <div className="rounded-xl border border-line bg-surface p-4">
           <h3 className="text-sm font-semibold">Tools</h3>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
               <a
                 href={`/api/initiatives/${initiative.id}/ics`}
-                className="flex items-center gap-2 rounded-md border border-stone-200 bg-stone-50 px-3 py-2 hover:border-brand-primary/40 hover:text-brand-primary"
+                className="flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 hover:border-brand-primary/40 hover:text-brand-primary-glow"
               >
                 <span className="inline-block h-2 w-2 rounded-full bg-brand-primary" />
                 Add to calendar (.ics)
@@ -523,7 +523,7 @@ export default async function InitiativePage({
         </div>
 
         {canEdit && (
-          <div className="rounded-xl border border-stone-200 bg-white p-4">
+          <div className="rounded-xl border border-line bg-surface p-4">
             <h3 className="text-sm font-semibold">Owner controls</h3>
             <form
               className="mt-3 space-y-2"
@@ -538,7 +538,7 @@ export default async function InitiativePage({
               <select
                 name="status"
                 defaultValue={initiative.status}
-                className="w-full rounded-md border border-stone-300 px-3 py-2 text-sm"
+                className="w-full rounded-md border border-line px-3 py-2 text-sm"
               >
                 <option value="draft">Draft</option>
                 <option value="open">Open</option>
@@ -546,7 +546,7 @@ export default async function InitiativePage({
                 <option value="done">Done</option>
                 <option value="archived">Archived</option>
               </select>
-              <button className="w-full rounded-md border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-50">
+              <button className="w-full rounded-md border border-line px-3 py-1.5 text-sm hover:bg-line">
                 Update status
               </button>
             </form>
@@ -558,7 +558,7 @@ export default async function InitiativePage({
                 else await saveAsTemplate(initiative.id);
               }}
             >
-              <button className="w-full rounded-md border border-stone-300 px-3 py-1.5 text-sm hover:bg-stone-50">
+              <button className="w-full rounded-md border border-line px-3 py-1.5 text-sm hover:bg-line">
                 {initiative.isTemplate ? "Remove from templates" : "Save as template"}
               </button>
             </form>
@@ -566,8 +566,8 @@ export default async function InitiativePage({
         )}
 
         {adminAccess && (
-          <div className="rounded-xl border border-brand-accent-100 bg-brand-accent-50 p-4">
-            <h3 className="text-sm font-semibold text-brand-accent-dark">Admin</h3>
+          <div className="rounded-xl border border-brand-accent/30 bg-brand-accent-950 p-4">
+            <h3 className="text-sm font-semibold text-brand-accent">Admin</h3>
             <form
               className="mt-3"
               action={async () => {
@@ -575,25 +575,25 @@ export default async function InitiativePage({
                 await toggleFeatured(initiative.id);
               }}
             >
-              <button className="w-full rounded-md border border-brand-accent bg-white px-3 py-1.5 text-sm font-medium text-brand-accent-dark hover:bg-brand-accent-100">
+              <button className="w-full rounded-md border border-brand-accent bg-surface px-3 py-1.5 text-sm font-medium text-brand-accent hover:bg-brand-accent-900">
                 {initiative.featured ? "Unfeature" : "★ Feature on home"}
               </button>
             </form>
           </div>
         )}
 
-        <div className="rounded-xl border border-stone-200 bg-white p-4">
+        <div className="rounded-xl border border-line bg-surface p-4">
           <h3 className="text-sm font-semibold">
-            People <span className="text-stone-500">({visibleSubs.length})</span>
+            People <span className="text-muted">({visibleSubs.length})</span>
           </h3>
           <ul className="mt-3 space-y-2 text-sm">
             {visibleSubs.length === 0 && (
-              <li className="text-stone-500">No one yet.</li>
+              <li className="text-muted">No one yet.</li>
             )}
             {visibleSubs.map((s) => (
               <li key={s.userId} className="flex items-center justify-between gap-2">
                 <UserChip id={s.userId} name={s.name} email={s.email} />
-                <span className="shrink-0 text-xs text-stone-500">{s.role}</span>
+                <span className="shrink-0 text-xs text-muted">{s.role}</span>
               </li>
             ))}
           </ul>
@@ -642,13 +642,13 @@ function Facts({
     });
 
   return (
-    <dl className="grid gap-3 rounded-xl border border-stone-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-3">
+    <dl className="grid gap-3 rounded-xl border border-line bg-surface p-5 sm:grid-cols-2 lg:grid-cols-3">
       {items.map((it) => (
         <div key={it.label}>
-          <dt className="text-xs font-medium uppercase tracking-wide text-stone-500">
+          <dt className="text-xs font-medium uppercase tracking-wide text-muted">
             {it.label}
           </dt>
-          <dd className="mt-0.5 text-sm text-stone-800">{it.value}</dd>
+          <dd className="mt-0.5 text-sm text-ink-text">{it.value}</dd>
         </div>
       ))}
     </dl>
@@ -663,9 +663,9 @@ function AiSummarySection({
   aiEnabled: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-brand-primary-100 bg-brand-primary-50 p-5">
+    <section className="rounded-xl border border-brand-primary/30 bg-brand-primary-950 p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-primary">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-primary-glow">
           AI weekly summary
         </h2>
         <form
@@ -680,16 +680,16 @@ function AiSummarySection({
         </form>
       </div>
       {!aiEnabled && (
-        <p className="mt-2 text-xs text-brand-primary">
+        <p className="mt-2 text-xs text-brand-primary-glow">
           AI is not configured. Set <code>ANTHROPIC_API_KEY</code> in Vercel.
         </p>
       )}
       {initiative.aiSummary ? (
-        <p className="mt-3 whitespace-pre-wrap text-sm text-stone-800">
+        <p className="mt-3 whitespace-pre-wrap text-sm text-ink-text">
           {initiative.aiSummary}
         </p>
       ) : (
-        <p className="mt-3 text-sm text-brand-primary/80">
+        <p className="mt-3 text-sm text-brand-primary-glow/80">
           Click to summarise the latest updates into one paragraph.
         </p>
       )}
@@ -716,9 +716,9 @@ function OutcomeSection({
   signedIn: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-brand-success-100 bg-brand-success-50 p-6">
+    <section className="rounded-xl border border-brand-success/30 bg-brand-success-950 p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success-dark">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success">
           Outcomes
         </h2>
         {canEdit && aiEnabled && (
@@ -728,7 +728,7 @@ function OutcomeSection({
               await draftOutcomeWithAi(initiative.id);
             }}
           >
-            <button className="rounded-md border border-brand-success bg-white px-2.5 py-1 text-xs font-medium text-brand-success-dark hover:bg-brand-success-100">
+            <button className="rounded-md border border-brand-success bg-surface px-2.5 py-1 text-xs font-medium text-brand-success hover:bg-brand-success-900">
               ✨ Draft with AI
             </button>
           </form>
@@ -737,7 +737,7 @@ function OutcomeSection({
       {showcasable ? (
         <>
           {initiative.outcomeBody && (
-            <p className="mt-2 whitespace-pre-wrap text-stone-800">
+            <p className="mt-2 whitespace-pre-wrap text-ink-text">
               {initiative.outcomeBody}
             </p>
           )}
@@ -753,7 +753,7 @@ function OutcomeSection({
                       href={l}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-brand-success-dark underline hover:no-underline"
+                      className="text-brand-success underline hover:no-underline"
                     >
                       {l}
                     </a>
@@ -776,7 +776,7 @@ function OutcomeSection({
           })()}
         </>
       ) : (
-        <p className="mt-2 text-sm text-brand-success-dark">
+        <p className="mt-2 text-sm text-brand-success">
           {canEdit
             ? "Wrap this up by posting what you shipped, learned, or produced."
             : "Awaiting outcome write-up."}
@@ -790,14 +790,14 @@ function OutcomeSection({
             defaultValue={initiative.outcomeBody ?? ""}
             rows={4}
             placeholder="What did you ship? What did the team learn?"
-            className="w-full resize-y rounded-md border border-brand-success-100 bg-white px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
+            className="w-full resize-y rounded-md border border-brand-success/30 bg-surface px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
           />
           <textarea
             name="links"
             defaultValue={initiative.outcomeLinks ?? ""}
             rows={2}
             placeholder="Links (one per line) — demos, docs, slides, screenshots"
-            className="w-full resize-y rounded-md border border-brand-success-100 bg-white px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
+            className="w-full resize-y rounded-md border border-brand-success/30 bg-surface px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
           />
           <div className="flex justify-end">
             <button className="rounded-md bg-brand-success px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-success-dark">
