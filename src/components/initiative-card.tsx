@@ -1,11 +1,22 @@
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils";
+import {
+  CATEGORIES,
+  DIFFICULTIES,
+  FORMATS,
+  type Category,
+  type Difficulty,
+  type Format,
+} from "@/lib/categories";
 
 type Props = {
   id: string;
   title: string;
   summary: string;
   status: string;
+  category: Category;
+  format: Format;
+  difficulty: Difficulty;
   ownerName: string | null;
   timeCommitment: string | null;
   capacity: number | null;
@@ -23,37 +34,49 @@ const statusStyles: Record<string, string> = {
 };
 
 export function InitiativeCard(p: Props) {
+  const cat = CATEGORIES[p.category];
   return (
     <Link
       href={`/initiatives/${p.id}`}
-      className="block rounded-xl border border-stone-200 bg-white p-5 transition hover:border-stone-300 hover:shadow-sm"
+      className="group block rounded-xl border border-stone-200 bg-white p-5 transition hover:border-stone-300 hover:shadow-sm"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-lg font-semibold tracking-tight">{p.title}</h3>
-          <p className="mt-1 line-clamp-2 text-sm text-stone-600">{p.summary}</p>
-        </div>
+      <div className="flex items-center gap-2">
+        <span className={`inline-block h-2 w-2 rounded-full ${cat.dot}`} />
+        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cat.badge}`}>
+          {cat.label}
+        </span>
         <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
+          className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${
             statusStyles[p.status] ?? "bg-stone-100 text-stone-700"
           }`}
         >
           {p.status.replace("_", " ")}
         </span>
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-500">
+
+      <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight group-hover:underline">
+        {p.title}
+      </h3>
+      <p className="mt-1 line-clamp-2 text-sm text-stone-600">{p.summary}</p>
+
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-stone-500">
         <span>by {p.ownerName ?? "—"}</span>
+        <span>· {FORMATS[p.format].label}</span>
+        {p.difficulty !== "any" && (
+          <span>· {DIFFICULTIES[p.difficulty].label}</span>
+        )}
         {p.timeCommitment && <span>· {p.timeCommitment}</span>}
         {p.capacity != null && (
           <span>
             · {p.participantCount}/{p.capacity} joined
           </span>
         )}
-        <span>· {timeAgo(p.createdAt)}</span>
+        <span className="ml-auto">{timeAgo(p.createdAt)}</span>
       </div>
+
       {p.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {p.tags.map((t) => (
+          {p.tags.slice(0, 4).map((t) => (
             <span
               key={t}
               className="rounded-md bg-stone-100 px-2 py-0.5 text-xs text-stone-700"

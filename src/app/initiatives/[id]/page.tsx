@@ -17,6 +17,16 @@ import { postUpdate } from "@/actions/updates";
 import { updateInitiativeStatus } from "@/actions/initiatives";
 import { formatDate, timeAgo } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import {
+  CATEGORIES,
+  DIFFICULTIES,
+  EFFORTS,
+  FORMATS,
+  type Category,
+  type Difficulty,
+  type Effort,
+  type Format,
+} from "@/lib/categories";
 
 export default async function InitiativePage({
   params,
@@ -100,16 +110,15 @@ export default async function InitiativePage({
     <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
       <div className="space-y-8">
         <header className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
-            <span className="rounded-full bg-stone-100 px-2 py-0.5">{initiative.status.replace("_", " ")}</span>
-            <span>· by {row.ownerName ?? row.ownerEmail}</span>
-            <span>· {formatDate(initiative.createdAt)}</span>
-            {initiative.timeCommitment && <span>· {initiative.timeCommitment}</span>}
-            {initiative.capacity != null && (
-              <span>
-                · {participantCount}/{initiative.capacity} joined
-              </span>
-            )}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <CategoryBadge category={initiative.category as Category} />
+            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-700">
+              {initiative.status.replace("_", " ")}
+            </span>
+            <span className="text-stone-500">
+              · by {row.ownerName ?? row.ownerEmail}
+            </span>
+            <span className="text-stone-500">· {formatDate(initiative.createdAt)}</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight">{initiative.title}</h1>
           <p className="text-lg text-stone-700">{initiative.summary}</p>
@@ -127,6 +136,30 @@ export default async function InitiativePage({
             </div>
           )}
         </header>
+
+        <Facts initiative={initiative} participantCount={participantCount} />
+
+        {initiative.outcomes && (
+          <section className="rounded-xl border border-stone-200 bg-white p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+              What you'll do / outcomes
+            </h2>
+            <p className="mt-2 whitespace-pre-wrap text-stone-800">
+              {initiative.outcomes}
+            </p>
+          </section>
+        )}
+
+        {initiative.prerequisites && (
+          <section className="rounded-xl border border-stone-200 bg-white p-6">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">
+              Skills helpful
+            </h2>
+            <p className="mt-2 whitespace-pre-wrap text-stone-800">
+              {initiative.prerequisites}
+            </p>
+          </section>
+        )}
 
         {initiative.body && (
           <article className="prose-tight rounded-xl border border-stone-200 bg-white p-6 text-stone-800">
@@ -326,5 +359,57 @@ export default async function InitiativePage({
         </div>
       </aside>
     </div>
+  );
+}
+
+function CategoryBadge({ category }: { category: Category }) {
+  const c = CATEGORIES[category];
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${c.badge}`}
+    >
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.dot}`} />
+      {c.label}
+    </span>
+  );
+}
+
+function Facts({
+  initiative,
+  participantCount,
+}: {
+  initiative: any;
+  participantCount: number;
+}) {
+  const items: { label: string; value: string }[] = [
+    { label: "Format", value: FORMATS[initiative.format as Format].label },
+    {
+      label: "Who's it for",
+      value: DIFFICULTIES[initiative.difficulty as Difficulty].label,
+    },
+  ];
+  if (initiative.effort)
+    items.push({ label: "Effort", value: EFFORTS[initiative.effort as Effort].label });
+  if (initiative.timeCommitment)
+    items.push({ label: "Time commitment", value: initiative.timeCommitment });
+  if (initiative.subcategory)
+    items.push({ label: "Area", value: initiative.subcategory });
+  if (initiative.capacity != null)
+    items.push({
+      label: "Capacity",
+      value: `${participantCount} of ${initiative.capacity} joined`,
+    });
+
+  return (
+    <dl className="grid gap-3 rounded-xl border border-stone-200 bg-white p-5 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((it) => (
+        <div key={it.label}>
+          <dt className="text-xs font-medium uppercase tracking-wide text-stone-500">
+            {it.label}
+          </dt>
+          <dd className="mt-0.5 text-sm text-stone-800">{it.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }

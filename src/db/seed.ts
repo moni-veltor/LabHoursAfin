@@ -17,21 +17,40 @@ type SeedUser = {
   department: string;
 };
 
-const TECH_OWNER_EMAIL = "monica.velasquez@afinbank.com";
+const TECH_USERS: SeedUser[] = [
+  { email: "monica.velasquez@afinbank.com", name: "Monica Velasquez", role: "tech", department: "Engineering" },
+  { email: "mohammed.najem@afinbank.com", name: "Mohammed Najem", role: "tech", department: "Data" },
+  { email: "emmanuel.sifah@afinbank.com", name: "Emmanuel Sifah", role: "tech", department: "Risk & Security" },
+];
 
-const SEED_USERS: SeedUser[] = [
-  { email: TECH_OWNER_EMAIL, name: "Monica Velasquez", role: "tech", department: "Engineering" },
+const MEMBER_USERS: SeedUser[] = [
   { email: "maria.lopez@afinbank.com", name: "Maria Lopez", role: "member", department: "Product" },
-  { email: "jordan.smith@afinbank.com", name: "Jordan Smith", role: "member", department: "Ops" },
+  { email: "jordan.smith@afinbank.com", name: "Jordan Smith", role: "member", department: "Operations" },
   { email: "lin.zhao@afinbank.com", name: "Lin Zhao", role: "member", department: "Marketing" },
   { email: "rafa.morales@afinbank.com", name: "Rafa Morales", role: "member", department: "Finance" },
 ];
+
+const SEED_USERS = [...TECH_USERS, ...MEMBER_USERS];
 
 type SeedInitiative = {
   ownerEmail: string;
   title: string;
   summary: string;
-  body: string;
+  outcomes?: string;
+  prerequisites?: string;
+  body?: string;
+  category:
+    | "product_engineering"
+    | "data_architecture"
+    | "ai"
+    | "third_parties"
+    | "operational_resilience"
+    | "information_security"
+    | "other";
+  subcategory?: string;
+  format: "open" | "workshop" | "pairing" | "sessions" | "reading_club" | "async";
+  difficulty: "any" | "beginner" | "intermediate" | "advanced";
+  effort?: "small" | "medium" | "large";
   status: "open" | "in_progress" | "done";
   capacity?: number;
   timeCommitment: string;
@@ -41,191 +60,364 @@ type SeedInitiative = {
   comments?: { authorEmail: string; body: string }[];
 };
 
+const M = "monica.velasquez@afinbank.com";
+const N = "mohammed.najem@afinbank.com";
+const E = "emmanuel.sifah@afinbank.com";
+
 const SEED_INITIATIVES: SeedInitiative[] = [
+  // Product Engineering
   {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "Build a product feature in the core",
+    ownerEmail: M,
+    title: "Build a feature on the core banking platform",
     summary:
-      "Pick a real feature from the roadmap and ship it end-to-end with the core team. No prior platform experience needed.",
+      "Pair with the platform team to take a real ledger feature from intake to PR. No prior platform experience needed.",
+    outcomes:
+      "You'll see how a change moves through design review, code review, CI, and release. You'll have at least one merged PR with your name on it.",
+    prerequisites: "Comfortable with reading code (any language). No prior banking knowledge required.",
     body:
-      "## What you'll do\n\n- Pair with a core engineer for 1–2 weeks\n- Take a real ticket from intake to PR\n- Get a tour of the dev/CI/release pipeline\n\n## Who it's for\n\nAnyone curious how product work actually gets built. We'll match you with something appropriate to your background.",
+      "## What we'll cover\n\n- Repo and dev environment\n- Ticket intake & scoping\n- Pairing on a real change\n- Code review etiquette and CI\n\n## Outcomes\n\nA merged PR. Confidence to take a second one.",
+    category: "product_engineering",
+    subcategory: "Core Banking Platform",
+    format: "pairing",
+    difficulty: "intermediate",
+    effort: "medium",
     status: "open",
-    capacity: 6,
+    capacity: 4,
     timeCommitment: "~3 hrs/week for 2 weeks",
-    tags: ["core", "pairing"],
+    tags: ["core-banking", "pairing"],
     subscribers: [
       { email: "maria.lopez@afinbank.com", role: "participant" },
-      { email: "jordan.smith@afinbank.com", role: "participant" },
-      { email: "lin.zhao@afinbank.com", role: "subscriber" },
+      { email: "jordan.smith@afinbank.com", role: "subscriber" },
     ],
-    updates: [
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "Kickoff call this Friday. Sending calendar invites today.",
-      },
-    ],
-    comments: [
-      {
-        authorEmail: "maria.lopez@afinbank.com",
-        body: "Could I shadow before committing as a participant?",
-      },
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "Absolutely — drop in on the kickoff call, no commitment.",
-      },
-    ],
+    updates: [{ authorEmail: M, body: "Kickoff Friday. Calendar invites going out today." }],
   },
   {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "Learning about engineering — pairing weeks",
+    ownerEmail: M,
+    title: "Improve a CRM workflow end-to-end",
     summary:
-      "Five weeks of structured pairing. Learn how engineers think about debugging, design, and trade-offs by sitting in on real work.",
-    body:
-      "## Format\n\nEach week pairs you with a different engineer for ~2 hours. Topics rotate:\n\n1. Reading a stack trace from production\n2. Designing an API\n3. Code review etiquette\n4. Debugging a flaky test\n5. Shipping behind a feature flag\n\nNo prep needed. Bring questions.",
+      "Pick a CRM journey that's clunky today, redesign it with the team, and ship the change.",
+    outcomes:
+      "Practical experience with how customer-facing UX changes get scoped, designed, and released safely.",
+    category: "product_engineering",
+    subcategory: "Customer Relationship Management",
+    format: "workshop",
+    difficulty: "any",
+    effort: "small",
     status: "open",
     capacity: 8,
-    timeCommitment: "~2 hrs/week × 5 weeks",
-    tags: ["learning", "pairing"],
+    timeCommitment: "Two 90-min workshops",
+    tags: ["crm", "ux"],
     subscribers: [
       { email: "lin.zhao@afinbank.com", role: "participant" },
+      { email: "rafa.morales@afinbank.com", role: "subscriber" },
+    ],
+  },
+
+  // Data Architecture
+  {
+    ownerEmail: N,
+    title: "Snowflake data quality dashboard",
+    summary:
+      "Build a small dashboard that flags broken data contracts. Help wanted on schemas and tests.",
+    outcomes:
+      "Hands-on experience writing dbt-style tests, querying Snowflake, and shipping an internal dashboard.",
+    prerequisites: "Some SQL helpful. We'll teach the rest.",
+    category: "data_architecture",
+    subcategory: "Snowflake",
+    format: "pairing",
+    difficulty: "beginner",
+    effort: "medium",
+    status: "in_progress",
+    capacity: 5,
+    timeCommitment: "~2 hrs/week for 4 weeks",
+    tags: ["snowflake", "data-quality", "sql"],
+    subscribers: [
       { email: "rafa.morales@afinbank.com", role: "participant" },
       { email: "maria.lopez@afinbank.com", role: "subscriber" },
     ],
-    comments: [
-      {
-        authorEmail: "lin.zhao@afinbank.com",
-        body: "This is exactly what I've been hoping for. Sign me up.",
-      },
-    ],
-  },
-  {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "Build your first app — beginner cohort",
-    summary:
-      "We'll guide a small group through building and deploying a tiny full-stack app. Zero prior code experience required.",
-    body:
-      "## Outcome\n\nBy the end you'll have a deployed, real, publicly-accessible app you built. Bring an idea (or borrow one of ours).\n\n## Stack we'll use\n\n- Next.js + Tailwind\n- A free Postgres on Neon\n- Vercel for deploy\n\n## What we'll cover\n\n- Setting up a dev environment\n- Reading errors without panic\n- Pushing to GitHub and deploying\n- Asking AI for help — well",
-    status: "open",
-    capacity: 5,
-    timeCommitment: "~4 hrs/week for 4 weeks",
-    tags: ["learning", "frontend", "fun"],
-    subscribers: [
-      { email: "jordan.smith@afinbank.com", role: "participant" },
-      { email: "rafa.morales@afinbank.com", role: "subscriber" },
-    ],
     updates: [
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "Cohort starts in two weeks. I'll send pre-reading by Sunday.",
-      },
+      { authorEmail: N, body: "First version live. Two contracts wired up — feedback welcome." },
     ],
   },
   {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "Internal LLM playground",
+    ownerEmail: N,
+    title: "Automate monthly finance reports with Python",
     summary:
-      "Spin up a private chat UI on top of our handbook. Want help with ingestion and prompt-shaping.",
-    body:
-      "## Goals\n\n- Private chat over our internal docs\n- Source citations on every answer\n- Lives behind SSO\n\n## Help wanted\n\n- One person to own ingestion of Notion + Drive\n- Two people to test prompts and report regressions",
+      "Replace the manual month-end reporting flow with a small Python pipeline. Great for a first scripting project.",
+    outcomes:
+      "You'll write a real Python script that reads from Snowflake, formats results, and posts them where Finance wants them.",
+    prerequisites: "Curiosity. We'll start from `print('hello')` if needed.",
+    category: "data_architecture",
+    subcategory: "Python scripts",
+    format: "sessions",
+    difficulty: "beginner",
+    effort: "medium",
+    status: "open",
+    capacity: 6,
+    timeCommitment: "~2 hrs/week × 3 weeks",
+    tags: ["python", "automation"],
+    subscribers: [
+      { email: "rafa.morales@afinbank.com", role: "participant" },
+      { email: "jordan.smith@afinbank.com", role: "participant" },
+    ],
+  },
+  {
+    ownerEmail: N,
+    title: "Modernise an ETL pipeline",
+    summary: "Move one creaky pipeline to our new pattern. Full-stack data work — extraction, transforms, tests.",
+    category: "data_architecture",
+    subcategory: "Data transformations",
+    format: "pairing",
+    difficulty: "intermediate",
+    effort: "large",
+    status: "open",
+    capacity: 3,
+    timeCommitment: "~4 hrs/week for 4 weeks",
+    tags: ["etl", "data-pipelines"],
+    subscribers: [],
+  },
+
+  // AI
+  {
+    ownerEmail: M,
+    title: "Internal LLM playground over our handbook",
+    summary:
+      "Private chat over our internal docs with citations. Need help with ingestion, prompt design, and eval.",
+    outcomes:
+      "You'll learn how a RAG system is wired together: chunking, embeddings, retrieval, citations, evals.",
+    category: "ai",
+    subcategory: "LLMs",
+    format: "pairing",
+    difficulty: "intermediate",
+    effort: "large",
     status: "in_progress",
     capacity: 4,
     timeCommitment: "~3 hrs/week",
-    tags: ["ml", "fun"],
+    tags: ["llm", "rag"],
     subscribers: [
       { email: "maria.lopez@afinbank.com", role: "participant" },
       { email: "lin.zhao@afinbank.com", role: "subscriber" },
     ],
     updates: [
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "First version up — only ingests handbook so far. Try it and tell me where it's wrong.",
-      },
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "Added citation tooltips. Drive ingestion next.",
-      },
+      { authorEmail: M, body: "Handbook ingestion live. Drive next." },
+      { authorEmail: M, body: "Citation tooltips shipped. Try it in #ai-lab." },
     ],
   },
   {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "Cut our CI build times in half",
+    ownerEmail: M,
+    title: "Build a customer-support agent prototype",
     summary:
-      "Investigation into where build minutes go. Pair-debug welcome — even if you've never touched our infra.",
-    body:
-      "Suspected hot spots:\n\n- Docker image rebuild on every push\n- Tests not properly sharded\n- Lint runs twice for some reason\n\nGoal: write up findings and one quick win this month.",
-    status: "in_progress",
-    capacity: 3,
-    timeCommitment: "~2 hrs/week",
-    tags: ["infra"],
-    subscribers: [
-      { email: "jordan.smith@afinbank.com", role: "participant" },
-    ],
-  },
-  {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "Design a fun internal homepage",
-    summary:
-      "What if our intranet didn't look like a tax form? Designers + frontend + anyone with weird ideas.",
-    body:
-      "Open canvas. Bring weird ideas. We'll mock 3 directions, pick one, ship it.\n\nNo functional requirements yet — that's the point.",
+      "Prototype an agent that can triage inbound support tickets and draft replies. Strictly internal demo.",
+    outcomes: "Hands-on experience with tool-using agents, prompt engineering, and safety guardrails.",
+    category: "ai",
+    subcategory: "Agents",
+    format: "sessions",
+    difficulty: "intermediate",
+    effort: "medium",
     status: "open",
-    capacity: 8,
-    timeCommitment: "~1 hr/week",
-    tags: ["frontend", "design", "fun"],
-    subscribers: [
-      { email: "lin.zhao@afinbank.com", role: "participant" },
-      { email: "maria.lopez@afinbank.com", role: "subscriber" },
-      { email: "rafa.morales@afinbank.com", role: "subscriber" },
-    ],
-    comments: [
-      {
-        authorEmail: "lin.zhao@afinbank.com",
-        body: "Can we have a leaderboard for who broke prod most often this quarter?",
-      },
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "Now THAT is the energy this initiative needs.",
-      },
-    ],
+    capacity: 4,
+    timeCommitment: "~3 hrs/week × 4 weeks",
+    tags: ["agents", "support"],
+    subscribers: [{ email: "lin.zhao@afinbank.com", role: "participant" }],
   },
   {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "ML lunch-and-learns",
+    ownerEmail: M,
+    title: "Workshop: prompt engineering basics",
     summary:
-      "Monthly hour where someone explains an ML topic to non-ML folks. Looking for guest speakers and audience.",
-    body:
-      "## Format\n\nOne hour, one topic, no math required. Past sessions:\n\n- How embeddings work (intuitively)\n- Why your model lies confidently\n- The cost of a single LLM call\n\n## Help wanted\n\n- Speakers (you don't need to be ML expert — just curious)\n- Notetakers to write up summaries",
+      "One-hour intro to writing prompts that work. Hands-on, no slides. Bring a real task you want help with.",
+    outcomes: "Leave with 2–3 prompts that work for your actual job.",
+    category: "ai",
+    format: "workshop",
+    difficulty: "beginner",
+    effort: "small",
     status: "open",
     capacity: 20,
-    timeCommitment: "~1 hr/month",
-    tags: ["ml", "learning"],
+    timeCommitment: "1 hour",
+    tags: ["prompts", "learning"],
     subscribers: [
+      { email: "maria.lopez@afinbank.com", role: "subscriber" },
+      { email: "rafa.morales@afinbank.com", role: "subscriber" },
       { email: "jordan.smith@afinbank.com", role: "subscriber" },
+    ],
+  },
+
+  // 3rd Parties
+  {
+    ownerEmail: E,
+    title: "Run an annual vendor due diligence cycle",
+    summary:
+      "Help us run this year's vendor due diligence — tooling, evidence collection, and review packs.",
+    outcomes:
+      "You'll see exactly what 'good enough' due diligence looks like, what regulators expect, and how we evidence it.",
+    category: "third_parties",
+    subcategory: "Due diligence",
+    format: "workshop",
+    difficulty: "any",
+    effort: "medium",
+    status: "open",
+    capacity: 6,
+    timeCommitment: "~2 hrs/week × 6 weeks",
+    tags: ["due-diligence", "vendor-management"],
+    subscribers: [
+      { email: "rafa.morales@afinbank.com", role: "participant" },
+      { email: "jordan.smith@afinbank.com", role: "subscriber" },
+    ],
+  },
+  {
+    ownerEmail: E,
+    title: "Vendor stressed-plan review group",
+    summary:
+      "Read and challenge vendor stressed exit plans together. Risk practice that matters.",
+    category: "third_parties",
+    subcategory: "Stressed plans",
+    format: "reading_club",
+    difficulty: "intermediate",
+    effort: "small",
+    status: "open",
+    capacity: 8,
+    timeCommitment: "1 hr/week × 4 weeks",
+    tags: ["stressed-exit", "risk"],
+    subscribers: [{ email: "rafa.morales@afinbank.com", role: "participant" }],
+  },
+
+  // Operational Resilience
+  {
+    ownerEmail: E,
+    title: "Tabletop disaster recovery exercise",
+    summary:
+      "Run a real DR scenario together. Pick the system, simulate the failure, exercise the playbook.",
+    outcomes:
+      "You'll experience the gap between a plan on paper and a plan you can actually execute under pressure.",
+    category: "operational_resilience",
+    subcategory: "Disaster Recovery",
+    format: "workshop",
+    difficulty: "any",
+    effort: "small",
+    status: "open",
+    capacity: 12,
+    timeCommitment: "Half-day workshop",
+    tags: ["dr", "tabletop", "incident"],
+    subscribers: [
+      { email: "jordan.smith@afinbank.com", role: "participant" },
+      { email: "maria.lopez@afinbank.com", role: "subscriber" },
+    ],
+  },
+  {
+    ownerEmail: E,
+    title: "Refresh our BCP plan — together",
+    summary:
+      "Open invitation to help rewrite the business continuity plan. We'll write less; we'll exercise more.",
+    category: "operational_resilience",
+    subcategory: "Business Continuity",
+    format: "pairing",
+    difficulty: "any",
+    effort: "medium",
+    status: "in_progress",
+    capacity: 4,
+    timeCommitment: "~2 hrs/week × 4 weeks",
+    tags: ["bcp", "writing"],
+    subscribers: [{ email: "jordan.smith@afinbank.com", role: "participant" }],
+  },
+
+  // Information Security
+  {
+    ownerEmail: E,
+    title: "Ethical hacking lunch & learns",
+    summary:
+      "Monthly hour where we walk through a real attack technique — and how we'd defend against it. Strictly hands-off, education only.",
+    outcomes: "You'll come away with intuition for how attackers think.",
+    category: "information_security",
+    subcategory: "Ethical hacking",
+    format: "sessions",
+    difficulty: "beginner",
+    effort: "small",
+    status: "open",
+    capacity: 30,
+    timeCommitment: "1 hr/month",
+    tags: ["security", "lunch-and-learn"],
+    subscribers: [
+      { email: "maria.lopez@afinbank.com", role: "subscriber" },
       { email: "rafa.morales@afinbank.com", role: "subscriber" },
       { email: "lin.zhao@afinbank.com", role: "subscriber" },
     ],
   },
   {
-    ownerEmail: "monica.velasquez@afinbank.com",
-    title: "How does the database actually work?",
+    ownerEmail: E,
+    title: "Threat-model a real internal service",
     summary:
-      "A 4-week reading club for non-engineers. We read short chapters and meet to discuss. No coding.",
-    body:
-      "We'll read selected chapters from *Designing Data-Intensive Applications* and discuss. Topics:\n\n1. What is a database, really?\n2. Indexes — why queries are sometimes slow\n3. Replication and why outages happen\n4. The CAP theorem in plain English\n\nBring questions. We'll keep it grounded with examples from our own systems.",
-    status: "done",
-    capacity: 10,
-    timeCommitment: "~1 hr/week × 4 weeks",
-    tags: ["learning", "infra"],
+      "Pick an internal service and threat-model it as a group. Outputs go straight into the security backlog.",
+    category: "information_security",
+    subcategory: "Threat modelling",
+    format: "workshop",
+    difficulty: "intermediate",
+    effort: "small",
+    status: "open",
+    capacity: 8,
+    timeCommitment: "Two 2-hour workshops",
+    tags: ["threat-modelling", "security"],
+    subscribers: [],
+  },
+
+  // Other
+  {
+    ownerEmail: M,
+    title: "How tech actually works — a beginner cohort",
+    summary:
+      "Five short sessions for non-engineers. We'll demystify servers, databases, deploys, and AI without code.",
+    outcomes:
+      "You'll be able to follow tech standups and ask sharper questions.",
+    category: "other",
+    subcategory: "Learn how tech works",
+    format: "sessions",
+    difficulty: "beginner",
+    effort: "small",
+    status: "open",
+    capacity: 12,
+    timeCommitment: "1 hr/week × 5 weeks",
+    tags: ["learning"],
     subscribers: [
-      { email: "maria.lopez@afinbank.com", role: "participant" },
+      { email: "lin.zhao@afinbank.com", role: "participant" },
       { email: "rafa.morales@afinbank.com", role: "participant" },
+      { email: "maria.lopez@afinbank.com", role: "subscriber" },
     ],
-    updates: [
-      {
-        authorEmail: "monica.velasquez@afinbank.com",
-        body: "Wrapped! Notes published in #lab-hours. Thanks to everyone who read along.",
-      },
+    comments: [
+      { authorEmail: "lin.zhao@afinbank.com", body: "This is exactly what I've been hoping for." },
     ],
+  },
+  {
+    ownerEmail: M,
+    title: "Manage a board: Jira tickets 101",
+    summary:
+      "Workshop on running a board well. Backlog hygiene, prioritisation, and how to actually finish things.",
+    category: "other",
+    subcategory: "Manage a board",
+    format: "workshop",
+    difficulty: "any",
+    effort: "small",
+    status: "open",
+    capacity: 15,
+    timeCommitment: "Single 90-min workshop",
+    tags: ["jira", "ops"],
+    subscribers: [
+      { email: "jordan.smith@afinbank.com", role: "participant" },
+      { email: "lin.zhao@afinbank.com", role: "subscriber" },
+    ],
+  },
+  {
+    ownerEmail: M,
+    title: "Build your first app",
+    summary:
+      "Guided beginner cohort. We'll build and deploy a small full-stack app together. Zero prior coding required.",
+    outcomes: "A real, deployed, public app you can show people.",
+    category: "other",
+    format: "sessions",
+    difficulty: "beginner",
+    effort: "large",
+    status: "open",
+    capacity: 5,
+    timeCommitment: "~4 hrs/week × 4 weeks",
+    tags: ["learning", "build"],
+    subscribers: [{ email: "rafa.morales@afinbank.com", role: "participant" }],
   },
 ];
 
@@ -263,10 +455,10 @@ async function main() {
     userIdByEmail.set(u.email, id);
   }
 
-  console.log("Wiping existing initiatives so seed is idempotent...");
+  console.log("Wiping existing initiatives...");
   await db.delete(initiatives);
 
-  console.log("Seeding initiatives...");
+  console.log(`Seeding ${SEED_INITIATIVES.length} initiatives...`);
   for (const s of SEED_INITIATIVES) {
     const ownerId = userIdByEmail.get(s.ownerEmail);
     if (!ownerId) throw new Error(`Missing seed user: ${s.ownerEmail}`);
@@ -277,8 +469,15 @@ async function main() {
         ownerId,
         title: s.title,
         summary: s.summary,
-        body: s.body,
+        body: s.body ?? "",
         status: s.status,
+        category: s.category,
+        subcategory: s.subcategory,
+        format: s.format,
+        difficulty: s.difficulty,
+        effort: s.effort,
+        outcomes: s.outcomes,
+        prerequisites: s.prerequisites,
         capacity: s.capacity,
         timeCommitment: s.timeCommitment,
       })
@@ -292,7 +491,7 @@ async function main() {
 
     for (const sub of s.subscribers) {
       const userId = userIdByEmail.get(sub.email);
-      if (!userId) continue;
+      if (!userId || userId === ownerId) continue;
       await db
         .insert(subscriptions)
         .values({ userId, initiativeId: created.id, role: sub.role })
@@ -328,10 +527,14 @@ async function main() {
     }
   }
 
-  console.log("Done.");
-  console.log("\nMock users you can sign in as:");
-  for (const u of SEED_USERS) {
-    console.log(`  [${u.role.padEnd(6)}] ${u.name.padEnd(16)}  ${u.email}`);
+  console.log("\nDone.\n");
+  console.log("Tech team (can post initiatives):");
+  for (const u of TECH_USERS) {
+    console.log(`  ${u.name.padEnd(18)}  ${u.email}`);
+  }
+  console.log("\nMembers (can subscribe and comment):");
+  for (const u of MEMBER_USERS) {
+    console.log(`  ${u.name.padEnd(18)}  ${u.email}`);
   }
   process.exit(0);
 }

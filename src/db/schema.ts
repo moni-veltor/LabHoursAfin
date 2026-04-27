@@ -25,6 +25,34 @@ export const subscriptionRole = pgEnum("subscription_role", [
   "participant",
   "owner",
 ]);
+export const initiativeCategory = pgEnum("initiative_category", [
+  "product_engineering",
+  "data_architecture",
+  "ai",
+  "third_parties",
+  "operational_resilience",
+  "information_security",
+  "other",
+]);
+export const initiativeFormat = pgEnum("initiative_format", [
+  "open",
+  "workshop",
+  "pairing",
+  "sessions",
+  "reading_club",
+  "async",
+]);
+export const initiativeDifficulty = pgEnum("initiative_difficulty", [
+  "any",
+  "beginner",
+  "intermediate",
+  "advanced",
+]);
+export const initiativeEffort = pgEnum("initiative_effort", [
+  "small",
+  "medium",
+  "large",
+]);
 
 export const users = pgTable("user", {
   id: text("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -86,6 +114,13 @@ export const initiatives = pgTable(
     summary: text("summary").notNull(),
     body: text("body").notNull().default(""),
     status: initiativeStatus("status").notNull().default("draft"),
+    category: initiativeCategory("category").notNull().default("other"),
+    subcategory: text("subcategory"),
+    format: initiativeFormat("format").notNull().default("open"),
+    difficulty: initiativeDifficulty("difficulty").notNull().default("any"),
+    effort: initiativeEffort("effort"),
+    outcomes: text("outcomes"),
+    prerequisites: text("prerequisites"),
     capacity: integer("capacity"),
     timeCommitment: text("time_commitment"),
     startsAt: timestamp("starts_at"),
@@ -93,7 +128,10 @@ export const initiatives = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (t) => [index("initiative_status_idx").on(t.status)]
+  (t) => [
+    index("initiative_status_idx").on(t.status),
+    index("initiative_category_idx").on(t.category),
+  ]
 );
 
 export const subscriptions = pgTable(

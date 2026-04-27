@@ -1,10 +1,21 @@
 import { db } from "@/lib/db";
-import { initiatives, subscriptions, users, initiativeTags, tags } from "@/db/schema";
+import {
+  initiatives,
+  subscriptions,
+  users,
+  initiativeTags,
+  tags,
+} from "@/db/schema";
 import { eq, desc, ne, inArray, and } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
 import Link from "next/link";
+import {
+  CATEGORIES,
+  CATEGORY_KEYS,
+  type Category,
+} from "@/lib/categories";
 
-type Search = { status?: string; tag?: string };
+type Search = { status?: string; tag?: string; category?: string };
 
 export default async function HomePage({
   searchParams,
@@ -13,9 +24,11 @@ export default async function HomePage({
 }) {
   const sp = await searchParams;
 
-  const where = sp.status
-    ? eq(initiatives.status, sp.status as any)
-    : ne(initiatives.status, "archived");
+  const filters = [ne(initiatives.status, "archived")];
+  if (sp.status) filters.push(eq(initiatives.status, sp.status as any));
+  if (sp.category && (CATEGORY_KEYS as string[]).includes(sp.category)) {
+    filters.push(eq(initiatives.category, sp.category as any));
+  }
 
   let initiativeIds: string[] | null = null;
   if (sp.tag) {
@@ -30,12 +43,20 @@ export default async function HomePage({
     }
   }
 
+  const where =
+    initiativeIds != null
+      ? and(...filters, inArray(initiatives.id, initiativeIds))
+      : and(...filters);
+
   const rows = await db
     .select({
       id: initiatives.id,
       title: initiatives.title,
       summary: initiatives.summary,
       status: initiatives.status,
+      category: initiatives.category,
+      format: initiatives.format,
+      difficulty: initiatives.difficulty,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
       createdAt: initiatives.createdAt,
@@ -43,7 +64,7 @@ export default async function HomePage({
     })
     .from(initiatives)
     .leftJoin(users, eq(users.id, initiatives.ownerId))
-    .where(initiativeIds ? and(where, inArray(initiatives.id, initiativeIds)) : where)
+    .where(where)
     .orderBy(desc(initiatives.createdAt));
 
   const ids = rows.map((r) => r.id);
@@ -79,16 +100,18 @@ export default async function HomePage({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Lab Board</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Lab Hours</h1>
         <p className="mt-1 text-stone-600">
-          Initiatives the tech team is exploring. Subscribe to the ones you want in on.
+          Initiatives the tech team is exploring. Subscribe to follow along, or
+          join the ones you want in on.
         </p>
       </div>
 
-      <FilterBar current={sp} />
+      <CategoryTabs current={sp.category} />
+      <StatusBar current={sp} />
 
       {rows.length === 0 ? (
-        <EmptyState message="No initiatives yet." />
+        <EmptyState message="No initiatives match these filters." />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
           {rows.map((r) => (
@@ -98,6 +121,9 @@ export default async function HomePage({
               title={r.title}
               summary={r.summary}
               status={r.status}
+              category={r.category as Category}
+              format={r.format as any}
+              difficulty={r.difficulty as any}
               ownerName={r.ownerName}
               timeCommitment={r.timeCommitment}
               capacity={r.capacity}
@@ -112,28 +138,92 @@ export default async function HomePage({
   );
 }
 
-function FilterBar({ current }: { current: Search }) {
-  const statuses = ["open", "in_progress", "done"];
+function CategoryTabs({ current }: { current?: string }) {
   return (
-    <div className="flex flex-wrap items-center gap-2 text-sm">
-      <Link
-        href="/"
-        className={`rounded-full px-3 py-1 ${!current.status ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700"}`}
-      >
+    <div className="-mx-1 flex flex-wrap gap-1 overflow-x-auto pb-1 text-sm">
+      <Tab href="/" active={!current}>
         All
+      </Tab>
+      {CATEGORY_KEYS.map((k) => (
+        <Tab
+          key={k}
+          href={`/?category=${k}`}
+          active={current === k}
+          dotClass={CATEGORIES[k].dot}
+        >
+          {CATEGORIES[k].label}
+        </Tab>
+      ))}
+    </div>
+  );
+}
+
+function Tab({
+  href,
+  active,
+  dotClass,
+  children,
+}: {
+  href: string;
+  active: boolean;
+  dotClass?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${
+        active
+          ? "bg-stone-900 text-white"
+          : "border border-stone-200 bg-white text-stone-700 hover:border-stone-300"
+      }`}
+    >
+      {dotClass && (
+        <span
+          className={`inline-block h-2 w-2 rounded-full ${dotClass} ${
+            active ? "opacity-90" : ""
+          }`}
+        />
+      )}
+      <span>{children}</span>
+    </Link>
+  );
+}
+
+function StatusBar({ current }: { current: Search }) {
+  const statuses = ["open", "in_progress", "done"];
+  const base = current.category ? `&category=${current.category}` : "";
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-xs">
+      <Link
+        href={current.category ? `/?category=${current.category}` : "/"}
+        className={`rounded-full px-3 py-1 ${
+          !current.status
+            ? "bg-stone-200 text-stone-900"
+            : "bg-white border border-stone-200 text-stone-600"
+        }`}
+      >
+        Any status
       </Link>
       {statuses.map((s) => (
         <Link
           key={s}
-          href={`/?status=${s}`}
-          className={`rounded-full px-3 py-1 ${current.status === s ? "bg-stone-900 text-white" : "bg-white border border-stone-200 text-stone-700"}`}
+          href={`/?status=${s}${base}`}
+          className={`rounded-full px-3 py-1 ${
+            current.status === s
+              ? "bg-stone-200 text-stone-900"
+              : "bg-white border border-stone-200 text-stone-600"
+          }`}
         >
           {s.replace("_", " ")}
         </Link>
       ))}
       {current.tag && (
         <span className="ml-2 rounded-full bg-stone-100 px-3 py-1 text-stone-700">
-          #{current.tag} <Link href="/" className="ml-1 text-stone-500">×</Link>
+          #{current.tag}{" "}
+          <Link href="/" className="ml-1 text-stone-500">
+            ×
+          </Link>
         </span>
       )}
     </div>

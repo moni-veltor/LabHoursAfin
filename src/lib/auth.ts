@@ -4,11 +4,7 @@ import { db } from "@/lib/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authConfig } from "@/lib/auth.config";
-
-const techEmails = (process.env.TECH_TEAM_EMAILS ?? "")
-  .split(",")
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
+import { isTechTeam } from "@/lib/tech-team";
 
 const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.toLowerCase();
 
@@ -26,7 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!email || !email.includes("@")) return null;
         if (allowedDomain && !email.endsWith(`@${allowedDomain}`)) return null;
 
-        const wantedRole = techEmails.includes(email) ? "tech" : "member";
+        const wantedRole: "tech" | "member" = isTechTeam(email) ? "tech" : "member";
         const fallbackName =
           String(creds?.name ?? "").trim() || email.split("@")[0];
 
@@ -37,7 +33,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           .limit(1);
 
         if (existing[0]) {
-          if (existing[0].role !== wantedRole && wantedRole === "tech") {
+          if (existing[0].role !== wantedRole) {
             await db
               .update(users)
               .set({ role: wantedRole })
@@ -47,7 +43,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             id: existing[0].id,
             email,
             name: existing[0].name ?? fallbackName,
-            role: wantedRole === "tech" ? "tech" : existing[0].role,
+            role: wantedRole,
           } as any;
         }
 
@@ -80,6 +76,7 @@ export async function requireUser() {
 
 export async function requireTech() {
   const u = await requireUser();
-  if (u.role !== "tech" && u.role !== "admin") throw new Error("FORBIDDEN");
+  const allowed = u.role === "tech" || u.role === "admin" || isTechTeam(u.email);
+  if (!allowed) throw new Error("FORBIDDEN");
   return u;
 }

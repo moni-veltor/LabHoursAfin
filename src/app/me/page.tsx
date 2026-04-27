@@ -31,6 +31,9 @@ export default async function MyBoardPage() {
       title: initiatives.title,
       summary: initiatives.summary,
       status: initiatives.status,
+      category: initiatives.category,
+      format: initiatives.format,
+      difficulty: initiatives.difficulty,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
       createdAt: initiatives.createdAt,
@@ -72,6 +75,9 @@ function Section({
     title: string;
     summary: string;
     status: string;
+    category: string;
+    format: string;
+    difficulty: string;
     timeCommitment: string | null;
     capacity: number | null;
     createdAt: Date;
@@ -92,6 +98,9 @@ function Section({
             title={r.title}
             summary={r.summary}
             status={r.status}
+            category={r.category as any}
+            format={r.format as any}
+            difficulty={r.difficulty as any}
             ownerName={r.ownerName}
             timeCommitment={r.timeCommitment}
             capacity={r.capacity}
