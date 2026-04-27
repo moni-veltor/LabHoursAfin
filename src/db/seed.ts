@@ -17,15 +17,14 @@ type SeedUser = {
   department: string;
 };
 
+const TECH_OWNER_EMAIL = "monica.velasquez@afinbank.com";
+
 const SEED_USERS: SeedUser[] = [
-  { email: "alex.chen@labhours.dev", name: "Alex Chen", role: "tech", department: "Engineering" },
-  { email: "priya.patel@labhours.dev", name: "Priya Patel", role: "tech", department: "Engineering" },
-  { email: "diego.rivera@labhours.dev", name: "Diego Rivera", role: "tech", department: "Engineering" },
-  { email: "sam.kim@labhours.dev", name: "Sam Kim", role: "tech", department: "ML" },
-  { email: "maria.lopez@labhours.dev", name: "Maria Lopez", role: "member", department: "Product" },
-  { email: "jordan.smith@labhours.dev", name: "Jordan Smith", role: "member", department: "Ops" },
-  { email: "lin.zhao@labhours.dev", name: "Lin Zhao", role: "member", department: "Marketing" },
-  { email: "rafa.morales@labhours.dev", name: "Rafa Morales", role: "member", department: "Finance" },
+  { email: TECH_OWNER_EMAIL, name: "Monica Velasquez", role: "tech", department: "Engineering" },
+  { email: "maria.lopez@afinbank.com", name: "Maria Lopez", role: "member", department: "Product" },
+  { email: "jordan.smith@afinbank.com", name: "Jordan Smith", role: "member", department: "Ops" },
+  { email: "lin.zhao@afinbank.com", name: "Lin Zhao", role: "member", department: "Marketing" },
+  { email: "rafa.morales@afinbank.com", name: "Rafa Morales", role: "member", department: "Finance" },
 ];
 
 type SeedInitiative = {
@@ -44,7 +43,7 @@ type SeedInitiative = {
 
 const SEED_INITIATIVES: SeedInitiative[] = [
   {
-    ownerEmail: "alex.chen@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "Build a product feature in the core",
     summary:
       "Pick a real feature from the roadmap and ship it end-to-end with the core team. No prior platform experience needed.",
@@ -55,29 +54,29 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~3 hrs/week for 2 weeks",
     tags: ["core", "pairing"],
     subscribers: [
-      { email: "maria.lopez@labhours.dev", role: "participant" },
-      { email: "jordan.smith@labhours.dev", role: "participant" },
-      { email: "lin.zhao@labhours.dev", role: "subscriber" },
+      { email: "maria.lopez@afinbank.com", role: "participant" },
+      { email: "jordan.smith@afinbank.com", role: "participant" },
+      { email: "lin.zhao@afinbank.com", role: "subscriber" },
     ],
     updates: [
       {
-        authorEmail: "alex.chen@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "Kickoff call this Friday. Sending calendar invites today.",
       },
     ],
     comments: [
       {
-        authorEmail: "maria.lopez@labhours.dev",
+        authorEmail: "maria.lopez@afinbank.com",
         body: "Could I shadow before committing as a participant?",
       },
       {
-        authorEmail: "alex.chen@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "Absolutely — drop in on the kickoff call, no commitment.",
       },
     ],
   },
   {
-    ownerEmail: "priya.patel@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "Learning about engineering — pairing weeks",
     summary:
       "Five weeks of structured pairing. Learn how engineers think about debugging, design, and trade-offs by sitting in on real work.",
@@ -88,19 +87,19 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~2 hrs/week × 5 weeks",
     tags: ["learning", "pairing"],
     subscribers: [
-      { email: "lin.zhao@labhours.dev", role: "participant" },
-      { email: "rafa.morales@labhours.dev", role: "participant" },
-      { email: "maria.lopez@labhours.dev", role: "subscriber" },
+      { email: "lin.zhao@afinbank.com", role: "participant" },
+      { email: "rafa.morales@afinbank.com", role: "participant" },
+      { email: "maria.lopez@afinbank.com", role: "subscriber" },
     ],
     comments: [
       {
-        authorEmail: "lin.zhao@labhours.dev",
+        authorEmail: "lin.zhao@afinbank.com",
         body: "This is exactly what I've been hoping for. Sign me up.",
       },
     ],
   },
   {
-    ownerEmail: "diego.rivera@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "Build your first app — beginner cohort",
     summary:
       "We'll guide a small group through building and deploying a tiny full-stack app. Zero prior code experience required.",
@@ -111,18 +110,18 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~4 hrs/week for 4 weeks",
     tags: ["learning", "frontend", "fun"],
     subscribers: [
-      { email: "jordan.smith@labhours.dev", role: "participant" },
-      { email: "rafa.morales@labhours.dev", role: "subscriber" },
+      { email: "jordan.smith@afinbank.com", role: "participant" },
+      { email: "rafa.morales@afinbank.com", role: "subscriber" },
     ],
     updates: [
       {
-        authorEmail: "diego.rivera@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "Cohort starts in two weeks. I'll send pre-reading by Sunday.",
       },
     ],
   },
   {
-    ownerEmail: "sam.kim@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "Internal LLM playground",
     summary:
       "Spin up a private chat UI on top of our handbook. Want help with ingestion and prompt-shaping.",
@@ -133,22 +132,22 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~3 hrs/week",
     tags: ["ml", "fun"],
     subscribers: [
-      { email: "maria.lopez@labhours.dev", role: "participant" },
-      { email: "lin.zhao@labhours.dev", role: "subscriber" },
+      { email: "maria.lopez@afinbank.com", role: "participant" },
+      { email: "lin.zhao@afinbank.com", role: "subscriber" },
     ],
     updates: [
       {
-        authorEmail: "sam.kim@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "First version up — only ingests handbook so far. Try it and tell me where it's wrong.",
       },
       {
-        authorEmail: "sam.kim@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "Added citation tooltips. Drive ingestion next.",
       },
     ],
   },
   {
-    ownerEmail: "priya.patel@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "Cut our CI build times in half",
     summary:
       "Investigation into where build minutes go. Pair-debug welcome — even if you've never touched our infra.",
@@ -159,11 +158,11 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~2 hrs/week",
     tags: ["infra"],
     subscribers: [
-      { email: "alex.chen@labhours.dev", role: "participant" },
+      { email: "jordan.smith@afinbank.com", role: "participant" },
     ],
   },
   {
-    ownerEmail: "diego.rivera@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "Design a fun internal homepage",
     summary:
       "What if our intranet didn't look like a tax form? Designers + frontend + anyone with weird ideas.",
@@ -174,23 +173,23 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~1 hr/week",
     tags: ["frontend", "design", "fun"],
     subscribers: [
-      { email: "lin.zhao@labhours.dev", role: "participant" },
-      { email: "maria.lopez@labhours.dev", role: "subscriber" },
-      { email: "rafa.morales@labhours.dev", role: "subscriber" },
+      { email: "lin.zhao@afinbank.com", role: "participant" },
+      { email: "maria.lopez@afinbank.com", role: "subscriber" },
+      { email: "rafa.morales@afinbank.com", role: "subscriber" },
     ],
     comments: [
       {
-        authorEmail: "lin.zhao@labhours.dev",
+        authorEmail: "lin.zhao@afinbank.com",
         body: "Can we have a leaderboard for who broke prod most often this quarter?",
       },
       {
-        authorEmail: "diego.rivera@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "Now THAT is the energy this initiative needs.",
       },
     ],
   },
   {
-    ownerEmail: "sam.kim@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "ML lunch-and-learns",
     summary:
       "Monthly hour where someone explains an ML topic to non-ML folks. Looking for guest speakers and audience.",
@@ -201,13 +200,13 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~1 hr/month",
     tags: ["ml", "learning"],
     subscribers: [
-      { email: "jordan.smith@labhours.dev", role: "subscriber" },
-      { email: "rafa.morales@labhours.dev", role: "subscriber" },
-      { email: "lin.zhao@labhours.dev", role: "subscriber" },
+      { email: "jordan.smith@afinbank.com", role: "subscriber" },
+      { email: "rafa.morales@afinbank.com", role: "subscriber" },
+      { email: "lin.zhao@afinbank.com", role: "subscriber" },
     ],
   },
   {
-    ownerEmail: "alex.chen@labhours.dev",
+    ownerEmail: "monica.velasquez@afinbank.com",
     title: "How does the database actually work?",
     summary:
       "A 4-week reading club for non-engineers. We read short chapters and meet to discuss. No coding.",
@@ -218,12 +217,12 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     timeCommitment: "~1 hr/week × 4 weeks",
     tags: ["learning", "infra"],
     subscribers: [
-      { email: "maria.lopez@labhours.dev", role: "participant" },
-      { email: "rafa.morales@labhours.dev", role: "participant" },
+      { email: "maria.lopez@afinbank.com", role: "participant" },
+      { email: "rafa.morales@afinbank.com", role: "participant" },
     ],
     updates: [
       {
-        authorEmail: "alex.chen@labhours.dev",
+        authorEmail: "monica.velasquez@afinbank.com",
         body: "Wrapped! Notes published in #lab-hours. Thanks to everyone who read along.",
       },
     ],
