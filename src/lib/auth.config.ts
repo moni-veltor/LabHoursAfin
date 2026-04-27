@@ -12,6 +12,7 @@ export const authConfig = {
       const isPublic =
         p.startsWith("/signin") ||
         p.startsWith("/api/auth") ||
+        p.startsWith("/api/diag") ||
         p.startsWith("/_next") ||
         p === "/favicon.ico";
       if (isPublic) return true;
