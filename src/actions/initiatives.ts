@@ -34,6 +34,10 @@ const InitiativeSchema = z.object({
   capacity: z.coerce.number().int().min(1).max(500).optional(),
   timeCommitment: z.string().max(80).optional(),
   tags: z.string().max(200).optional(),
+  requiresApproval: z
+    .union([z.literal("on"), z.literal("true"), z.literal("false"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
 });
 
 async function upsertTags(raw?: string) {
@@ -91,6 +95,7 @@ export async function createInitiative(formData: FormData) {
     capacity: emptyToUndef(formData.get("capacity")),
     timeCommitment: emptyToUndef(formData.get("timeCommitment")),
     tags: emptyToUndef(formData.get("tags")),
+    requiresApproval: (formData.get("requiresApproval") as any) ?? "",
   });
 
   const [created] = await db
@@ -110,6 +115,7 @@ export async function createInitiative(formData: FormData) {
       prerequisites: parsed.prerequisites,
       capacity: parsed.capacity,
       timeCommitment: parsed.timeCommitment,
+      requiresApproval: parsed.requiresApproval,
     })
     .returning();
 

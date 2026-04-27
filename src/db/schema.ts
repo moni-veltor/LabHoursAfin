@@ -24,6 +24,7 @@ export const subscriptionRole = pgEnum("subscription_role", [
   "subscriber",
   "participant",
   "owner",
+  "pending",
 ]);
 export const initiativeCategory = pgEnum("initiative_category", [
   "product_engineering",
@@ -125,12 +126,17 @@ export const initiatives = pgTable(
     timeCommitment: text("time_commitment"),
     startsAt: timestamp("starts_at"),
     endsAt: timestamp("ends_at"),
+    requiresApproval: boolean("requires_approval").notNull().default(false),
+    featured: boolean("featured").notNull().default(false),
+    outcomeBody: text("outcome_body"),
+    outcomeLinks: text("outcome_links"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("initiative_status_idx").on(t.status),
     index("initiative_category_idx").on(t.category),
+    index("initiative_featured_idx").on(t.featured),
   ]
 );
 
@@ -203,6 +209,23 @@ export const notificationPrefs = pgTable(
     enabled: boolean("enabled").notNull().default(true),
   },
   (t) => [primaryKey({ columns: [t.userId, t.kind] })]
+);
+
+export const reactions = pgTable(
+  "reaction",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    targetType: text("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    emoji: text("emoji").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.targetType, t.targetId, t.emoji] }),
+    index("reaction_target_idx").on(t.targetType, t.targetId),
+  ]
 );
 
 export const initiativesRelations = relations(initiatives, ({ one, many }) => ({

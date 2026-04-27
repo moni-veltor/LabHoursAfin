@@ -127,6 +127,19 @@ export default async function NewInitiativePage() {
             name="prerequisites"
             placeholder="e.g. comfortable with Python; or 'no coding experience needed'"
           />
+          <label className="flex items-start gap-3 rounded-md border border-stone-200 bg-stone-50 p-3 text-sm">
+            <input
+              type="checkbox"
+              name="requiresApproval"
+              className="mt-0.5 h-4 w-4 rounded border-stone-300"
+            />
+            <span>
+              <span className="font-medium">Application required to join</span>
+              <span className="block text-xs text-stone-600">
+                People can follow updates instantly, but joining as a participant needs your approval. Use this for capacity-limited cohorts.
+              </span>
+            </span>
+          </label>
         </Section>
 
         <Section title="More" hint="Optional. Add depth, tags, or save as draft.">

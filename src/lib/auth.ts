@@ -5,8 +5,15 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { authConfig } from "@/lib/auth.config";
 import { isTechTeam } from "@/lib/tech-team";
+import { isAdmin } from "@/lib/admin";
 
 const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.toLowerCase();
+
+function roleFor(email: string): "admin" | "tech" | "member" {
+  if (isAdmin(email)) return "admin";
+  if (isTechTeam(email)) return "tech";
+  return "member";
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -22,7 +29,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!email || !email.includes("@")) return null;
         if (allowedDomain && !email.endsWith(`@${allowedDomain}`)) return null;
 
-        const wantedRole: "tech" | "member" = isTechTeam(email) ? "tech" : "member";
+        const wantedRole = roleFor(email);
         const fallbackName =
           String(creds?.name ?? "").trim() || email.split("@")[0];
 
@@ -76,7 +83,17 @@ export async function requireUser() {
 
 export async function requireTech() {
   const u = await requireUser();
-  const allowed = u.role === "tech" || u.role === "admin" || isTechTeam(u.email);
+  const allowed =
+    u.role === "tech" ||
+    u.role === "admin" ||
+    isTechTeam(u.email) ||
+    isAdmin(u.email);
   if (!allowed) throw new Error("FORBIDDEN");
+  return u;
+}
+
+export async function requireAdmin() {
+  const u = await requireUser();
+  if (u.role !== "admin" && !isAdmin(u.email)) throw new Error("FORBIDDEN");
   return u;
 }

@@ -8,6 +8,7 @@ import {
   initiativeTags,
   updates,
   comments,
+  reactions,
 } from "./schema";
 
 type SeedUser = {
@@ -54,10 +55,14 @@ type SeedInitiative = {
   status: "open" | "in_progress" | "done";
   capacity?: number;
   timeCommitment: string;
+  requiresApproval?: boolean;
+  featured?: boolean;
+  outcomeBody?: string;
+  outcomeLinks?: string;
   tags: string[];
-  subscribers: { email: string; role: "subscriber" | "participant" }[];
-  updates?: { authorEmail: string; body: string }[];
-  comments?: { authorEmail: string; body: string }[];
+  subscribers: { email: string; role: "subscriber" | "participant" | "pending" }[];
+  updates?: { authorEmail: string; body: string; reactions?: { email: string; emoji: string }[] }[];
+  comments?: { authorEmail: string; body: string; reactions?: { email: string; emoji: string }[] }[];
 };
 
 const M = "monica.velasquez@afinbank.com";
@@ -83,13 +88,25 @@ const SEED_INITIATIVES: SeedInitiative[] = [
     effort: "medium",
     status: "open",
     capacity: 4,
+    requiresApproval: true,
+    featured: true,
     timeCommitment: "~3 hrs/week for 2 weeks",
     tags: ["core-banking", "pairing"],
     subscribers: [
       { email: "maria.lopez@afinbank.com", role: "participant" },
       { email: "jordan.smith@afinbank.com", role: "subscriber" },
+      { email: "lin.zhao@afinbank.com", role: "pending" },
     ],
-    updates: [{ authorEmail: M, body: "Kickoff Friday. Calendar invites going out today." }],
+    updates: [
+      {
+        authorEmail: M,
+        body: "Kickoff Friday. Calendar invites going out today.",
+        reactions: [
+          { email: "maria.lopez@afinbank.com", emoji: "🎉" },
+          { email: "jordan.smith@afinbank.com", emoji: "👍" },
+        ],
+      },
+    ],
   },
   {
     ownerEmail: M,
@@ -381,7 +398,74 @@ const SEED_INITIATIVES: SeedInitiative[] = [
       { email: "maria.lopez@afinbank.com", role: "subscriber" },
     ],
     comments: [
-      { authorEmail: "lin.zhao@afinbank.com", body: "This is exactly what I've been hoping for." },
+      {
+        authorEmail: "lin.zhao@afinbank.com",
+        body: "This is exactly what I've been hoping for.",
+        reactions: [
+          { email: M, emoji: "❤️" },
+          { email: "rafa.morales@afinbank.com", emoji: "👍" },
+        ],
+      },
+    ],
+  },
+
+  // A done-with-outcomes example for the Showcase
+  {
+    ownerEmail: M,
+    title: "How does the database actually work — reading club",
+    summary:
+      "A 4-week reading club for non-engineers. We read short chapters and discuss. No coding.",
+    category: "other",
+    subcategory: "Learn how tech works",
+    format: "reading_club",
+    difficulty: "beginner",
+    effort: "small",
+    status: "done",
+    capacity: 10,
+    timeCommitment: "~1 hr/week × 4 weeks",
+    tags: ["learning", "infra"],
+    outcomeBody:
+      "10 colleagues completed the club. Notes published in #lab-hours. Two participants are now contributing to the data quality dashboard initiative.",
+    outcomeLinks:
+      "https://example.com/lab-hours/notes-week-1\nhttps://example.com/lab-hours/notes-week-2",
+    subscribers: [
+      { email: "maria.lopez@afinbank.com", role: "participant" },
+      { email: "rafa.morales@afinbank.com", role: "participant" },
+      { email: "jordan.smith@afinbank.com", role: "participant" },
+    ],
+    updates: [
+      {
+        authorEmail: M,
+        body: "Wrapped! Notes published. Thanks to everyone who read along.",
+        reactions: [
+          { email: "rafa.morales@afinbank.com", emoji: "🎉" },
+          { email: "jordan.smith@afinbank.com", emoji: "🎉" },
+          { email: "maria.lopez@afinbank.com", emoji: "❤️" },
+        ],
+      },
+    ],
+  },
+  {
+    ownerEmail: N,
+    title: "Snowflake quickstart — 90-min workshop",
+    summary:
+      "Hands-on intro to Snowflake. By the end you'll have written your first useful query against real data.",
+    category: "data_architecture",
+    subcategory: "Snowflake",
+    format: "workshop",
+    difficulty: "beginner",
+    effort: "small",
+    status: "done",
+    capacity: 12,
+    timeCommitment: "Single 90-min workshop",
+    tags: ["snowflake", "sql", "learning"],
+    outcomeBody:
+      "11 of 12 attendees finished a working query. Recording shared in #lab-hours. Two follow-up sessions requested.",
+    outcomeLinks:
+      "https://example.com/lab-hours/snowflake-recording",
+    subscribers: [
+      { email: "rafa.morales@afinbank.com", role: "participant" },
+      { email: "jordan.smith@afinbank.com", role: "participant" },
     ],
   },
   {
@@ -480,6 +564,10 @@ async function main() {
         prerequisites: s.prerequisites,
         capacity: s.capacity,
         timeCommitment: s.timeCommitment,
+        requiresApproval: s.requiresApproval ?? false,
+        featured: s.featured ?? false,
+        outcomeBody: s.outcomeBody,
+        outcomeLinks: s.outcomeLinks,
       })
       .returning();
 
@@ -509,21 +597,53 @@ async function main() {
     for (const u of s.updates ?? []) {
       const authorId = userIdByEmail.get(u.authorEmail);
       if (!authorId) continue;
-      await db.insert(updates).values({
-        initiativeId: created.id,
-        authorId,
-        body: u.body,
-      });
+      const [created2] = await db
+        .insert(updates)
+        .values({
+          initiativeId: created.id,
+          authorId,
+          body: u.body,
+        })
+        .returning();
+      for (const r of u.reactions ?? []) {
+        const userId = userIdByEmail.get(r.email);
+        if (!userId) continue;
+        await db
+          .insert(reactions)
+          .values({
+            userId,
+            targetType: "update",
+            targetId: created2.id,
+            emoji: r.emoji,
+          })
+          .onConflictDoNothing();
+      }
     }
 
     for (const c of s.comments ?? []) {
       const authorId = userIdByEmail.get(c.authorEmail);
       if (!authorId) continue;
-      await db.insert(comments).values({
-        initiativeId: created.id,
-        authorId,
-        body: c.body,
-      });
+      const [created2] = await db
+        .insert(comments)
+        .values({
+          initiativeId: created.id,
+          authorId,
+          body: c.body,
+        })
+        .returning();
+      for (const r of c.reactions ?? []) {
+        const userId = userIdByEmail.get(r.email);
+        if (!userId) continue;
+        await db
+          .insert(reactions)
+          .values({
+            userId,
+            targetType: "comment",
+            targetId: created2.id,
+            emoji: r.emoji,
+          })
+          .onConflictDoNothing();
+      }
     }
   }
 

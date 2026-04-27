@@ -6,7 +6,7 @@ import {
   initiativeTags,
   tags,
 } from "@/db/schema";
-import { eq, desc, ne, inArray, and } from "drizzle-orm";
+import { eq, desc, ne, inArray, and, or, ilike, sql } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
 import Link from "next/link";
 import {
@@ -14,8 +14,14 @@ import {
   CATEGORY_KEYS,
   type Category,
 } from "@/lib/categories";
+import { SearchInput } from "@/components/search-input";
 
-type Search = { status?: string; tag?: string; category?: string };
+type Search = {
+  status?: string;
+  tag?: string;
+  category?: string;
+  q?: string;
+};
 
 export default async function HomePage({
   searchParams,
@@ -28,6 +34,15 @@ export default async function HomePage({
   if (sp.status) filters.push(eq(initiatives.status, sp.status as any));
   if (sp.category && (CATEGORY_KEYS as string[]).includes(sp.category)) {
     filters.push(eq(initiatives.category, sp.category as any));
+  }
+  if (sp.q && sp.q.trim().length > 0) {
+    const q = `%${sp.q.trim()}%`;
+    filters.push(
+      sql`(${ilike(initiatives.title, q)} OR ${ilike(initiatives.summary, q)} OR ${ilike(
+        initiatives.subcategory,
+        q
+      )})`
+    );
   }
 
   let initiativeIds: string[] | null = null;
@@ -57,6 +72,7 @@ export default async function HomePage({
       category: initiatives.category,
       format: initiatives.format,
       difficulty: initiatives.difficulty,
+      featured: initiatives.featured,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
       createdAt: initiatives.createdAt,
@@ -65,7 +81,7 @@ export default async function HomePage({
     .from(initiatives)
     .leftJoin(users, eq(users.id, initiatives.ownerId))
     .where(where)
-    .orderBy(desc(initiatives.createdAt));
+    .orderBy(desc(initiatives.featured), desc(initiatives.createdAt));
 
   const ids = rows.map((r) => r.id);
   const [counts, allTags] = await Promise.all([
@@ -97,6 +113,9 @@ export default async function HomePage({
     tagsByInitiative.set(t.id, arr);
   }
 
+  const featured = rows.filter((r) => r.featured);
+  const rest = rows.filter((r) => !r.featured);
+
   return (
     <div className="space-y-6">
       <div>
@@ -107,33 +126,69 @@ export default async function HomePage({
         </p>
       </div>
 
+      <SearchInput q={sp.q} />
       <CategoryTabs current={sp.category} />
       <StatusBar current={sp} />
 
-      {rows.length === 0 ? (
-        <EmptyState message="No initiatives match these filters." />
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {rows.map((r) => (
-            <InitiativeCard
-              key={r.id}
-              id={r.id}
-              title={r.title}
-              summary={r.summary}
-              status={r.status}
-              category={r.category as Category}
-              format={r.format as any}
-              difficulty={r.difficulty as any}
-              ownerName={r.ownerName}
-              timeCommitment={r.timeCommitment}
-              capacity={r.capacity}
-              participantCount={participantCount.get(r.id) ?? 0}
-              createdAt={r.createdAt}
-              tags={tagsByInitiative.get(r.id) ?? []}
-            />
-          ))}
-        </div>
+      {featured.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            ★ Featured
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {featured.map((r) => (
+              <InitiativeCard
+                key={r.id}
+                id={r.id}
+                title={r.title}
+                summary={r.summary}
+                status={r.status}
+                category={r.category as Category}
+                format={r.format as any}
+                difficulty={r.difficulty as any}
+                ownerName={r.ownerName}
+                timeCommitment={r.timeCommitment}
+                capacity={r.capacity}
+                participantCount={participantCount.get(r.id) ?? 0}
+                createdAt={r.createdAt}
+                tags={tagsByInitiative.get(r.id) ?? []}
+              />
+            ))}
+          </div>
+        </section>
       )}
+
+      {rest.length === 0 && featured.length === 0 ? (
+        <EmptyState message="No initiatives match these filters." />
+      ) : rest.length > 0 ? (
+        <section>
+          {featured.length > 0 && (
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
+              All initiatives
+            </h2>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {rest.map((r) => (
+              <InitiativeCard
+                key={r.id}
+                id={r.id}
+                title={r.title}
+                summary={r.summary}
+                status={r.status}
+                category={r.category as Category}
+                format={r.format as any}
+                difficulty={r.difficulty as any}
+                ownerName={r.ownerName}
+                timeCommitment={r.timeCommitment}
+                capacity={r.capacity}
+                participantCount={participantCount.get(r.id) ?? 0}
+                createdAt={r.createdAt}
+                tags={tagsByInitiative.get(r.id) ?? []}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
