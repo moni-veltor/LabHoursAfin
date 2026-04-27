@@ -69,7 +69,7 @@ export default async function ShowcasePage() {
                 </h3>
                 <p className="text-sm text-stone-600 line-clamp-3">{r.summary}</p>
                 {r.outcomeBody && (
-                  <p className="rounded-md border-l-2 border-emerald-500 bg-emerald-50 px-3 py-2 text-xs text-stone-700 line-clamp-4">
+                  <p className="rounded-md border-l-2 border-brand-success bg-brand-success-50 px-3 py-2 text-xs text-stone-700 line-clamp-4">
                     {r.outcomeBody}
                   </p>
                 )}

@@ -49,7 +49,7 @@ export default async function SignInPage({
         </div>
         <button
           type="submit"
-          className="w-full rounded-md bg-stone-900 px-3 py-2 text-sm font-medium text-white hover:bg-stone-800"
+          className="w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark"
         >
           Sign in
         </button>

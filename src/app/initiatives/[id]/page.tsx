@@ -169,12 +169,12 @@ export default async function InitiativePage({
               {initiative.status.replace("_", " ")}
             </span>
             {initiative.featured && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-900">
+              <span className="rounded-full bg-brand-accent-50 px-2 py-0.5 font-medium text-brand-accent-dark">
                 ★ Featured
               </span>
             )}
             {initiative.requiresApproval && (
-              <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">
+              <span className="rounded-full bg-brand-primary-50 px-2 py-0.5 text-brand-primary">
                 Application required
               </span>
             )}
@@ -259,7 +259,7 @@ export default async function InitiativePage({
                 className="w-full resize-y rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none"
               />
               <div className="mt-2 flex justify-end">
-                <button className="rounded-md bg-stone-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-stone-800">
+                <button className="rounded-md bg-brand-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-primary-dark">
                   Post update
                 </button>
               </div>
@@ -396,7 +396,7 @@ export default async function InitiativePage({
                     await requestToJoin(initiative.id);
                   }}
                 >
-                  <button className="w-full rounded-md bg-stone-900 px-3 py-2 text-sm font-medium text-white hover:bg-stone-800">
+                  <button className="w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark">
                     {initiative.requiresApproval
                       ? "Apply to join"
                       : "I'm in — count me as a participant"}
@@ -423,7 +423,7 @@ export default async function InitiativePage({
                     await requestToJoin(initiative.id);
                   }}
                 >
-                  <button className="w-full rounded-md bg-stone-900 px-3 py-2 text-sm font-medium text-white hover:bg-stone-800">
+                  <button className="w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark">
                     {initiative.requiresApproval
                       ? "Apply to join"
                       : "Join the initiative"}
@@ -440,8 +440,8 @@ export default async function InitiativePage({
         </div>
 
         {canEdit && pending.length > 0 && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <h3 className="text-sm font-semibold text-amber-900">
+          <div className="rounded-xl border border-brand-accent-100 bg-brand-accent-50 p-4">
+            <h3 className="text-sm font-semibold text-brand-accent-dark">
               Pending applications ({pending.length})
             </h3>
             <ul className="mt-3 space-y-2 text-sm">
@@ -455,7 +455,7 @@ export default async function InitiativePage({
                         await approveParticipant(initiative.id, p.userId);
                       }}
                     >
-                      <button className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-700">
+                      <button className="rounded-md bg-brand-success px-2 py-1 text-xs font-medium text-white hover:bg-brand-success-dark">
                         Approve
                       </button>
                     </form>
@@ -465,7 +465,7 @@ export default async function InitiativePage({
                         await declineParticipant(initiative.id, p.userId);
                       }}
                     >
-                      <button className="rounded-md border border-stone-300 px-2 py-1 text-xs hover:bg-white">
+                      <button className="rounded-md border border-stone-300 bg-white px-2 py-1 text-xs hover:bg-stone-50">
                         Decline
                       </button>
                     </form>
@@ -508,8 +508,8 @@ export default async function InitiativePage({
         )}
 
         {adminAccess && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
-            <h3 className="text-sm font-semibold text-rose-900">Admin</h3>
+          <div className="rounded-xl border border-brand-accent-100 bg-brand-accent-50 p-4">
+            <h3 className="text-sm font-semibold text-brand-accent-dark">Admin</h3>
             <form
               className="mt-3"
               action={async () => {
@@ -517,7 +517,7 @@ export default async function InitiativePage({
                 await toggleFeatured(initiative.id);
               }}
             >
-              <button className="w-full rounded-md border border-rose-300 bg-white px-3 py-1.5 text-sm hover:bg-rose-100">
+              <button className="w-full rounded-md border border-brand-accent bg-white px-3 py-1.5 text-sm font-medium text-brand-accent-dark hover:bg-brand-accent-100">
                 {initiative.featured ? "Unfeature" : "★ Feature on home"}
               </button>
             </form>
@@ -607,8 +607,8 @@ function OutcomeSection({
   showcasable: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-emerald-900">
+    <section className="rounded-xl border border-brand-success-100 bg-brand-success-50 p-6">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success-dark">
         Outcomes
       </h2>
       {showcasable ? (
@@ -630,7 +630,7 @@ function OutcomeSection({
                       href={l}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-emerald-900 underline hover:no-underline"
+                      className="text-brand-success-dark underline hover:no-underline"
                     >
                       {l}
                     </a>
@@ -640,7 +640,7 @@ function OutcomeSection({
           )}
         </>
       ) : (
-        <p className="mt-2 text-sm text-emerald-900">
+        <p className="mt-2 text-sm text-brand-success-dark">
           {canEdit
             ? "Wrap this up by posting what you shipped, learned, or produced."
             : "Awaiting outcome write-up."}
@@ -654,17 +654,17 @@ function OutcomeSection({
             defaultValue={initiative.outcomeBody ?? ""}
             rows={4}
             placeholder="What did you ship? What did the team learn?"
-            className="w-full resize-y rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            className="w-full resize-y rounded-md border border-brand-success-100 bg-white px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
           />
           <textarea
             name="links"
             defaultValue={initiative.outcomeLinks ?? ""}
             rows={2}
             placeholder="Links (one per line) — demos, docs, slides, screenshots"
-            className="w-full resize-y rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none"
+            className="w-full resize-y rounded-md border border-brand-success-100 bg-white px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
           />
           <div className="flex justify-end">
-            <button className="rounded-md bg-emerald-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-800">
+            <button className="rounded-md bg-brand-success px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-success-dark">
               Save outcome (marks as done)
             </button>
           </div>

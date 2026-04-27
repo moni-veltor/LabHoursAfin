@@ -174,7 +174,7 @@ export default async function NewInitiativePage() {
           </p>
           <button
             type="submit"
-            className="rounded-md bg-stone-900 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800"
+            className="rounded-md bg-brand-primary px-4 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark"
           >
             Publish initiative
           </button>

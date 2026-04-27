@@ -179,7 +179,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl border border-stone-200 bg-white p-4">
       <div className="text-xs uppercase tracking-wide text-stone-500">{label}</div>
-      <div className="mt-1 text-2xl font-semibold">{value}</div>
+      <div className="mt-1 text-2xl font-semibold text-brand-primary">{value}</div>
     </div>
   );
 }
@@ -219,7 +219,7 @@ function BarList({
             </div>
             <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-stone-100">
               <div
-                className="h-full bg-stone-900"
+                className="h-full bg-brand-primary"
                 style={{ width: `${Math.max(4, (r.value / max) * 100)}%` }}
               />
             </div>

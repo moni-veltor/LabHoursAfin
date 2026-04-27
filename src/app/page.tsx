@@ -132,8 +132,8 @@ export default async function HomePage({
 
       {featured.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-500">
-            ★ Featured
+          <h2 className="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-brand-accent-dark">
+            <span>★</span> Featured
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {featured.map((r) => (
@@ -152,6 +152,7 @@ export default async function HomePage({
                 participantCount={participantCount.get(r.id) ?? 0}
                 createdAt={r.createdAt}
                 tags={tagsByInitiative.get(r.id) ?? []}
+                featured
               />
             ))}
           </div>
@@ -229,8 +230,8 @@ function Tab({
       href={href}
       className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${
         active
-          ? "bg-stone-900 text-white"
-          : "border border-stone-200 bg-white text-stone-700 hover:border-stone-300"
+          ? "bg-brand-primary text-white"
+          : "border border-stone-200 bg-white text-stone-700 hover:border-brand-primary/40"
       }`}
     >
       {dotClass && (
@@ -254,7 +255,7 @@ function StatusBar({ current }: { current: Search }) {
         href={current.category ? `/?category=${current.category}` : "/"}
         className={`rounded-full px-3 py-1 ${
           !current.status
-            ? "bg-stone-200 text-stone-900"
+            ? "bg-brand-primary-100 text-brand-primary"
             : "bg-white border border-stone-200 text-stone-600"
         }`}
       >
@@ -266,7 +267,7 @@ function StatusBar({ current }: { current: Search }) {
           href={`/?status=${s}${base}`}
           className={`rounded-full px-3 py-1 ${
             current.status === s
-              ? "bg-stone-200 text-stone-900"
+              ? "bg-brand-primary-100 text-brand-primary"
               : "bg-white border border-stone-200 text-stone-600"
           }`}
         >

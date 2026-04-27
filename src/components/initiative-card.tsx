@@ -23,13 +23,14 @@ type Props = {
   participantCount: number;
   createdAt: Date;
   tags: string[];
+  featured?: boolean;
 };
 
 const statusStyles: Record<string, string> = {
-  open: "bg-emerald-100 text-emerald-800",
-  in_progress: "bg-blue-100 text-blue-800",
+  open: "bg-brand-success-50 text-brand-success-dark",
+  in_progress: "bg-brand-primary-50 text-brand-primary",
   done: "bg-stone-200 text-stone-700",
-  draft: "bg-amber-100 text-amber-800",
+  draft: "bg-brand-accent-50 text-brand-accent-dark",
   archived: "bg-stone-100 text-stone-500",
 };
 
@@ -38,13 +39,22 @@ export function InitiativeCard(p: Props) {
   return (
     <Link
       href={`/initiatives/${p.id}`}
-      className="group block rounded-xl border border-stone-200 bg-white p-5 transition hover:border-stone-300 hover:shadow-sm"
+      className={`group block rounded-xl border bg-white p-5 transition hover:shadow-sm ${
+        p.featured
+          ? "border-brand-accent/60 ring-1 ring-brand-accent/30"
+          : "border-stone-200 hover:border-brand-primary/40"
+      }`}
     >
       <div className="flex items-center gap-2">
         <span className={`inline-block h-2 w-2 rounded-full ${cat.dot}`} />
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cat.badge}`}>
           {cat.label}
         </span>
+        {p.featured && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-brand-accent-50 px-2 py-0.5 text-xs font-medium text-brand-accent-dark">
+            ★ Featured
+          </span>
+        )}
         <span
           className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${
             statusStyles[p.status] ?? "bg-stone-100 text-stone-700"
@@ -54,7 +64,7 @@ export function InitiativeCard(p: Props) {
         </span>
       </div>
 
-      <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight group-hover:underline">
+      <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight group-hover:text-brand-primary group-hover:underline">
         {p.title}
       </h3>
       <p className="mt-1 line-clamp-2 text-sm text-stone-600">{p.summary}</p>

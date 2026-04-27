@@ -39,10 +39,10 @@ export function Reactions({
               disabled={!signedIn}
               className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition ${
                 isMine
-                  ? "border-stone-900 bg-stone-900 text-white"
+                  ? "border-brand-primary bg-brand-primary text-white"
                   : c > 0
-                  ? "border-stone-200 bg-stone-50 text-stone-700 hover:border-stone-300"
-                  : "border-transparent bg-transparent text-stone-400 hover:bg-stone-50 hover:text-stone-600"
+                  ? "border-stone-200 bg-stone-50 text-stone-700 hover:border-brand-primary/40"
+                  : "border-transparent bg-transparent text-stone-400 hover:bg-brand-primary-50 hover:text-brand-primary"
               } ${!signedIn ? "cursor-not-allowed opacity-60" : ""}`}
             >
               <span>{e}</span>

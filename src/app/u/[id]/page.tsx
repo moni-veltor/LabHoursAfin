@@ -77,9 +77,9 @@ export default async function ProfilePage({
         <span
           className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
             user.role === "admin"
-              ? "bg-rose-100 text-rose-800"
+              ? "bg-brand-accent-50 text-brand-accent-dark"
               : user.role === "tech"
-              ? "bg-blue-100 text-blue-800"
+              ? "bg-brand-primary-50 text-brand-primary"
               : "bg-stone-200 text-stone-700"
           }`}
         >
