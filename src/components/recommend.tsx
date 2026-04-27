@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { initiatives, subscriptions, users } from "@/db/schema";
-import { and, desc, eq, notInArray, sql } from "drizzle-orm";
+import { and, desc, eq, notInArray } from "drizzle-orm";
 import { CATEGORIES, type Category } from "@/lib/categories";
 
 export async function RecommendStrip({ userId }: { userId: string }) {
@@ -20,33 +20,38 @@ export async function RecommendStrip({ userId }: { userId: string }) {
     if (s.category)
       myCategoryCounts.set(s.category, (myCategoryCounts.get(s.category) ?? 0) + 1);
   }
-  const preferredCats = Array.from(myCategoryCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([k]) => k);
+  const preferred = new Set(
+    Array.from(myCategoryCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 2)
+      .map(([k]) => k)
+  );
 
   const baseFilters = [eq(initiatives.status, "open")];
   if (subscribedIds.length > 0) {
     baseFilters.push(notInArray(initiatives.id, subscribedIds));
   }
 
-  const recs = await db
+  const pool = await db
     .select({
       id: initiatives.id,
       title: initiatives.title,
       summary: initiatives.summary,
       category: initiatives.category,
+      createdAt: initiatives.createdAt,
       ownerName: users.name,
     })
     .from(initiatives)
     .leftJoin(users, eq(users.id, initiatives.ownerId))
     .where(and(...baseFilters))
-    .orderBy(
-      preferredCats.length
-        ? sql`CASE WHEN ${initiatives.category}::text = ANY(${preferredCats}) THEN 0 ELSE 1 END, ${initiatives.createdAt} DESC`
-        : desc(initiatives.createdAt)
-    )
-    .limit(3);
+    .orderBy(desc(initiatives.createdAt))
+    .limit(20);
+
+  const recs = pool
+    .map((r) => ({ r, score: preferred.has(r.category) ? 0 : 1 }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3)
+    .map(({ r }) => r);
 
   if (recs.length === 0) return null;
 
