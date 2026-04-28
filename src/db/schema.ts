@@ -175,9 +175,7 @@ export const updates = pgTable("update", {
   initiativeId: uuid("initiative_id")
     .notNull()
     .references(() => initiatives.id, { onDelete: "cascade" }),
-  authorId: text("author_id")
-    .notNull()
-    .references(() => users.id),
+  authorId: text("author_id").references(() => users.id, { onDelete: "set null" }),
   body: text("body").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
@@ -187,9 +185,7 @@ export const comments = pgTable("comment", {
   initiativeId: uuid("initiative_id")
     .notNull()
     .references(() => initiatives.id, { onDelete: "cascade" }),
-  authorId: text("author_id")
-    .notNull()
-    .references(() => users.id),
+  authorId: text("author_id").references(() => users.id, { onDelete: "set null" }),
   parentId: uuid("parent_id"),
   body: text("body").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
