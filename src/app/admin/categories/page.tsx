@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { customCategories, initiatives } from "@/db/schema";
 import { count, eq, desc } from "drizzle-orm";
 import { CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
+import { AdminSubNav } from "@/components/admin-subnav";
 import {
   createCustomCategory,
   deleteCustomCategory,
@@ -50,6 +51,8 @@ export default async function AdminCategoriesPage() {
 
   return (
     <div className="space-y-8">
+      <AdminSubNav active="/admin/categories" />
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Categories</h1>
         <p className="mt-1 text-muted">

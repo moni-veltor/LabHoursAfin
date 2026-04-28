@@ -6,6 +6,7 @@ import { auditEvents, users } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 import { UserChip } from "@/components/avatar";
 import { timeAgo } from "@/lib/utils";
+import { AdminSubNav } from "@/components/admin-subnav";
 
 export default async function AdminAuditPage() {
   const session = await auth();
@@ -38,6 +39,8 @@ export default async function AdminAuditPage() {
 
   return (
     <div className="space-y-6">
+      <AdminSubNav active="/admin/audit" />
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Audit log</h1>
         <p className="mt-1 text-muted">

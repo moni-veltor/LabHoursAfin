@@ -7,6 +7,7 @@ import { grantParticipationOverride } from "@/actions/admin-rule";
 import { db } from "@/lib/db";
 import { participationOverrides, users } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
+import { AdminSubNav } from "@/components/admin-subnav";
 
 export default async function AdminSettingsPage() {
   const session = await auth();
@@ -38,6 +39,8 @@ export default async function AdminSettingsPage() {
 
   return (
     <div className="space-y-8">
+      <AdminSubNav active="/admin/settings" />
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="mt-1 text-muted">

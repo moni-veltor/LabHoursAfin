@@ -17,10 +17,11 @@ export default async function SignInPage({
           access &gt; lab hours
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-ink-text">
-          Sign in
+          Welcome to Lab Hours
         </h1>
         <p className="mt-2 text-muted">
-          Use your work email. No password — we just need to know who you are.
+          Sign in with your work email — that's it. No password, no link to
+          click. We just need to know who you are.
         </p>
         {sp.error && (
           <p className="mt-3 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">

@@ -374,6 +374,132 @@ export const announcements = pgTable("announcement", {
   active: boolean("active").notNull().default(true),
 });
 
+export const hackathonStage = pgEnum("hackathon_stage", [
+  "draft",
+  "idea",
+  "team_forming",
+  "build",
+  "demo",
+  "voting",
+  "done",
+]);
+
+export const hackathons = pgTable(
+  "hackathon",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull().unique(),
+    name: text("name").notNull(),
+    theme: text("theme"),
+    description: text("description"),
+    coverImage: text("cover_image"),
+    tracks: text("tracks"),
+    stage: hackathonStage("stage").notNull().default("draft"),
+    teamCapacity: integer("team_capacity").notNull().default(5),
+    prizes: text("prizes"),
+    startsAt: timestamp("starts_at"),
+    endsAt: timestamp("ends_at"),
+    createdBy: text("created_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("hackathon_stage_idx").on(t.stage)]
+);
+
+export const hackIdeas = pgTable(
+  "hack_idea",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    authorId: text("author_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    title: text("title").notNull(),
+    body: text("body"),
+    track: text("track"),
+    teamId: uuid("team_id"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("hack_idea_hack_idx").on(t.hackathonId)]
+);
+
+export const hackTeams = pgTable(
+  "hack_team",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    leaderId: text("leader_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    ideaId: uuid("idea_id"),
+    name: text("name").notNull(),
+    track: text("track"),
+    blurb: text("blurb"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("hack_team_hack_idx").on(t.hackathonId)]
+);
+
+export const hackTeamMembers = pgTable(
+  "hack_team_member",
+  {
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => hackTeams.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    joinedAt: timestamp("joined_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.teamId, t.userId] })]
+);
+
+export const hackDemos = pgTable("hack_demo", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  teamId: uuid("team_id")
+    .notNull()
+    .references(() => hackTeams.id, { onDelete: "cascade" })
+    .unique(),
+  body: text("body").notNull(),
+  links: text("links"),
+  coverImage: text("cover_image"),
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+});
+
+export const hackVotes = pgTable(
+  "hack_vote",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    demoId: uuid("demo_id")
+      .notNull()
+      .references(() => hackDemos.id, { onDelete: "cascade" }),
+    category: text("category").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.demoId, t.category] })]
+);
+
+export const hackAwards = pgTable("hack_award", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  hackathonId: uuid("hackathon_id")
+    .notNull()
+    .references(() => hackathons.id, { onDelete: "cascade" }),
+  demoId: uuid("demo_id").references(() => hackDemos.id, {
+    onDelete: "cascade",
+  }),
+  kind: text("kind").notNull(),
+  note: text("note"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const initiativesRelations = relations(initiatives, ({ one, many }) => ({
   owner: one(users, { fields: [initiatives.ownerId], references: [users.id] }),
   subscriptions: many(subscriptions),

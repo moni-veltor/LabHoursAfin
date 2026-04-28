@@ -11,6 +11,8 @@ import {
 } from "@/db/schema";
 import { count, eq, desc, sql, gte } from "drizzle-orm";
 import { CATEGORIES, type Category } from "@/lib/categories";
+import { AdminSubNav } from "@/components/admin-subnav";
+import Link from "next/link";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -117,12 +119,59 @@ export default async function AdminPage() {
 
   return (
     <div className="space-y-8">
+      <AdminSubNav active="/admin" />
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Admin</h1>
         <p className="mt-1 text-muted">
           Quick stats on engagement and where Lab Hours is being used.
         </p>
       </div>
+
+      <section className="grid gap-3 sm:grid-cols-3">
+        <Link
+          href="/admin/categories"
+          className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-accent/40 hover:shadow-glow-accent"
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+            ★ shortcut
+          </p>
+          <h3 className="mt-1 text-base font-semibold tracking-tight">
+            Manage categories
+          </h3>
+          <p className="text-xs text-muted">
+            Add new categories that everyone can use across the app.
+          </p>
+        </Link>
+        <Link
+          href="/admin/queue"
+          className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-primary/40 hover:shadow-glow-soft"
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
+            ★ shortcut
+          </p>
+          <h3 className="mt-1 text-base font-semibold tracking-tight">
+            Pending queue
+          </h3>
+          <p className="text-xs text-muted">
+            Cross-initiative applications + initiatives awaiting review.
+          </p>
+        </Link>
+        <Link
+          href="/admin/settings"
+          className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-success/40 hover:shadow-glow-success"
+        >
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-success">
+            ★ shortcut
+          </p>
+          <h3 className="mt-1 text-base font-semibold tracking-tight">
+            Settings & overrides
+          </h3>
+          <p className="text-xs text-muted">
+            Pre-publish review, quarter-rule overrides, announcements.
+          </p>
+        </Link>
+      </section>
 
       <section className="grid gap-3 sm:grid-cols-4">
         <Stat label="Initiatives" value={t.initiatives} />

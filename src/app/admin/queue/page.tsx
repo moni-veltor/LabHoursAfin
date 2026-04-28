@@ -9,6 +9,7 @@ import { UserChip } from "@/components/avatar";
 import { approveParticipant } from "@/actions/approvals";
 import { approveInitiative } from "@/actions/settings";
 import { DeclineForm } from "@/components/decline-form";
+import { AdminSubNav } from "@/components/admin-subnav";
 
 export default async function AdminQueuePage() {
   const session = await auth();
@@ -54,6 +55,8 @@ export default async function AdminQueuePage() {
 
   return (
     <div className="space-y-8">
+      <AdminSubNav active="/admin/queue" />
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Queue</h1>
         <p className="mt-1 text-muted">
