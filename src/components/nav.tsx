@@ -23,8 +23,14 @@ export async function Nav() {
 
   const mobileLinks: { href: string; label: string; emphasis?: "primary" | "accent" }[] = [
     { href: "/", label: "Browse" },
-    { href: "/showcase", label: "Showcase" },
   ];
+  if (user)
+    mobileLinks.push({
+      href: "/hack",
+      label: "🔥 Hack",
+      emphasis: "accent",
+    });
+  mobileLinks.push({ href: "/showcase", label: "Showcase" });
   if (user) mobileLinks.push({ href: "/people", label: "People" });
   if (user) mobileLinks.push({ href: "/inbox", label: `Inbox${unread ? ` (${unread})` : ""}` });
   if (canPost) mobileLinks.push({ href: "/owner", label: "Owner dashboard" });
@@ -60,6 +66,15 @@ export async function Nav() {
 
         <nav className="hidden items-center gap-1 text-sm sm:flex">
           <NavLink href="/">Browse</NavLink>
+          {user && (
+            <Link
+              href="/hack"
+              className="inline-flex items-center gap-1.5 rounded-md bg-brand-accent px-3 py-1.5 text-sm font-semibold text-ink shadow-glow-accent transition hover:bg-brand-accent-dark"
+            >
+              <span aria-hidden>🔥</span>
+              <span>Hack</span>
+            </Link>
+          )}
           <NavLink href="/showcase">Showcase</NavLink>
           {user && <NavLink href="/people">People</NavLink>}
           {canPost && <NavLink href="/owner">Owner</NavLink>}
