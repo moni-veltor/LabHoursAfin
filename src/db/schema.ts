@@ -65,6 +65,10 @@ export const users = pgTable("user", {
   department: text("department"),
   jobTitle: text("job_title"),
   hobbies: text("hobbies"),
+  bio: text("bio"),
+  askMeAbout: text("ask_me_about"),
+  pronouns: text("pronouns"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -133,7 +137,10 @@ export const initiatives = pgTable(
     crossTeam: boolean("cross_team").notNull().default(false),
     isTemplate: boolean("is_template").notNull().default(false),
     awaitingReview: boolean("awaiting_review").notNull().default(false),
+    commentsLocked: boolean("comments_locked").notNull().default(false),
     customCategorySlug: text("custom_category_slug"),
+    pinnedCommentId: uuid("pinned_comment_id"),
+    slug: text("slug"),
     coverImage: text("cover_image"),
     recordings: text("recordings"),
     aiSummary: text("ai_summary"),
@@ -149,6 +156,8 @@ export const initiatives = pgTable(
     index("initiative_category_idx").on(t.category),
     index("initiative_featured_idx").on(t.featured),
     index("initiative_template_idx").on(t.isTemplate),
+    index("initiative_slug_idx").on(t.slug),
+    index("initiative_owner_idx").on(t.ownerId),
   ]
 );
 
@@ -167,7 +176,12 @@ export const subscriptions = pgTable(
     declineReason: text("decline_reason"),
     waitlistPosition: integer("waitlist_position"),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.initiativeId] })]
+  (t) => [
+    primaryKey({ columns: [t.userId, t.initiativeId] }),
+    index("subscription_user_role_idx").on(t.userId, t.role),
+    index("subscription_role_idx").on(t.role),
+    index("subscription_initiative_role_idx").on(t.initiativeId, t.role),
+  ]
 );
 
 export const updates = pgTable("update", {
@@ -330,6 +344,34 @@ export const settings = pgTable("setting", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const reports = pgTable(
+  "report",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    targetType: text("target_type").notNull(),
+    targetId: uuid("target_id").notNull(),
+    reporterId: text("reporter_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    reason: text("reason"),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at"),
+  },
+  (t) => [index("report_status_idx").on(t.status)]
+);
+
+export const announcements = pgTable("announcement", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  body: text("body").notNull(),
+  createdBy: text("created_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at"),
+  active: boolean("active").notNull().default(true),
 });
 
 export const initiativesRelations = relations(initiatives, ({ one, many }) => ({

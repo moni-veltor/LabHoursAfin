@@ -37,6 +37,10 @@ export function Reactions({
             <button
               type="submit"
               disabled={!signedIn}
+              aria-label={`React with ${e}${c > 0 ? `, currently ${c}` : ""}${
+                isMine ? ", you reacted" : ""
+              }`}
+              aria-pressed={isMine}
               className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition ${
                 isMine
                   ? "border-brand-primary bg-brand-primary text-white shadow-glow"

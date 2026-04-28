@@ -15,11 +15,13 @@ import {
 } from "@/lib/participation";
 import { CATEGORIES, type Category } from "@/lib/categories";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
+import { hourAwareGreeting } from "@/lib/greeting";
+import { computeStreak } from "@/lib/streaks";
 
 export default async function MyBoardPage() {
   const session = await auth();
   const me = session?.user as
-    | { id?: string; email?: string; role?: string }
+    | { id?: string; email?: string; role?: string; name?: string }
     | undefined;
   if (!me?.id) redirect("/signin?callbackUrl=/me");
 
@@ -28,6 +30,8 @@ export default async function MyBoardPage() {
     !isTechTeam(me.email) &&
     !isAdmin(me.email);
   const status = ruleApplies ? await getParticipationStatus(me.id) : null;
+  const streak = await computeStreak(me.id);
+  const greeting = hourAwareGreeting(me.name);
 
   const mySubs = await db
     .select({ id: subscriptions.initiativeId, role: subscriptions.role })
@@ -88,14 +92,26 @@ export default async function MyBoardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">My board</h1>
-        <a
-          href="/me/portfolio"
-          className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-ink-text hover:bg-line"
-        >
-          View my portfolio →
-        </a>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-dim">
+            {greeting}
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight">My board</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {streak > 0 && (
+            <span className="rounded-full border border-brand-success/40 bg-brand-success-950 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-success">
+              🔥 {streak} {streak === 1 ? "quarter" : "quarters"} streak
+            </span>
+          )}
+          <a
+            href="/me/portfolio"
+            className="rounded-md border border-line bg-surface px-3 py-1.5 text-sm text-ink-text hover:bg-line"
+          >
+            View my portfolio →
+          </a>
+        </div>
       </div>
 
       {status && <TermPanel status={status} catMap={catMap} />}

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { db } from "@/lib/db";
 import { customCategories } from "@/db/schema";
 import { CATEGORIES, type Category } from "@/lib/categories";
@@ -15,7 +16,7 @@ export type CategoryMeta = {
 const DEFAULT_BADGE = "bg-stone-500/10 text-stone-300 border-stone-400/30";
 const DEFAULT_DOT = "bg-stone-500";
 
-export async function loadAllCategories(): Promise<CategoryMeta[]> {
+export const loadAllCategories = cache(async (): Promise<CategoryMeta[]> => {
   const rows = await db.select().from(customCategories);
   const builtins = (Object.keys(CATEGORIES) as Category[]).map((k, i) => ({
     key: k,
@@ -36,14 +37,14 @@ export async function loadAllCategories(): Promise<CategoryMeta[]> {
     sortOrder: r.sortOrder ?? 100,
   }));
   return [...builtins, ...customs].sort((a, b) => a.sortOrder - b.sortOrder);
-}
+});
 
-export async function getCategoryMap() {
+export const getCategoryMap = cache(async () => {
   const all = await loadAllCategories();
   const m = new Map<string, CategoryMeta>();
   for (const c of all) m.set(c.key, c);
   return m;
-}
+});
 
 export function categoryKeyOf(initiative: {
   category: string;

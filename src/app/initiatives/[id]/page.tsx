@@ -262,6 +262,9 @@ export default async function InitiativePage({
           </div>
           <h1 className="text-3xl font-bold tracking-tight">{initiative.title}</h1>
           <p className="text-lg text-ink-text">{initiative.summary}</p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-dim">
+            {readTimeMinutes(initiative.body, initiative.outcomes, initiative.prerequisites)} min read
+          </p>
           {tagRows.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {tagRows.map((t) => (

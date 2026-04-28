@@ -100,6 +100,17 @@ export default async function ProfilePage({
                 ))}
             </div>
           )}
+          {user.bio && (
+            <p className="mt-3 text-sm text-ink-text/90">{user.bio}</p>
+          )}
+          {user.askMeAbout && (
+            <p className="mt-2 text-xs text-muted">
+              <span className="font-mono uppercase tracking-wider text-dim">
+                ask me about ·
+              </span>{" "}
+              {user.askMeAbout}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
             <Stat label="Owns" n={owned.length} />
             <Stat label="Participating" n={participating.length} />

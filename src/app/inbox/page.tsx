@@ -26,12 +26,13 @@ export default async function InboxPage() {
   const me = session?.user as { id?: string } | undefined;
   if (!me?.id) redirect("/signin?callbackUrl=/inbox");
 
+  const PAGE_SIZE = 50;
   const rows = await db
     .select()
     .from(notifications)
     .where(eq(notifications.userId, me.id))
     .orderBy(desc(notifications.createdAt))
-    .limit(100);
+    .limit(PAGE_SIZE);
 
   return (
     <div className="space-y-6">
