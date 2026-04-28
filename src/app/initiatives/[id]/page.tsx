@@ -36,6 +36,7 @@ import {
   type Format,
 } from "@/lib/categories";
 import { isAdmin } from "@/lib/admin";
+import { isTechTeam } from "@/lib/tech-team";
 import { UserChip } from "@/components/avatar";
 import { Reactions, REACTION_EMOJIS } from "@/components/reactions";
 import { CoverImage } from "@/components/cover-image";
@@ -43,6 +44,10 @@ import { Recordings } from "@/components/recordings";
 import { saveAsTemplate, unsaveAsTemplate } from "@/actions/templates";
 import { generateAiSummary, draftOutcomeWithAi } from "@/actions/ai";
 import { aiEnabled } from "@/lib/ai";
+import {
+  checkParticipationRule,
+  getParticipationStatus,
+} from "@/lib/participation";
 
 export default async function InitiativePage({
   params,
@@ -164,6 +169,22 @@ export default async function InitiativePage({
   const showcasable =
     initiative.status === "done" &&
     !!(initiative.outcomeBody || initiative.outcomeLinks);
+
+  const ruleExempt =
+    !me?.id ||
+    me.role === "tech" ||
+    me.role === "admin" ||
+    isTechTeam(me.email) ||
+    isAdmin(me.email);
+
+  const ruleVerdict =
+    me?.id && !ruleExempt
+      ? checkParticipationRule(
+          await getParticipationStatus(me.id),
+          initiative.category as Category,
+          CATEGORIES[initiative.category as Category]?.label ?? initiative.category
+        )
+      : { ok: true as const };
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
@@ -420,7 +441,7 @@ export default async function InitiativePage({
                   Leave
                 </button>
               </form>
-              {myRole === "subscriber" && !capacityFull && (
+              {myRole === "subscriber" && !capacityFull && ruleVerdict.ok && (
                 <form
                   action={async () => {
                     "use server";
@@ -433,6 +454,9 @@ export default async function InitiativePage({
                       : "I'm in — count me as a participant"}
                   </button>
                 </form>
+              )}
+              {myRole === "subscriber" && !ruleVerdict.ok && (
+                <RuleBlock message={ruleVerdict.message} />
               )}
             </div>
           ) : (
@@ -447,7 +471,7 @@ export default async function InitiativePage({
                   Follow updates
                 </button>
               </form>
-              {!capacityFull && (
+              {!capacityFull && ruleVerdict.ok && (
                 <form
                   action={async () => {
                     "use server";
@@ -461,11 +485,12 @@ export default async function InitiativePage({
                   </button>
                 </form>
               )}
-              {capacityFull && (
+              {capacityFull && ruleVerdict.ok && (
                 <p className="text-xs text-muted">
                   At capacity. You can still follow updates.
                 </p>
               )}
+              {!ruleVerdict.ok && <RuleBlock message={ruleVerdict.message} />}
             </div>
           )}
         </div>
@@ -599,6 +624,17 @@ export default async function InitiativePage({
           </ul>
         </div>
       </aside>
+    </div>
+  );
+}
+
+function RuleBlock({ message }: { message: string }) {
+  return (
+    <div className="rounded-md border border-brand-accent/30 bg-brand-accent-950 p-3">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+        Quarter rule
+      </p>
+      <p className="mt-1 text-xs text-muted">{message}</p>
     </div>
   );
 }

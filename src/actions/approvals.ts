@@ -5,6 +5,22 @@ import { db } from "@/lib/db";
 import { initiatives, subscriptions } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
+import { isTechTeam } from "@/lib/tech-team";
+import { isAdmin } from "@/lib/admin";
+import {
+  checkParticipationRule,
+  getParticipationStatus,
+} from "@/lib/participation";
+import { CATEGORIES, type Category } from "@/lib/categories";
+
+function isExempt(u: { email: string; role: string }) {
+  return (
+    u.role === "tech" ||
+    u.role === "admin" ||
+    isTechTeam(u.email) ||
+    isAdmin(u.email)
+  );
+}
 
 export async function requestToJoin(initiativeId: string) {
   const me = await requireUser();
@@ -14,6 +30,19 @@ export async function requestToJoin(initiativeId: string) {
     .where(eq(initiatives.id, initiativeId));
   if (!initiative) throw new Error("NOT_FOUND");
 
+  if (!isExempt(me)) {
+    const status = await getParticipationStatus(me.id);
+    const cat = initiative.category as Category;
+    const verdict = checkParticipationRule(
+      status,
+      cat,
+      CATEGORIES[cat]?.label ?? cat
+    );
+    if (!verdict.ok) {
+      throw new Error(`PARTICIPATION_RULE: ${verdict.message}`);
+    }
+  }
+
   const targetRole = initiative.requiresApproval ? "pending" : "participant";
 
   await db
@@ -21,7 +50,7 @@ export async function requestToJoin(initiativeId: string) {
     .values({ userId: me.id, initiativeId, role: targetRole })
     .onConflictDoUpdate({
       target: [subscriptions.userId, subscriptions.initiativeId],
-      set: { role: targetRole },
+      set: { role: targetRole, joinedAt: new Date() },
     });
   revalidatePath(`/initiatives/${initiativeId}`);
   revalidatePath("/me");
