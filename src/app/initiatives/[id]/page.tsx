@@ -569,6 +569,17 @@ export default async function InitiativePage({
                 Add to calendar (.ics)
               </a>
             </li>
+            {canEdit && (
+              <li>
+                <a
+                  href={`/initiatives/${initiative.id}/edit`}
+                  className="flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 hover:border-brand-accent/40 hover:text-brand-accent"
+                >
+                  <span className="inline-block h-2 w-2 rounded-full bg-brand-accent" />
+                  Edit initiative
+                </a>
+              </li>
+            )}
           </ul>
         </div>
 

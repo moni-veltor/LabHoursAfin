@@ -25,6 +25,7 @@ export async function Nav() {
     { href: "/", label: "Browse" },
     { href: "/showcase", label: "Showcase" },
   ];
+  if (user) mobileLinks.push({ href: "/people", label: "People" });
   if (user) mobileLinks.push({ href: "/inbox", label: `Inbox${unread ? ` (${unread})` : ""}` });
   if (canPost) mobileLinks.push({ href: "/owner", label: "Owner dashboard" });
   if (canPost) mobileLinks.push({ href: "/templates", label: "Templates" });
@@ -60,6 +61,7 @@ export async function Nav() {
         <nav className="hidden items-center gap-1 text-sm sm:flex">
           <NavLink href="/">Browse</NavLink>
           <NavLink href="/showcase">Showcase</NavLink>
+          {user && <NavLink href="/people">People</NavLink>}
           {canPost && <NavLink href="/owner">Owner</NavLink>}
           {canPost && <NavLink href="/templates">Templates</NavLink>}
           {user && <NavLink href="/me">My board</NavLink>}
