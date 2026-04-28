@@ -86,9 +86,20 @@ export default async function PortfolioPage() {
           <h2 className="text-2xl font-bold tracking-tight">
             {user.name ?? user.email}
           </h2>
+          {user.jobTitle && (
+            <p className="text-sm text-ink-text">{user.jobTitle}</p>
+          )}
           <p className="text-sm text-muted">
             {user.department ?? "—"} · {user.email}
           </p>
+          {user.hobbies && (
+            <p className="mt-1 text-xs text-muted">
+              <span className="font-mono uppercase tracking-wider text-dim">
+                hobbies ·
+              </span>{" "}
+              {user.hobbies}
+            </p>
+          )}
           <p className="mt-1 text-xs text-muted">
             Lab Hours portfolio · generated {formatDate(new Date())}
           </p>
