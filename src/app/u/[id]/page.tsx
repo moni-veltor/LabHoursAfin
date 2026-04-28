@@ -78,9 +78,28 @@ export default async function ProfilePage({
         <Avatar name={user.name} email={user.email} size={64} />
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{user.name ?? user.email}</h1>
+          {user.jobTitle && (
+            <p className="text-sm text-ink-text">{user.jobTitle}</p>
+          )}
           <p className="text-sm text-muted">
             {user.department ?? "—"} · {user.email}
           </p>
+          {user.hobbies && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {user.hobbies
+                .split(/[,;]/)
+                .map((h) => h.trim())
+                .filter(Boolean)
+                .map((h) => (
+                  <span
+                    key={h}
+                    className="rounded-full border border-line bg-raised px-2 py-0.5 font-mono text-[10px] text-muted"
+                  >
+                    {h.toLowerCase()}
+                  </span>
+                ))}
+            </div>
+          )}
           <div className="mt-2 flex flex-wrap gap-2 text-xs">
             <Stat label="Owns" n={owned.length} />
             <Stat label="Participating" n={participating.length} />

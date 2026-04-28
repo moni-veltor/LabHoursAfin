@@ -63,6 +63,8 @@ export const users = pgTable("user", {
   image: text("image"),
   role: userRole("role").notNull().default("member"),
   department: text("department"),
+  jobTitle: text("job_title"),
+  hobbies: text("hobbies"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
