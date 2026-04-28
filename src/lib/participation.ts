@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { initiatives, subscriptions } from "@/db/schema";
+import { initiatives, participationOverrides, subscriptions } from "@/db/schema";
 import { and, eq, gte, lt, or } from "drizzle-orm";
 import type { Category } from "@/lib/categories";
 
@@ -59,8 +59,10 @@ export type ParticipationStatus = {
   nextKey: string;
   nextStart: string;
   currentSlotsUsed: number;
-  currentCategories: Category[];
-  previousCategories: Category[];
+  currentCap: number;
+  extraSlots: number;
+  currentCategories: string[];
+  previousCategories: string[];
 };
 
 export async function getParticipationStatus(
@@ -74,9 +76,12 @@ export async function getParticipationStatus(
   const { start: currentStart, end: currentEnd } = termRange(currentKey);
   const { start: prevStart, end: prevEnd } = termRange(previousKey);
 
-  const [currentRows, previousRows] = await Promise.all([
+  const [currentRows, previousRows, override] = await Promise.all([
     db
-      .select({ category: initiatives.category })
+      .select({
+        category: initiatives.category,
+        custom: initiatives.customCategorySlug,
+      })
       .from(subscriptions)
       .innerJoin(initiatives, eq(initiatives.id, subscriptions.initiativeId))
       .where(
@@ -91,7 +96,10 @@ export async function getParticipationStatus(
         )
       ),
     db
-      .select({ category: initiatives.category })
+      .select({
+        category: initiatives.category,
+        custom: initiatives.customCategorySlug,
+      })
       .from(subscriptions)
       .innerJoin(initiatives, eq(initiatives.id, subscriptions.initiativeId))
       .where(
@@ -102,14 +110,22 @@ export async function getParticipationStatus(
           lt(subscriptions.joinedAt, prevEnd)
         )
       ),
+    db
+      .select()
+      .from(participationOverrides)
+      .where(
+        and(
+          eq(participationOverrides.userId, userId),
+          eq(participationOverrides.termKey, currentKey)
+        )
+      ),
   ]);
 
-  const currentCategories = Array.from(
-    new Set(currentRows.map((r) => r.category as Category))
-  );
-  const previousCategories = Array.from(
-    new Set(previousRows.map((r) => r.category as Category))
-  );
+  const keyOf = (r: { category: string; custom: string | null }) =>
+    r.custom ?? r.category;
+  const currentCategories = Array.from(new Set(currentRows.map(keyOf)));
+  const previousCategories = Array.from(new Set(previousRows.map(keyOf)));
+  const extraSlots = override[0]?.extraSlots ?? 0;
 
   return {
     currentKey,
@@ -119,6 +135,8 @@ export async function getParticipationStatus(
     nextKey,
     nextStart: formatTermStart(nextKey),
     currentSlotsUsed: currentRows.length,
+    currentCap: TERM_CAP + extraSlots,
+    extraSlots,
     currentCategories,
     previousCategories,
   };
@@ -132,24 +150,24 @@ export type RuleVerdict =
 
 export function checkParticipationRule(
   status: ParticipationStatus,
-  category: Category,
+  categoryKey: string,
   categoryLabel: string
 ): RuleVerdict {
-  if (status.currentSlotsUsed >= TERM_CAP) {
+  if (status.currentSlotsUsed >= status.currentCap) {
     return {
       ok: false,
       reason: "TERM_CAP",
-      message: `You've used both of your slots for ${status.currentLabel}. Next term opens ${status.nextStart}.`,
+      message: `You've used all ${status.currentCap} of your slots for ${status.currentLabel}. Next term opens ${status.nextStart}.`,
     };
   }
-  if (status.currentCategories.includes(category)) {
+  if (status.currentCategories.includes(categoryKey)) {
     return {
       ok: false,
       reason: "DUP_CATEGORY",
       message: `You're already in a ${categoryLabel} initiative this term — your two slots must be different categories.`,
     };
   }
-  if (status.previousCategories.includes(category)) {
+  if (status.previousCategories.includes(categoryKey)) {
     return {
       ok: false,
       reason: "PREV_TERM_CATEGORY",

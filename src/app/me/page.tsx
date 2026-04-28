@@ -14,6 +14,7 @@ import {
   nextTermKey,
 } from "@/lib/participation";
 import { CATEGORIES, type Category } from "@/lib/categories";
+import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 
 export default async function MyBoardPage() {
   const session = await auth();
@@ -35,9 +36,11 @@ export default async function MyBoardPage() {
   const ids = mySubs.map((s) => s.id);
 
   if (ids.length === 0) {
+    const emptyCatMap = await getCategoryMap();
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <h1 className="text-2xl font-bold tracking-tight">My board</h1>
+        {status && <TermPanel status={status} catMap={emptyCatMap} />}
         <p className="text-muted">You haven't subscribed to anything yet.</p>
       </div>
     );
@@ -50,10 +53,12 @@ export default async function MyBoardPage() {
       summary: initiatives.summary,
       status: initiatives.status,
       category: initiatives.category,
+      customCategorySlug: initiatives.customCategorySlug,
       format: initiatives.format,
       difficulty: initiatives.difficulty,
       coverImage: initiatives.coverImage,
       crossTeam: initiatives.crossTeam,
+      featured: initiatives.featured,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
       createdAt: initiatives.createdAt,
@@ -63,6 +68,13 @@ export default async function MyBoardPage() {
     .leftJoin(users, eq(users.id, initiatives.ownerId))
     .where(inArray(initiatives.id, ids))
     .orderBy(desc(initiatives.createdAt));
+
+  const catMap = await getCategoryMap();
+  const fallback = catMap.get("other")!;
+  const resolveCat = (r: { category: string; customCategorySlug: string | null }) => {
+    const c = catMap.get(categoryKeyOf(r)) ?? fallback;
+    return { label: c.label, badge: c.badge, dot: c.dot };
+  };
 
   const owner = rows.filter((r) =>
     mySubs.find((s) => s.id === r.id && s.role === "owner")
@@ -86,19 +98,30 @@ export default async function MyBoardPage() {
         </a>
       </div>
 
-      {status && <TermPanel status={status} />}
+      {status && <TermPanel status={status} catMap={catMap} />}
 
-      <Section title="Owned by me" rows={owner} />
-      <Section title="Participating" rows={participating} />
-      <Section title="Following" rows={following} />
+      <Section
+        title="Owned by me"
+        rows={owner.map((r) => ({ ...r, category: resolveCat(r) }))}
+      />
+      <Section
+        title="Participating"
+        rows={participating.map((r) => ({ ...r, category: resolveCat(r) }))}
+      />
+      <Section
+        title="Following"
+        rows={following.map((r) => ({ ...r, category: resolveCat(r) }))}
+      />
     </div>
   );
 }
 
 function TermPanel({
   status,
+  catMap,
 }: {
   status: Awaited<ReturnType<typeof getParticipationStatus>>;
+  catMap: Awaited<ReturnType<typeof getCategoryMap>>;
 }) {
   const slotsLeft = Math.max(0, TERM_CAP - status.currentSlotsUsed);
   return (
@@ -126,7 +149,7 @@ function TermPanel({
           ) : (
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {status.currentCategories.map((c) => (
-                <CatPill key={c} c={c} tone="primary" />
+                <CatPill key={c} k={c} tone="primary" catMap={catMap} />
               ))}
             </ul>
           )}
@@ -142,7 +165,7 @@ function TermPanel({
           ) : (
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {status.previousCategories.map((c) => (
-                <CatPill key={c} c={c} tone="locked" />
+                <CatPill key={c} k={c} tone="locked" catMap={catMap} />
               ))}
             </ul>
           )}
@@ -157,13 +180,15 @@ function TermPanel({
 }
 
 function CatPill({
-  c,
+  k,
   tone,
+  catMap,
 }: {
-  c: Category;
+  k: string;
   tone: "primary" | "locked";
+  catMap: Awaited<ReturnType<typeof getCategoryMap>>;
 }) {
-  const meta = CATEGORIES[c];
+  const meta = catMap.get(k);
   const cls =
     tone === "locked"
       ? "border-brand-accent/30 bg-brand-accent-950 text-brand-accent"
@@ -172,8 +197,10 @@ function CatPill({
     <li
       className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cls}`}
     >
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-      {meta.label}
+      <span
+        className={`inline-block h-1.5 w-1.5 rounded-full ${meta?.dot ?? "bg-stone-500"}`}
+      />
+      {meta?.label ?? k}
     </li>
   );
 }
@@ -188,11 +215,12 @@ function Section({
     title: string;
     summary: string;
     status: string;
-    category: string;
+    category: { label: string; badge: string; dot: string };
     format: string;
     difficulty: string;
     coverImage: string | null;
     crossTeam: boolean;
+    featured: boolean;
     timeCommitment: string | null;
     capacity: number | null;
     createdAt: Date;
@@ -213,7 +241,7 @@ function Section({
             title={r.title}
             summary={r.summary}
             status={r.status}
-            category={r.category as any}
+            category={r.category}
             format={r.format as any}
             difficulty={r.difficulty as any}
             coverImage={r.coverImage}
@@ -224,6 +252,7 @@ function Section({
             participantCount={0}
             createdAt={r.createdAt}
             tags={[]}
+            featured={r.featured}
           />
         ))}
       </div>

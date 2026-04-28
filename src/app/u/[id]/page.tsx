@@ -6,6 +6,7 @@ import { InitiativeCard } from "@/components/initiative-card";
 import { Avatar } from "@/components/avatar";
 import { SkillBadges } from "@/components/skill-badges";
 import Link from "next/link";
+import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 
 export default async function ProfilePage({
   params,
@@ -31,10 +32,12 @@ export default async function ProfilePage({
           summary: initiatives.summary,
           status: initiatives.status,
           category: initiatives.category,
+          customCategorySlug: initiatives.customCategorySlug,
           format: initiatives.format,
           difficulty: initiatives.difficulty,
           coverImage: initiatives.coverImage,
           crossTeam: initiatives.crossTeam,
+          featured: initiatives.featured,
           outcomeBody: initiatives.outcomeBody,
           timeCommitment: initiatives.timeCommitment,
           capacity: initiatives.capacity,
@@ -46,6 +49,13 @@ export default async function ProfilePage({
         .where(inArray(initiatives.id, ids))
         .orderBy(desc(initiatives.createdAt))
     : [];
+
+  const catMap = await getCategoryMap();
+  const fallback = catMap.get("other")!;
+  const resolveCat = (r: { category: string; customCategorySlug: string | null }) => {
+    const c = catMap.get(categoryKeyOf(r)) ?? fallback;
+    return { label: c.label, badge: c.badge, dot: c.dot };
+  };
 
   const owned = rows.filter((r) =>
     mySubs.find((s) => s.id === r.id && s.role === "owner")
@@ -64,7 +74,7 @@ export default async function ProfilePage({
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center gap-4 rounded-xl border border-line bg-surface p-6">
+      <header className="flex flex-wrap items-center gap-4 rounded-xl border border-line bg-surface p-6">
         <Avatar name={user.name} email={user.email} size={64} />
         <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold tracking-tight">{user.name ?? user.email}</h1>
@@ -106,9 +116,18 @@ export default async function ProfilePage({
         </span>
       </header>
 
-      <Section title="Owned" rows={owned} />
-      <Section title="Participating" rows={participating} />
-      <Section title="Following" rows={following} />
+      <Section
+        title="Owned"
+        rows={owned.map((r) => ({ ...r, category: resolveCat(r) }))}
+      />
+      <Section
+        title="Participating"
+        rows={participating.map((r) => ({ ...r, category: resolveCat(r) }))}
+      />
+      <Section
+        title="Following"
+        rows={following.map((r) => ({ ...r, category: resolveCat(r) }))}
+      />
 
       {owned.length === 0 && participating.length === 0 && following.length === 0 && (
         <div className="rounded-xl border border-dashed border-line bg-surface py-16 text-center text-muted">
@@ -137,11 +156,12 @@ function Section({
     title: string;
     summary: string;
     status: string;
-    category: string;
+    category: { label: string; badge: string; dot: string };
     format: string;
     difficulty: string;
     coverImage: string | null;
     crossTeam: boolean;
+    featured: boolean;
     timeCommitment: string | null;
     capacity: number | null;
     createdAt: Date;
@@ -162,11 +182,12 @@ function Section({
             title={r.title}
             summary={r.summary}
             status={r.status}
-            category={r.category as any}
+            category={r.category}
             format={r.format as any}
             difficulty={r.difficulty as any}
             coverImage={r.coverImage}
             crossTeam={r.crossTeam}
+            featured={r.featured}
             ownerName={r.ownerName}
             timeCommitment={r.timeCommitment}
             capacity={r.capacity}

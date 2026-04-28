@@ -48,6 +48,12 @@ import {
   checkParticipationRule,
   getParticipationStatus,
 } from "@/lib/participation";
+import { getCategoryMap } from "@/lib/categories-server";
+import { interests, initiativeCitations } from "@/db/schema";
+import { ApplicantNote } from "@/components/applicant-note";
+import { DeclineForm } from "@/components/decline-form";
+import { InterestButton } from "@/components/interest-button";
+import { readTimeMinutes } from "@/lib/read-time";
 
 export default async function InitiativePage({
   params,
@@ -177,14 +183,40 @@ export default async function InitiativePage({
     isTechTeam(me.email) ||
     isAdmin(me.email);
 
+  const catKey = initiative.customCategorySlug ?? initiative.category;
+  const catMap = await getCategoryMap();
+  const catMeta = catMap.get(catKey) ?? catMap.get("other")!;
+
   const ruleVerdict =
     me?.id && !ruleExempt
       ? checkParticipationRule(
           await getParticipationStatus(me.id),
-          initiative.category as Category,
-          CATEGORIES[initiative.category as Category]?.label ?? initiative.category
+          catKey,
+          catMeta.label
         )
       : { ok: true as const };
+
+  const myInterest = me?.id
+    ? await db
+        .select()
+        .from(interests)
+        .where(
+          and(
+            eq(interests.userId, me.id),
+            eq(interests.initiativeId, initiative.id)
+          )
+        )
+    : [];
+
+  const cited = await db
+    .select({
+      id: initiatives.id,
+      title: initiatives.title,
+      note: initiativeCitations.note,
+    })
+    .from(initiativeCitations)
+    .innerJoin(initiatives, eq(initiatives.id, initiativeCitations.citesId))
+    .where(eq(initiativeCitations.initiativeId, initiative.id));
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
@@ -194,7 +226,7 @@ export default async function InitiativePage({
         )}
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
-            <CategoryBadge category={initiative.category as Category} />
+            <CategoryBadge meta={catMeta} />
             <span className="rounded-full bg-raised px-2 py-0.5 text-ink-text">
               {initiative.status.replace("_", " ")}
             </span>
@@ -442,18 +474,15 @@ export default async function InitiativePage({
                 </button>
               </form>
               {myRole === "subscriber" && !capacityFull && ruleVerdict.ok && (
-                <form
-                  action={async () => {
-                    "use server";
-                    await requestToJoin(initiative.id);
-                  }}
-                >
-                  <button className="w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark">
-                    {initiative.requiresApproval
+                <ApplicantNote
+                  initiativeId={initiative.id}
+                  ctaLabel={
+                    initiative.requiresApproval
                       ? "Apply to join"
-                      : "I'm in — count me as a participant"}
-                  </button>
-                </form>
+                      : "I'm in — count me as a participant"
+                  }
+                  requiresApproval={!!initiative.requiresApproval}
+                />
               )}
               {myRole === "subscriber" && !ruleVerdict.ok && (
                 <RuleBlock message={ruleVerdict.message} />
@@ -472,19 +501,21 @@ export default async function InitiativePage({
                 </button>
               </form>
               {!capacityFull && ruleVerdict.ok && (
-                <form
-                  action={async () => {
-                    "use server";
-                    await requestToJoin(initiative.id);
-                  }}
-                >
-                  <button className="w-full rounded-md bg-brand-primary px-3 py-2 text-sm font-medium text-white hover:bg-brand-primary-dark">
-                    {initiative.requiresApproval
+                <ApplicantNote
+                  initiativeId={initiative.id}
+                  ctaLabel={
+                    initiative.requiresApproval
                       ? "Apply to join"
-                      : "Join the initiative"}
-                  </button>
-                </form>
+                      : "Join the initiative"
+                  }
+                  requiresApproval={!!initiative.requiresApproval}
+                />
               )}
+              <InterestButton
+                initiativeId={initiative.id}
+                isInterested={myInterest.length > 0}
+                signedIn={!!me}
+              />
               {capacityFull && ruleVerdict.ok && (
                 <p className="text-xs text-muted">
                   At capacity. You can still follow updates.
@@ -515,16 +546,10 @@ export default async function InitiativePage({
                         Approve
                       </button>
                     </form>
-                    <form
-                      action={async () => {
-                        "use server";
-                        await declineParticipant(initiative.id, p.userId);
-                      }}
-                    >
-                      <button className="rounded-md border border-line bg-surface px-2 py-1 text-xs hover:bg-line">
-                        Decline
-                      </button>
-                    </form>
+                    <DeclineForm
+                      initiativeId={initiative.id}
+                      userId={p.userId}
+                    />
                   </div>
                 </li>
               ))}
@@ -639,14 +664,17 @@ function RuleBlock({ message }: { message: string }) {
   );
 }
 
-function CategoryBadge({ category }: { category: Category }) {
-  const c = CATEGORIES[category];
+function CategoryBadge({
+  meta,
+}: {
+  meta: { label: string; badge: string; dot: string };
+}) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${c.badge}`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${meta.badge}`}
     >
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${c.dot}`} />
-      {c.label}
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${meta.dot}`} />
+      {meta.label}
     </span>
   );
 }

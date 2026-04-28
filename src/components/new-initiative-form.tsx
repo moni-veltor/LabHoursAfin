@@ -3,8 +3,6 @@
 import { useRef, useState } from "react";
 import { createInitiative } from "@/actions/initiatives";
 import {
-  CATEGORIES,
-  CATEGORY_KEYS,
   DIFFICULTIES,
   DIFFICULTY_KEYS,
   EFFORTS,
@@ -12,6 +10,13 @@ import {
   FORMATS,
   FORMAT_KEYS,
 } from "@/lib/categories";
+
+type CategoryOption = {
+  key: string;
+  label: string;
+  blurb: string;
+  isCustom: boolean;
+};
 
 type Initial = Partial<{
   title: string;
@@ -37,9 +42,11 @@ type Initial = Partial<{
 export function NewInitiativeForm({
   initial,
   aiEnabled,
+  categories,
 }: {
   initial: Initial;
   aiEnabled: boolean;
+  categories: CategoryOption[];
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [pitch, setPitch] = useState("");
@@ -131,10 +138,10 @@ export function NewInitiativeForm({
             name="category"
             required
             defaultValue={initial.category}
-            options={CATEGORY_KEYS.map((k) => ({
-              value: k,
-              label: CATEGORIES[k].label,
-              hint: CATEGORIES[k].blurb,
+            options={categories.map((c) => ({
+              value: c.key,
+              label: c.label,
+              hint: c.blurb,
             }))}
           />
           <Field

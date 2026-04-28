@@ -1,14 +1,47 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
+import { isTechTeam } from "@/lib/tech-team";
+import { unreadCount } from "@/lib/notifications-server";
+import { NotificationBell } from "@/components/notification-bell";
+import { MobileNav } from "@/components/mobile-nav";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { DensityToggle } from "@/components/density-toggle";
 
 export async function Nav() {
   const session = await auth();
   const user = session?.user as
     | { id?: string; name?: string; email?: string; role?: "member" | "tech" | "admin" }
     | undefined;
-  const canPost = user?.role === "tech" || user?.role === "admin";
+  const canPost =
+    user?.role === "tech" ||
+    user?.role === "admin" ||
+    isTechTeam(user?.email) ||
+    isAdmin(user?.email);
   const adminAccess = isAdmin(user?.email);
+  const unread = user?.id ? await unreadCount(user.id) : 0;
+
+  const mobileLinks: { href: string; label: string; emphasis?: "primary" | "accent" }[] = [
+    { href: "/", label: "Browse" },
+    { href: "/showcase", label: "Showcase" },
+  ];
+  if (user) mobileLinks.push({ href: "/inbox", label: `Inbox${unread ? ` (${unread})` : ""}` });
+  if (canPost) mobileLinks.push({ href: "/owner", label: "Owner dashboard" });
+  if (canPost) mobileLinks.push({ href: "/templates", label: "Templates" });
+  if (user) mobileLinks.push({ href: "/me", label: "My board" });
+  if (adminAccess) {
+    mobileLinks.push({ href: "/admin", label: "Admin", emphasis: "accent" });
+    mobileLinks.push({ href: "/admin/queue", label: "Queue" });
+    mobileLinks.push({ href: "/admin/categories", label: "Categories" });
+    mobileLinks.push({ href: "/admin/audit", label: "Audit log" });
+    mobileLinks.push({ href: "/admin/settings", label: "Settings" });
+  }
+  if (canPost)
+    mobileLinks.push({
+      href: "/initiatives/new",
+      label: "+ New initiative",
+      emphasis: "primary",
+    });
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-ink/85 backdrop-blur">
@@ -19,13 +52,15 @@ export async function Nav() {
         >
           <BrandMark />
           <span className="text-ink-text">Lab Hours</span>
-          <span className="font-mono text-xs text-dim group-hover:text-muted">
-            v0.4
+          <span className="hidden font-mono text-xs text-dim group-hover:text-muted sm:inline">
+            v0.6
           </span>
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+
+        <nav className="hidden items-center gap-1 text-sm sm:flex">
           <NavLink href="/">Browse</NavLink>
           <NavLink href="/showcase">Showcase</NavLink>
+          {canPost && <NavLink href="/owner">Owner</NavLink>}
           {canPost && <NavLink href="/templates">Templates</NavLink>}
           {user && <NavLink href="/me">My board</NavLink>}
           {adminAccess && (
@@ -41,10 +76,11 @@ export async function Nav() {
               href="/initiatives/new"
               className="ml-1 rounded-md bg-brand-primary px-3 py-1.5 text-sm font-medium text-white shadow-glow transition hover:bg-brand-primary-dark"
             >
-              + New initiative
+              + New
             </Link>
           )}
-          <span className="ml-2 hidden items-center gap-1 rounded-md border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-dim sm:inline-flex">
+          {user && <NotificationBell unread={unread} />}
+          <span className="ml-2 hidden items-center gap-1 rounded-md border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-dim md:inline-flex">
             <kbd>⌘</kbd>
             <kbd>K</kbd>
           </span>
@@ -64,6 +100,11 @@ export async function Nav() {
             <NavLink href="/signin">Sign in</NavLink>
           )}
         </nav>
+
+        <div className="flex items-center gap-2 sm:hidden">
+          {user && <NotificationBell unread={unread} />}
+          <MobileNav links={mobileLinks} />
+        </div>
       </div>
     </header>
   );

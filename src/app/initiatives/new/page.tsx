@@ -7,6 +7,7 @@ import { initiatives, initiativeTags, tags } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NewInitiativeForm } from "@/components/new-initiative-form";
 import { aiEnabled } from "@/lib/ai";
+import { loadAllCategories } from "@/lib/categories-server";
 
 export default async function NewInitiativePage({
   searchParams,
@@ -85,7 +86,11 @@ export default async function NewInitiativePage({
       )}
 
       <div className="mt-6">
-        <NewInitiativeForm initial={initial} aiEnabled={aiEnabled} />
+        <NewInitiativeForm
+          initial={initial}
+          aiEnabled={aiEnabled}
+          categories={await loadAllCategories()}
+        />
       </div>
     </div>
   );

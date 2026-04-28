@@ -6,23 +6,27 @@ import {
   initiativeTags,
   tags,
 } from "@/db/schema";
-import { eq, desc, ne, inArray, and, ilike, sql } from "drizzle-orm";
+import { eq, desc, ne, inArray, and, ilike, sql, asc } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
 import Link from "next/link";
-import {
-  CATEGORIES,
-  CATEGORY_KEYS,
-  type Category,
-} from "@/lib/categories";
 import { SearchInput } from "@/components/search-input";
 import { RecommendStrip } from "@/components/recommend";
 import { auth } from "@/lib/auth";
+import { loadAllCategories, categoryKeyOf } from "@/lib/categories-server";
+import { getParticipationStatus } from "@/lib/participation";
+import { isTechTeam } from "@/lib/tech-team";
+import { isAdmin } from "@/lib/admin";
+
+const PAGE_SIZE = 20;
 
 type Search = {
   status?: string;
   tag?: string;
   category?: string;
   q?: string;
+  sort?: string;
+  page?: string;
+  surprise?: string;
 };
 
 export default async function HomePage({
@@ -32,12 +36,33 @@ export default async function HomePage({
 }) {
   const sp = await searchParams;
   const session = await auth();
-  const meId = (session?.user as { id?: string } | undefined)?.id;
+  const me = session?.user as
+    | { id?: string; email?: string; role?: string }
+    | undefined;
 
-  const filters = [ne(initiatives.status, "archived")];
+  const allCats = await loadAllCategories();
+  const catMap = new Map(allCats.map((c) => [c.key, c]));
+  const fallbackCat = catMap.get("other")!;
+
+  const ruleApplies = !!(
+    me &&
+    me.role === "member" &&
+    !isTechTeam(me.email) &&
+    !isAdmin(me.email)
+  );
+  const status = me?.id && ruleApplies ? await getParticipationStatus(me.id) : null;
+  const lockedSet = new Set(
+    status ? [...status.currentCategories, ...status.previousCategories] : []
+  );
+
+  const filters = [ne(initiatives.status, "archived"), eq(initiatives.awaitingReview, false)];
   if (sp.status) filters.push(eq(initiatives.status, sp.status as any));
-  if (sp.category && (CATEGORY_KEYS as string[]).includes(sp.category)) {
-    filters.push(eq(initiatives.category, sp.category as any));
+  if (sp.category) {
+    if (catMap.get(sp.category)?.isCustom) {
+      filters.push(eq(initiatives.customCategorySlug, sp.category));
+    } else {
+      filters.push(eq(initiatives.category, sp.category as any));
+    }
   }
   if (sp.q && sp.q.trim().length > 0) {
     const q = `%${sp.q.trim()}%`;
@@ -67,13 +92,22 @@ export default async function HomePage({
       ? and(...filters, inArray(initiatives.id, initiativeIds))
       : and(...filters);
 
-  const rows = await db
+  const page = Math.max(1, Number(sp.page) || 1);
+  const offset = (page - 1) * PAGE_SIZE;
+  const sort = sp.sort ?? "new";
+
+  let orderBy: any[] = [desc(initiatives.featured), desc(initiatives.createdAt)];
+  if (sort === "trending") orderBy = [desc(initiatives.updatedAt)];
+  if (sort === "ending") orderBy = [asc(initiatives.endsAt), desc(initiatives.createdAt)];
+
+  const rowsRaw = await db
     .select({
       id: initiatives.id,
       title: initiatives.title,
       summary: initiatives.summary,
       status: initiatives.status,
       category: initiatives.category,
+      customCategorySlug: initiatives.customCategorySlug,
       format: initiatives.format,
       difficulty: initiatives.difficulty,
       featured: initiatives.featured,
@@ -87,7 +121,16 @@ export default async function HomePage({
     .from(initiatives)
     .leftJoin(users, eq(users.id, initiatives.ownerId))
     .where(where)
-    .orderBy(desc(initiatives.featured), desc(initiatives.createdAt));
+    .orderBy(...orderBy)
+    .limit(PAGE_SIZE + 1)
+    .offset(offset);
+
+  const hasNext = rowsRaw.length > PAGE_SIZE;
+  let rows = rowsRaw.slice(0, PAGE_SIZE);
+
+  if (sp.surprise === "1" && rows.length > 1) {
+    rows = [rows[Math.floor(Math.random() * rows.length)]];
+  }
 
   const ids = rows.map((r) => r.id);
   const [counts, allTags] = await Promise.all([
@@ -128,15 +171,21 @@ export default async function HomePage({
 
       <div className="space-y-3">
         <SearchInput q={sp.q} />
-        <CategoryTabs current={sp.category} />
-        <StatusBar current={sp} />
+        <CategoryTabs current={sp.category} allCats={allCats} />
+        <ControlBar current={sp} />
       </div>
 
-      {meId && !sp.q && !sp.category && !sp.status && !sp.tag && (
-        <RecommendStrip userId={meId} />
+      {me?.id && !sp.q && !sp.category && !sp.status && !sp.tag && !sp.surprise && (
+        <RecommendStrip userId={me.id} />
       )}
 
-      {featured.length > 0 && (
+      {sp.surprise === "1" && rows.length > 0 && (
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+          random pick — refresh for another
+        </p>
+      )}
+
+      {featured.length > 0 && !sp.surprise && (
         <section>
           <SectionHeader badge="featured" tone="accent">
             On the wall
@@ -145,8 +194,7 @@ export default async function HomePage({
             {featured.map((r) => (
               <InitiativeCard
                 key={r.id}
-                {...mapRow(r, participantCount, tagsByInitiative)}
-                featured
+                {...mapRow(r, participantCount, tagsByInitiative, catMap, fallbackCat, lockedSet)}
               />
             ))}
           </div>
@@ -164,12 +212,16 @@ export default async function HomePage({
             {rest.map((r) => (
               <InitiativeCard
                 key={r.id}
-                {...mapRow(r, participantCount, tagsByInitiative)}
+                {...mapRow(r, participantCount, tagsByInitiative, catMap, fallbackCat, lockedSet)}
               />
             ))}
           </div>
         </section>
       ) : null}
+
+      {(page > 1 || hasNext) && (
+        <Pagination page={page} hasNext={hasNext} sp={sp} />
+      )}
     </div>
   );
 }
@@ -177,14 +229,19 @@ export default async function HomePage({
 function mapRow(
   r: any,
   participantCount: Map<string, number>,
-  tagsByInitiative: Map<string, string[]>
+  tagsByInitiative: Map<string, string[]>,
+  catMap: Map<string, any>,
+  fallbackCat: any,
+  lockedSet: Set<string>
 ) {
+  const key = r.customCategorySlug ?? r.category;
+  const cat = catMap.get(key) ?? fallbackCat;
   return {
     id: r.id,
     title: r.title,
     summary: r.summary,
     status: r.status,
-    category: r.category as Category,
+    category: { label: cat.label, badge: cat.badge, dot: cat.dot },
     format: r.format,
     difficulty: r.difficulty,
     ownerName: r.ownerName,
@@ -195,6 +252,8 @@ function mapRow(
     tags: tagsByInitiative.get(r.id) ?? [],
     coverImage: r.coverImage,
     crossTeam: r.crossTeam,
+    featured: r.featured,
+    locked: lockedSet.has(key),
   };
 }
 
@@ -203,16 +262,14 @@ function Hero({ count }: { count: number }) {
     <section className="relative overflow-hidden rounded-2xl border border-line bg-surface">
       <div className="lh-mesh absolute inset-0 opacity-90" />
       <div className="lh-grid-bg absolute inset-0 opacity-30" />
-      <div className="relative px-7 py-10">
+      <div className="relative px-5 py-8 sm:px-7 sm:py-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-line bg-raised/70 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted backdrop-blur">
           <span className="relative inline-block h-1.5 w-1.5 rounded-full bg-brand-success">
             <span className="absolute inset-0 rounded-full bg-brand-success opacity-60 animate-pulse-soft" />
           </span>
-          live · {count} initiatives
+          live · {count} on this page
         </div>
-        <h1 className="mt-4 text-4xl font-bold tracking-tight text-ink-text">
-          Lab Hours
-        </h1>
+        <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Lab Hours</h1>
         <p className="mt-2 max-w-xl text-muted">
           Initiatives the tech team is exploring. Subscribe to follow along, or
           join the ones you want in on.
@@ -274,20 +331,29 @@ function SectionHeader({
   );
 }
 
-function CategoryTabs({ current }: { current?: string }) {
+function CategoryTabs({
+  current,
+  allCats,
+}: {
+  current?: string;
+  allCats: Awaited<ReturnType<typeof loadAllCategories>>;
+}) {
   return (
     <div className="-mx-1 flex flex-wrap gap-1 overflow-x-auto pb-1 text-sm">
       <Tab href="/" active={!current}>
         All
       </Tab>
-      {CATEGORY_KEYS.map((k) => (
+      {allCats.map((c) => (
         <Tab
-          key={k}
-          href={`/?category=${k}`}
-          active={current === k}
-          dotClass={CATEGORIES[k].dot}
+          key={c.key}
+          href={`/?category=${c.key}`}
+          active={current === c.key}
+          dotClass={c.dot}
         >
-          {CATEGORIES[k].label}
+          {c.label}
+          {c.isCustom && (
+            <span className="ml-1 font-mono text-[9px] text-dim">·new</span>
+          )}
         </Tab>
       ))}
     </div>
@@ -320,8 +386,12 @@ function Tab({
   );
 }
 
-function StatusBar({ current }: { current: Search }) {
+function ControlBar({ current }: { current: Search }) {
   const statuses = ["open", "in_progress", "done"];
+  const sorts = [
+    { k: "new", label: "newest" },
+    { k: "trending", label: "active" },
+  ];
   const base = current.category ? `&category=${current.category}` : "";
   return (
     <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] uppercase tracking-wider">
@@ -348,8 +418,36 @@ function StatusBar({ current }: { current: Search }) {
           {s.replace("_", " ")}
         </Link>
       ))}
+      <span className="ml-2 text-dim">|</span>
+      {sorts.map((s) => {
+        const active = (current.sort ?? "new") === s.k;
+        const params = new URLSearchParams();
+        if (current.category) params.set("category", current.category);
+        if (current.status) params.set("status", current.status);
+        if (current.q) params.set("q", current.q);
+        params.set("sort", s.k);
+        return (
+          <Link
+            key={s.k}
+            href={`/?${params.toString()}`}
+            className={`rounded-full px-3 py-1 ${
+              active
+                ? "border border-brand-accent/40 bg-brand-accent-950 text-brand-accent"
+                : "border border-line bg-raised text-muted hover:text-ink-text"
+            }`}
+          >
+            {s.label}
+          </Link>
+        );
+      })}
+      <Link
+        href="/?surprise=1"
+        className="ml-auto rounded-full border border-line bg-raised px-3 py-1 text-muted hover:border-brand-accent/40 hover:text-brand-accent"
+      >
+        ✦ surprise me
+      </Link>
       {current.tag && (
-        <span className="ml-2 rounded-full border border-line bg-raised px-3 py-1 text-muted">
+        <span className="rounded-full border border-line bg-raised px-3 py-1 text-muted">
           #{current.tag}{" "}
           <Link href="/" className="ml-1 text-dim hover:text-ink-text">
             ×
@@ -357,6 +455,58 @@ function StatusBar({ current }: { current: Search }) {
         </span>
       )}
     </div>
+  );
+}
+
+function Pagination({
+  page,
+  hasNext,
+  sp,
+}: {
+  page: number;
+  hasNext: boolean;
+  sp: Search;
+}) {
+  function url(p: number) {
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(sp)) {
+      if (k === "page" || v == null || v === "") continue;
+      params.set(k, String(v));
+    }
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `/?${qs}` : "/";
+  }
+  return (
+    <nav className="flex items-center justify-between font-mono text-xs">
+      <span className="text-dim">page {page}</span>
+      <div className="flex items-center gap-2">
+        {page > 1 ? (
+          <Link
+            href={url(page - 1)}
+            className="rounded-md border border-line bg-raised px-3 py-1.5 text-muted hover:text-ink-text"
+          >
+            ← prev
+          </Link>
+        ) : (
+          <span className="rounded-md border border-line bg-surface px-3 py-1.5 text-dim">
+            ← prev
+          </span>
+        )}
+        {hasNext ? (
+          <Link
+            href={url(page + 1)}
+            className="rounded-md border border-line bg-raised px-3 py-1.5 text-muted hover:text-ink-text"
+          >
+            next →
+          </Link>
+        ) : (
+          <span className="rounded-md border border-line bg-surface px-3 py-1.5 text-dim">
+            next →
+          </span>
+        )}
+      </div>
+    </nav>
   );
 }
 

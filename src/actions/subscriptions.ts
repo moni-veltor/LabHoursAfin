@@ -11,7 +11,8 @@ import {
   checkParticipationRule,
   getParticipationStatus,
 } from "@/lib/participation";
-import { CATEGORIES, type Category } from "@/lib/categories";
+import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
+import { promoteFromWaitlist } from "@/actions/approvals";
 
 function isExempt(u: { email: string; role: string }) {
   return (
@@ -34,12 +35,13 @@ export async function subscribe(
       .from(initiatives)
       .where(eq(initiatives.id, initiativeId));
     if (!initiative) throw new Error("NOT_FOUND");
+    const catKey = categoryKeyOf(initiative);
+    const map = await getCategoryMap();
     const status = await getParticipationStatus(me.id);
-    const cat = initiative.category as Category;
     const verdict = checkParticipationRule(
       status,
-      cat,
-      CATEGORIES[cat]?.label ?? cat
+      catKey,
+      map.get(catKey)?.label ?? catKey
     );
     if (!verdict.ok) {
       throw new Error(`PARTICIPATION_RULE: ${verdict.message}`);
@@ -64,6 +66,7 @@ export async function unsubscribe(initiativeId: string) {
     .where(
       and(eq(subscriptions.userId, me.id), eq(subscriptions.initiativeId, initiativeId))
     );
+  await promoteFromWaitlist(initiativeId);
   revalidatePath(`/initiatives/${initiativeId}`);
   revalidatePath("/me");
 }

@@ -13,6 +13,8 @@ import {
   EFFORT_KEYS,
   FORMAT_KEYS,
 } from "@/lib/categories";
+import { customCategories } from "@/db/schema";
+import { getBoolSetting } from "@/lib/settings-server";
 
 const InitiativeSchema = z.object({
   title: z.string().min(3).max(140),
@@ -21,7 +23,7 @@ const InitiativeSchema = z.object({
   status: z
     .enum(["draft", "open", "in_progress", "done", "archived"])
     .default("open"),
-  category: z.enum(CATEGORY_KEYS as [string, ...string[]]),
+  categoryKey: z.string().min(1),
   subcategory: z.string().max(80).optional(),
   format: z.enum(FORMAT_KEYS as [string, ...string[]]).default("open"),
   difficulty: z.enum(DIFFICULTY_KEYS as [string, ...string[]]).default("any"),
@@ -44,6 +46,7 @@ const InitiativeSchema = z.object({
     .transform((v) => v === "on" || v === "true"),
   coverImage: z.string().max(500).optional(),
   recordings: z.string().max(2000).optional(),
+  lessonsLearned: z.string().max(4000).optional(),
 });
 
 async function upsertTags(raw?: string) {
@@ -91,7 +94,7 @@ export async function createInitiative(formData: FormData) {
     summary: formData.get("summary"),
     body: emptyToUndef(formData.get("body")) ?? "",
     status: emptyToUndef(formData.get("status")) ?? "open",
-    category: formData.get("category"),
+    categoryKey: formData.get("category"),
     subcategory: emptyToUndef(formData.get("subcategory")),
     format: emptyToUndef(formData.get("format")) ?? "open",
     difficulty: emptyToUndef(formData.get("difficulty")) ?? "any",
@@ -105,7 +108,30 @@ export async function createInitiative(formData: FormData) {
     crossTeam: (formData.get("crossTeam") as any) ?? "",
     coverImage: emptyToUndef(formData.get("coverImage")),
     recordings: emptyToUndef(formData.get("recordings")),
+    lessonsLearned: emptyToUndef(formData.get("lessonsLearned")),
   });
+
+  let category: string = "other";
+  let customCategorySlug: string | null = null;
+  if ((CATEGORY_KEYS as string[]).includes(parsed.categoryKey)) {
+    category = parsed.categoryKey;
+  } else {
+    const [c] = await db
+      .select()
+      .from(customCategories)
+      .where(eq(customCategories.slug, parsed.categoryKey));
+    if (!c) throw new Error("UNKNOWN_CATEGORY");
+    customCategorySlug = c.slug;
+    category = "other";
+  }
+
+  const requirePrePublish = await getBoolSetting(
+    "prepublish_review",
+    false
+  );
+  const status =
+    requirePrePublish && parsed.status === "open" ? "draft" : parsed.status;
+  const awaitingReview = requirePrePublish && parsed.status === "open";
 
   const [created] = await db
     .insert(initiatives)
@@ -114,8 +140,9 @@ export async function createInitiative(formData: FormData) {
       title: parsed.title,
       summary: parsed.summary,
       body: parsed.body,
-      status: parsed.status,
-      category: parsed.category as any,
+      status,
+      category: category as any,
+      customCategorySlug,
       subcategory: parsed.subcategory,
       format: parsed.format as any,
       difficulty: parsed.difficulty as any,
@@ -126,8 +153,10 @@ export async function createInitiative(formData: FormData) {
       timeCommitment: parsed.timeCommitment,
       requiresApproval: parsed.requiresApproval,
       crossTeam: parsed.crossTeam,
+      awaitingReview,
       coverImage: parsed.coverImage,
       recordings: parsed.recordings,
+      lessonsLearned: parsed.lessonsLearned,
     })
     .returning();
 

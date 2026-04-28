@@ -130,12 +130,15 @@ export const initiatives = pgTable(
     featured: boolean("featured").notNull().default(false),
     crossTeam: boolean("cross_team").notNull().default(false),
     isTemplate: boolean("is_template").notNull().default(false),
+    awaitingReview: boolean("awaiting_review").notNull().default(false),
+    customCategorySlug: text("custom_category_slug"),
     coverImage: text("cover_image"),
     recordings: text("recordings"),
     aiSummary: text("ai_summary"),
     aiSummaryAt: timestamp("ai_summary_at"),
     outcomeBody: text("outcome_body"),
     outcomeLinks: text("outcome_links"),
+    lessonsLearned: text("lessons_learned"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -158,6 +161,9 @@ export const subscriptions = pgTable(
       .references(() => initiatives.id, { onDelete: "cascade" }),
     role: subscriptionRole("role").notNull().default("subscriber"),
     joinedAt: timestamp("joined_at").notNull().defaultNow(),
+    applicationNote: text("application_note"),
+    declineReason: text("decline_reason"),
+    waitlistPosition: integer("waitlist_position"),
   },
   (t) => [primaryKey({ columns: [t.userId, t.initiativeId] })]
 );
@@ -234,6 +240,99 @@ export const reactions = pgTable(
     index("reaction_target_idx").on(t.targetType, t.targetId),
   ]
 );
+
+export const customCategories = pgTable("custom_category", {
+  slug: text("slug").primaryKey(),
+  label: text("label").notNull(),
+  blurb: text("blurb"),
+  badge: text("badge"),
+  dot: text("dot"),
+  sortOrder: integer("sort_order").notNull().default(100),
+  createdBy: text("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const notifications = pgTable(
+  "notification",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    initiativeId: uuid("initiative_id"),
+    sourceUserId: text("source_user_id"),
+    message: text("message").notNull(),
+    url: text("url"),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("notification_user_idx").on(t.userId, t.readAt)]
+);
+
+export const auditEvents = pgTable(
+  "audit_event",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorId: text("actor_id").references(() => users.id),
+    action: text("action").notNull(),
+    targetType: text("target_type"),
+    targetId: text("target_id"),
+    payload: text("payload"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("audit_event_idx").on(t.createdAt)]
+);
+
+export const interests = pgTable(
+  "interest",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.initiativeId] })]
+);
+
+export const initiativeCitations = pgTable(
+  "initiative_citation",
+  {
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    citesId: uuid("cites_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    note: text("note"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.initiativeId, t.citesId] })]
+);
+
+export const participationOverrides = pgTable(
+  "participation_override",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    termKey: text("term_key").notNull(),
+    extraSlots: integer("extra_slots").notNull().default(1),
+    grantedBy: text("granted_by").references(() => users.id),
+    grantedAt: timestamp("granted_at").notNull().defaultNow(),
+    reason: text("reason"),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.termKey] })]
+);
+
+export const settings = pgTable("setting", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
 export const initiativesRelations = relations(initiatives, ({ one, many }) => ({
   owner: one(users, { fields: [initiatives.ownerId], references: [users.id] }),

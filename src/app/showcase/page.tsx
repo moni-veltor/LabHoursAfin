@@ -2,7 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { initiatives, users } from "@/db/schema";
 import { and, desc, eq, isNotNull, or } from "drizzle-orm";
-import { CATEGORIES, type Category } from "@/lib/categories";
+import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { formatDate } from "@/lib/utils";
 
 export default async function ShowcasePage() {
@@ -12,8 +12,10 @@ export default async function ShowcasePage() {
       title: initiatives.title,
       summary: initiatives.summary,
       category: initiatives.category,
+      customCategorySlug: initiatives.customCategorySlug,
       outcomeBody: initiatives.outcomeBody,
       outcomeLinks: initiatives.outcomeLinks,
+      lessonsLearned: initiatives.lessonsLearned,
       updatedAt: initiatives.updatedAt,
       ownerId: initiatives.ownerId,
       ownerName: users.name,
@@ -27,6 +29,9 @@ export default async function ShowcasePage() {
       )
     )
     .orderBy(desc(initiatives.updatedAt));
+
+  const catMap = await getCategoryMap();
+  const fallback = catMap.get("other")!;
 
   return (
     <div className="space-y-6">
@@ -44,7 +49,7 @@ export default async function ShowcasePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((r) => {
-            const cat = CATEGORIES[r.category as Category];
+            const cat = catMap.get(categoryKeyOf(r)) ?? fallback;
             const links = (r.outcomeLinks ?? "")
               .split(/[\n,]+/)
               .map((s) => s.trim())
@@ -56,8 +61,12 @@ export default async function ShowcasePage() {
                 className="group flex flex-col gap-3 rounded-xl border border-line bg-surface p-5 transition hover:border-line hover:shadow-sm"
               >
                 <div className="flex items-center gap-2">
-                  <span className={`inline-block h-2 w-2 rounded-full ${cat.dot}`} />
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${cat.badge}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cat.badge}`}
+                  >
+                    <span
+                      className={`inline-block h-1.5 w-1.5 rounded-full ${cat.dot}`}
+                    />
                     {cat.label}
                   </span>
                   <span className="ml-auto text-xs text-dim">
@@ -71,6 +80,14 @@ export default async function ShowcasePage() {
                 {r.outcomeBody && (
                   <p className="rounded-md border-l-2 border-brand-success bg-brand-success-950 px-3 py-2 text-xs text-ink-text line-clamp-4">
                     {r.outcomeBody}
+                  </p>
+                )}
+                {r.lessonsLearned && (
+                  <p className="rounded-md border-l-2 border-brand-accent bg-brand-accent-950 px-3 py-2 text-xs text-ink-text line-clamp-3">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-brand-accent">
+                      lessons
+                    </span>{" "}
+                    {r.lessonsLearned}
                   </p>
                 )}
                 {links.length > 0 && (

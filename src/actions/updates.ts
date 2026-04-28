@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { initiatives, subscriptions, updates, users } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
-import { eq, inArray, ne } from "drizzle-orm";
-import { notifyUpdate } from "@/lib/email";
+import { eq, ne } from "drizzle-orm";
+import { notify } from "@/lib/notifications-server";
 
 const UpdateSchema = z.object({
   initiativeId: z.string().uuid(),
@@ -38,19 +38,19 @@ export async function postUpdate(formData: FormData) {
   const subs = await db
     .select({ userId: subscriptions.userId })
     .from(subscriptions)
-    .where(eq(subscriptions.initiativeId, parsed.initiativeId));
-  const subUserIds = subs.map((s) => s.userId).filter((id) => id !== me.id);
-  if (subUserIds.length > 0) {
-    const recipients = await db
-      .select({ email: users.email })
-      .from(users)
-      .where(inArray(users.id, subUserIds));
-    await notifyUpdate(
-      recipients.map((r) => r.email),
-      { id: initiative.id, title: initiative.title },
-      { body: parsed.body, authorName: me.name ?? me.email },
-      process.env.AUTH_URL ?? "http://localhost:3000"
+    .where(
+      eq(subscriptions.initiativeId, parsed.initiativeId)
     );
+  for (const s of subs) {
+    if (s.userId === me.id) continue;
+    await notify({
+      userId: s.userId,
+      kind: "update",
+      message: `New update on "${initiative.title}"`,
+      url: `/initiatives/${initiative.id}`,
+      initiativeId: initiative.id,
+      sourceUserId: me.id,
+    });
   }
 
   revalidatePath(`/initiatives/${parsed.initiativeId}`);
