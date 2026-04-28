@@ -8,11 +8,24 @@ type Item = { id: string; title: string; category: string };
 const STATIC_LINKS = [
   { href: "/", label: "Browse initiatives" },
   { href: "/showcase", label: "Showcase" },
+  { href: "/people", label: "People" },
+  { href: "/inbox", label: "Inbox" },
   { href: "/me", label: "My board" },
+  { href: "/me/edit", label: "Edit my profile" },
   { href: "/me/portfolio", label: "My portfolio" },
+  { href: "/owner", label: "Owner dashboard" },
   { href: "/templates", label: "Templates" },
   { href: "/initiatives/new", label: "New initiative" },
   { href: "/admin", label: "Admin" },
+  { href: "/admin/queue", label: "Admin queue" },
+  { href: "/admin/categories", label: "Admin categories" },
+  { href: "/admin/audit", label: "Admin audit" },
+  { href: "/admin/settings", label: "Admin settings" },
+];
+
+const COMMANDS = [
+  { id: "surprise", label: "✦ Surprise me", action: "/?surprise=1" },
+  { id: "theme", label: "◐ Toggle theme", action: "theme" },
 ];
 
 export function CmdK({ items }: { items: Item[] }) {
@@ -52,6 +65,27 @@ export function CmdK({ items }: { items: Item[] }) {
     return STATIC_LINKS.filter((l) => l.label.toLowerCase().includes(needle));
   }, [q]);
 
+  const filteredCommands = useMemo(() => {
+    if (!q) return COMMANDS;
+    const needle = q.toLowerCase();
+    return COMMANDS.filter(
+      (c) => c.label.toLowerCase().includes(needle) || c.id.includes(needle)
+    );
+  }, [q]);
+
+  function runCommand(c: (typeof COMMANDS)[number]) {
+    if (c.action === "theme") {
+      const cur = localStorage.getItem("lh-theme") ?? "dark";
+      const next = cur === "dark" ? "light" : "dark";
+      localStorage.setItem("lh-theme", next);
+      document.documentElement.classList.toggle("light", next === "light");
+      setOpen(false);
+    } else {
+      setOpen(false);
+      router.push(c.action);
+    }
+  }
+
   if (!open) return null;
 
   return (
@@ -76,6 +110,16 @@ export function CmdK({ items }: { items: Item[] }) {
           </div>
         </div>
         <div className="max-h-[60vh] overflow-auto py-1">
+          {filteredCommands.length > 0 && (
+            <Group title="commands">
+              {filteredCommands.map((c) => (
+                <Row key={c.id} onSelect={() => runCommand(c)}>
+                  <span className="font-mono text-xs text-brand-accent">▸</span>
+                  <span>{c.label}</span>
+                </Row>
+              ))}
+            </Group>
+          )}
           {filteredLinks.length > 0 && (
             <Group title="navigate">
               {filteredLinks.map((l) => (

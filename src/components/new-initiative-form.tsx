@@ -131,7 +131,12 @@ export function NewInitiativeForm({
         </div>
       </section>
 
-      <form ref={formRef} action={createInitiative} className="mt-6 space-y-6">
+      <form
+        id="new-initiative-form"
+        ref={formRef}
+        action={createInitiative}
+        className="mt-6 space-y-6"
+      >
         <Section title="The basics" hint="Required. This is what people see first.">
           <Select
             label="Category"

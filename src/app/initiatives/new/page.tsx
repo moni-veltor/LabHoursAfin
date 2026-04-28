@@ -8,6 +8,13 @@ import { eq } from "drizzle-orm";
 import { NewInitiativeForm } from "@/components/new-initiative-form";
 import { aiEnabled } from "@/lib/ai";
 import { loadAllCategories } from "@/lib/categories-server";
+import { DraftSaver } from "@/components/draft-saver";
+
+function DraftSaverMount() {
+  return (
+    <DraftSaver formId="new-initiative-form" storageKey="lh-draft-new-initiative" />
+  );
+}
 
 export default async function NewInitiativePage({
   searchParams,
@@ -91,6 +98,7 @@ export default async function NewInitiativePage({
           aiEnabled={aiEnabled}
           categories={await loadAllCategories()}
         />
+        <DraftSaverMount />
       </div>
     </div>
   );

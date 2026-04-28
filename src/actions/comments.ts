@@ -10,6 +10,7 @@ import {
   findUserIdsForMentions,
   notify,
 } from "@/lib/notifications-server";
+import { rateLimit } from "@/lib/rate-limit";
 
 const CommentSchema = z.object({
   initiativeId: z.string().uuid(),
@@ -19,11 +20,21 @@ const CommentSchema = z.object({
 
 export async function addComment(formData: FormData) {
   const me = await requireUser();
+  const rl = rateLimit(`comment:${me.id}`, 30, 60_000);
+  if (!rl.ok) throw new Error("RATE_LIMITED");
   const parsed = CommentSchema.parse({
     initiativeId: formData.get("initiativeId"),
     body: formData.get("body"),
     parentId: (formData.get("parentId") as string) || undefined,
   });
+  const [target] = await db
+    .select()
+    .from(initiatives)
+    .where(eq(initiatives.id, parsed.initiativeId));
+  if (!target) throw new Error("NOT_FOUND");
+  if (target.commentsLocked && target.ownerId !== me.id && me.role !== "admin") {
+    throw new Error("COMMENTS_LOCKED");
+  }
   const [created] = await db
     .insert(comments)
     .values({

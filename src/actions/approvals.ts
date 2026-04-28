@@ -98,6 +98,19 @@ export async function requestToJoin(initiativeId: string, note?: string) {
   revalidatePath("/me");
 }
 
+export async function bulkApproveParticipants(formData: FormData) {
+  const me = await requireUser();
+  const ids = formData.getAll("pending") as string[];
+  for (const composite of ids) {
+    const [initiativeId, userId] = composite.split(":");
+    if (!initiativeId || !userId) continue;
+    try {
+      await approveParticipant(initiativeId, userId);
+    } catch {}
+  }
+  return;
+}
+
 export async function approveParticipant(initiativeId: string, userId: string) {
   const me = await requireUser();
   const [initiative] = await db

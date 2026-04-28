@@ -15,6 +15,25 @@ import {
 } from "@/lib/categories";
 import { customCategories } from "@/db/schema";
 import { getBoolSetting } from "@/lib/settings-server";
+import { slugify } from "@/lib/slug";
+
+async function uniqueSlug(base: string, excludeId?: string) {
+  const candidate = base || "initiative";
+  const existing = await db
+    .select({ id: initiatives.id, slug: initiatives.slug })
+    .from(initiatives);
+  const taken = new Set(
+    existing
+      .filter((r) => r.id !== excludeId && r.slug)
+      .map((r) => r.slug as string)
+  );
+  if (!taken.has(candidate)) return candidate;
+  for (let i = 2; i < 100; i++) {
+    const next = `${candidate}-${i}`;
+    if (!taken.has(next)) return next;
+  }
+  return `${candidate}-${Date.now()}`;
+}
 
 const InitiativeSchema = z.object({
   title: z.string().min(3).max(140),
@@ -132,6 +151,7 @@ export async function createInitiative(formData: FormData) {
   const status =
     requirePrePublish && parsed.status === "open" ? "draft" : parsed.status;
   const awaitingReview = requirePrePublish && parsed.status === "open";
+  const slug = await uniqueSlug(slugify(parsed.title));
 
   const [created] = await db
     .insert(initiatives)
@@ -141,6 +161,7 @@ export async function createInitiative(formData: FormData) {
       summary: parsed.summary,
       body: parsed.body,
       status,
+      slug,
       category: category as any,
       customCategorySlug,
       subcategory: parsed.subcategory,
@@ -227,6 +248,11 @@ export async function updateInitiative(formData: FormData) {
     ownerId = newOwnerId;
   }
 
+  const slug =
+    row.slug && row.title === parsed.title
+      ? row.slug
+      : await uniqueSlug(slugify(parsed.title), id);
+
   await db
     .update(initiatives)
     .set({
@@ -235,6 +261,7 @@ export async function updateInitiative(formData: FormData) {
       summary: parsed.summary,
       body: parsed.body,
       status: parsed.status,
+      slug,
       category: category as any,
       customCategorySlug,
       subcategory: parsed.subcategory ?? null,

@@ -66,6 +66,10 @@ export default async function InitiativePage({
     | { id?: string; email?: string; role?: string }
     | undefined;
 
+  const { isUuid } = await import("@/lib/slug");
+  const lookup = isUuid(id)
+    ? eq(initiatives.id, id)
+    : eq(initiatives.slug, id);
   const [row] = await db
     .select({
       i: initiatives,
@@ -75,7 +79,7 @@ export default async function InitiativePage({
     })
     .from(initiatives)
     .leftJoin(users, eq(users.id, initiatives.ownerId))
-    .where(eq(initiatives.id, id));
+    .where(lookup);
 
   if (!row) notFound();
   const initiative = row.i;
