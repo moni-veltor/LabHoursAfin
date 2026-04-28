@@ -39,10 +39,13 @@ const STAGES = [
 
 export default async function HackathonPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ warn?: string; pool?: string; need?: string }>;
 }) {
   const { slug } = await params;
+  const sp = await searchParams;
   const session = await auth();
   const me = session?.user as { id?: string; email?: string } | undefined;
   if (!me?.id) redirect(`/signin?callbackUrl=/hack/${slug}`);
@@ -125,6 +128,19 @@ export default async function HackathonPage({
 
   return (
     <div className="space-y-8">
+      {sp.warn === "not-enough-signs" && (
+        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose-300">
+            ⚠ auto-form skipped
+          </p>
+          <p className="mt-1">
+            Couldn't auto-form teams: only {sp.pool ?? "0"} people with a known
+            birthday available, need at least {sp.need ?? "8"} for the chosen
+            team size. Falling back to the normal idea-pitch flow — you can run
+            zodiac team-builder later from the admin section.
+          </p>
+        </div>
+      )}
       <Hero hack={hack} adminAccess={adminAccess} />
 
       {hack.theme && (

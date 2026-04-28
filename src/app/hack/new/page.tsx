@@ -88,6 +88,74 @@ export default async function NewHackathonPage() {
             type="datetime-local"
           />
         </div>
+
+        <fieldset className="rounded-md border border-brand-accent/30 bg-brand-accent-950 p-3">
+          <legend className="px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+            ✨ auto-form teams by zodiac
+          </legend>
+          <p className="mt-1 text-xs text-muted">
+            Skip pitch + team-forming and auto-group every Afin employee with a
+            known birthday into teams. Needs at least <code>2 × team size</code>
+            people (so 8 for size 4, the default). If there aren't enough, the
+            hackathon falls back to the normal idea-pitch flow.
+          </p>
+          <label className="mt-3 flex items-start gap-2 rounded-md border border-line bg-raised p-2 text-sm">
+            <input type="checkbox" name="autoForm" className="mt-0.5 h-4 w-4" />
+            <span>
+              <span className="font-medium text-ink-text">
+                Auto-form teams now
+              </span>
+              <span className="block text-xs text-muted">
+                Pre-creates teams the moment this hackathon is published.
+                Hackathon starts in <em>team_forming</em> stage.
+              </span>
+            </span>
+          </label>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div>
+              <label className="block font-mono text-[10px] uppercase tracking-wider text-muted">
+                System
+              </label>
+              <select
+                name="autoSystem"
+                defaultValue="western"
+                className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm focus:border-brand-accent focus:outline-none"
+              >
+                <option value="western">Western (sun sign)</option>
+                <option value="chinese">Chinese (animal)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-mono text-[10px] uppercase tracking-wider text-muted">
+                Mode
+              </label>
+              <select
+                name="autoMode"
+                defaultValue="compat"
+                className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm focus:border-brand-accent focus:outline-none"
+              >
+                <option value="compat">
+                  Harmony · highest compatibility
+                </option>
+                <option value="chaos">Chaos · maximally clashing</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-mono text-[10px] uppercase tracking-wider text-muted">
+                Team size
+              </label>
+              <input
+                name="autoSize"
+                type="number"
+                min={2}
+                max={10}
+                defaultValue={4}
+                className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm focus:border-brand-accent focus:outline-none"
+              />
+            </div>
+          </div>
+        </fieldset>
+
         <button className="rounded-md bg-brand-accent px-4 py-2 text-sm font-medium text-ink shadow-glow-accent hover:bg-brand-accent-dark">
           Create hackathon →
         </button>

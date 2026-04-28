@@ -48,6 +48,14 @@ export async function createHackathon(formData: FormData) {
   const startsAtRaw = formData.get("startsAt") as string | null;
   const endsAtRaw = formData.get("endsAt") as string | null;
 
+  const autoForm = formData.get("autoForm") === "on";
+  const autoSystem = (formData.get("autoSystem") as string) || "western";
+  const autoMode = (formData.get("autoMode") as string) || "compat";
+  const autoSize = Math.max(
+    2,
+    Math.min(10, Number(formData.get("autoSize") ?? 4))
+  );
+
   const baseSlug = slugify(parsed.name) || "hackathon";
   let slug = baseSlug;
   for (let i = 2; i < 50; i++) {
@@ -56,21 +64,105 @@ export async function createHackathon(formData: FormData) {
     slug = `${baseSlug}-${i}`;
   }
 
-  await db.insert(hackathons).values({
-    slug,
-    name: parsed.name,
-    theme: parsed.theme,
-    description: parsed.description,
-    coverImage: parsed.coverImage,
-    tracks: parsed.tracks,
-    prizes: parsed.prizes,
-    teamCapacity: parsed.teamCapacity,
-    startsAt: startsAtRaw ? new Date(startsAtRaw) : null,
-    endsAt: endsAtRaw ? new Date(endsAtRaw) : null,
-    createdBy: me.id,
-    stage: "idea",
-  });
+  const [hack] = await db
+    .insert(hackathons)
+    .values({
+      slug,
+      name: parsed.name,
+      theme: parsed.theme,
+      description: parsed.description,
+      coverImage: parsed.coverImage,
+      tracks: parsed.tracks,
+      prizes: parsed.prizes,
+      teamCapacity: parsed.teamCapacity,
+      startsAt: startsAtRaw ? new Date(startsAtRaw) : null,
+      endsAt: endsAtRaw ? new Date(endsAtRaw) : null,
+      createdBy: me.id,
+      stage: autoForm ? "team_forming" : "idea",
+    })
+    .returning();
   await logAudit(me.id, "hackathon.create", { type: "hackathon", id: slug });
+
+  if (autoForm) {
+    const signCol =
+      autoSystem === "western" ? users.zodiac : users.chineseZodiac;
+    const pool = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        sign: signCol,
+      })
+      .from(users)
+      .where(and(isNotNull(signCol), isNull(users.deletedAt)));
+    const candidates = pool
+      .filter((u) => u.sign)
+      .map((u) => ({
+        id: u.id,
+        sign: u.sign as string,
+        name: u.name,
+        email: u.email,
+      }));
+
+    if (candidates.length < autoSize * 2) {
+      await db
+        .update(hackathons)
+        .set({ stage: "idea" })
+        .where(eq(hackathons.id, hack.id));
+      revalidatePath("/hack");
+      redirect(
+        `/hack/${slug}?warn=not-enough-signs&pool=${candidates.length}&need=${autoSize * 2}`
+      );
+    }
+
+    const teams = formZodiacTeams(
+      candidates,
+      autoSize,
+      autoMode as "compat" | "chaos",
+      autoSystem as "western" | "chinese"
+    );
+    const emoji = autoSystem === "western" ? ZODIAC_EMOJI : CHINESE_EMOJI;
+    const labelMode = autoMode === "compat" ? "Harmony" : "Chaos";
+
+    for (let i = 0; i < teams.length; i++) {
+      const t = teams[i];
+      const dominantSign = t[0].sign;
+      const teamName = `${labelMode} ${i + 1} · ${(emoji as any)[dominantSign] ?? dominantSign}`;
+      const blurb = `Auto-formed at hackathon creation by ${
+        autoSystem === "western" ? "Western zodiac" : "Chinese zodiac"
+      } (${autoMode === "compat" ? "compatibility" : "chaos"}). Signs: ${t
+        .map((m) => (emoji as any)[m.sign] ?? m.sign)
+        .join(" ")}`;
+      const [created] = await db
+        .insert(hackTeams)
+        .values({
+          hackathonId: hack.id,
+          leaderId: t[0].id,
+          name: teamName,
+          blurb,
+        })
+        .returning();
+      for (const member of t) {
+        await db
+          .insert(hackTeamMembers)
+          .values({ teamId: created.id, userId: member.id })
+          .onConflictDoNothing();
+      }
+    }
+    await logAudit(
+      me.id,
+      "hackathon.zodiac_teams",
+      { type: "hackathon", id: hack.id },
+      {
+        system: autoSystem,
+        mode: autoMode,
+        size: autoSize,
+        created: teams.length,
+        atCreation: true,
+      }
+    );
+  }
+
   revalidatePath("/hack");
   redirect(`/hack/${slug}`);
 }
