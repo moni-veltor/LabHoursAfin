@@ -5,6 +5,9 @@ import { db } from "@/lib/db";
 import { users } from "@/db/schema";
 import { asc, ilike, or, sql } from "drizzle-orm";
 import { Avatar } from "@/components/avatar";
+import { DeleteUserButton } from "@/components/delete-user-button";
+import { isAdmin } from "@/lib/admin";
+import { isTechTeam } from "@/lib/tech-team";
 
 type Search = { q?: string; dept?: string };
 
@@ -14,7 +17,9 @@ export default async function PeoplePage({
   searchParams: Promise<Search>;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/signin?callbackUrl=/people");
+  const me = session?.user as { id?: string; email?: string } | undefined;
+  if (!me) redirect("/signin?callbackUrl=/people");
+  const adminAccess = isAdmin(me.email);
   const sp = await searchParams;
 
   const where = sp.q
@@ -129,8 +134,19 @@ export default async function PeoplePage({
             return (
               <li
                 key={u.id}
-                className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-primary/40 hover:shadow-glow-soft"
+                className="relative rounded-xl border border-line bg-surface p-4 transition hover:border-brand-primary/40 hover:shadow-glow-soft"
               >
+                {adminAccess &&
+                  u.id !== me.id &&
+                  !isAdmin(u.email) &&
+                  !isTechTeam(u.email) && (
+                    <div className="absolute right-3 top-3 z-10">
+                      <DeleteUserButton
+                        userId={u.id}
+                        name={u.name ?? u.email}
+                      />
+                    </div>
+                  )}
                 <Link href={`/u/${u.id}`} className="flex items-start gap-3">
                   <Avatar name={u.name} email={u.email} size={44} />
                   <div className="min-w-0 flex-1">

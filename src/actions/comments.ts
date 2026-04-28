@@ -44,7 +44,7 @@ export async function addComment(formData: FormData) {
       .select({ authorId: comments.authorId })
       .from(comments)
       .where(eq(comments.id, parsed.parentId));
-    if (parent && parent.authorId !== me.id) {
+    if (parent && parent.authorId && parent.authorId !== me.id) {
       await notify({
         userId: parent.authorId,
         kind: "reply",
