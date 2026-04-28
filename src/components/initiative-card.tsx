@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { timeAgo } from "@/lib/utils";
 import { DIFFICULTIES, FORMATS, type Difficulty, type Format } from "@/lib/categories";
