@@ -12,11 +12,17 @@ import {
   hackDemos,
   hackVotes,
   hackAwards,
+  users,
 } from "@/db/schema";
 import { requireAdmin, requireUser } from "@/lib/auth";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNotNull, isNull } from "drizzle-orm";
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
+import {
+  formZodiacTeams,
+  ZODIAC_EMOJI,
+  CHINESE_EMOJI,
+} from "@/lib/zodiac";
 
 const HackSchema = z.object({
   name: z.string().min(3).max(80),
@@ -204,6 +210,104 @@ export async function voteDemo(demoId: string, category: string) {
   }
   await db.insert(hackVotes).values({ userId: me.id, demoId, category });
   revalidatePath("/hack");
+}
+
+const TeamGenSchema = z.object({
+  hackathonId: z.string().uuid(),
+  system: z.enum(["western", "chinese"]),
+  mode: z.enum(["compat", "chaos"]),
+  size: z.coerce.number().int().min(2).max(10).default(4),
+  reset: z
+    .union([z.literal("on"), z.literal("true"), z.literal("false"), z.literal("")])
+    .optional()
+    .transform((v) => v === "on" || v === "true"),
+});
+
+export async function generateZodiacTeams(formData: FormData) {
+  const me = await requireAdmin();
+  const parsed = TeamGenSchema.parse({
+    hackathonId: formData.get("hackathonId"),
+    system: formData.get("system"),
+    mode: formData.get("mode"),
+    size: formData.get("size") ?? 4,
+    reset: (formData.get("reset") as any) ?? "",
+  });
+
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, parsed.hackathonId));
+  if (!hack) throw new Error("NOT_FOUND");
+
+  const existingMembers = await db
+    .select({ userId: hackTeamMembers.userId, teamId: hackTeamMembers.teamId })
+    .from(hackTeamMembers)
+    .innerJoin(hackTeams, eq(hackTeams.id, hackTeamMembers.teamId))
+    .where(eq(hackTeams.hackathonId, parsed.hackathonId));
+  const alreadyOnTeam = new Set(existingMembers.map((m) => m.userId));
+
+  if (parsed.reset) {
+    await db.delete(hackTeams).where(eq(hackTeams.hackathonId, parsed.hackathonId));
+    alreadyOnTeam.clear();
+  }
+
+  const signCol = parsed.system === "western" ? users.zodiac : users.chineseZodiac;
+  const pool = await db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      sign: signCol,
+    })
+    .from(users)
+    .where(and(isNotNull(signCol), isNull(users.deletedAt)));
+
+  const candidates = pool
+    .filter((u) => !alreadyOnTeam.has(u.id) && u.sign)
+    .map((u) => ({ id: u.id, sign: u.sign as string, name: u.name, email: u.email }));
+
+  const teams = formZodiacTeams(candidates, parsed.size, parsed.mode, parsed.system);
+
+  const emoji = parsed.system === "western" ? ZODIAC_EMOJI : CHINESE_EMOJI;
+  const labelMode = parsed.mode === "compat" ? "Harmony" : "Chaos";
+
+  for (let i = 0; i < teams.length; i++) {
+    const t = teams[i];
+    const dominantSign = t[0].sign;
+    const teamName = `${labelMode} ${i + 1} · ${(emoji as any)[dominantSign] ?? dominantSign}`;
+    const blurb = `Auto-formed by ${parsed.system === "western" ? "Western zodiac" : "Chinese zodiac"} (${parsed.mode === "compat" ? "compatibility" : "chaos"}). Signs: ${t
+      .map((m) => (emoji as any)[m.sign] ?? m.sign)
+      .join(" ")}`;
+    const [created] = await db
+      .insert(hackTeams)
+      .values({
+        hackathonId: parsed.hackathonId,
+        leaderId: t[0].id,
+        name: teamName,
+        blurb,
+      })
+      .returning();
+    for (const member of t) {
+      await db
+        .insert(hackTeamMembers)
+        .values({ teamId: created.id, userId: member.id })
+        .onConflictDoNothing();
+    }
+  }
+
+  await logAudit(
+    me.id,
+    "hackathon.zodiac_teams",
+    { type: "hackathon", id: parsed.hackathonId },
+    {
+      system: parsed.system,
+      mode: parsed.mode,
+      size: parsed.size,
+      reset: parsed.reset,
+      created: teams.length,
+    }
+  );
+  revalidatePath(`/hack/${hack.slug}`);
 }
 
 export async function awardWinner(formData: FormData) {

@@ -68,6 +68,9 @@ export const users = pgTable("user", {
   bio: text("bio"),
   askMeAbout: text("ask_me_about"),
   pronouns: text("pronouns"),
+  dateOfBirth: timestamp("date_of_birth", { mode: "date" }),
+  zodiac: text("zodiac"),
+  chineseZodiac: text("chinese_zodiac"),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });

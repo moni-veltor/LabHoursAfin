@@ -26,6 +26,7 @@ import {
   setHackStage,
   awardWinner,
 } from "@/actions/hack";
+import { ZodiacForm } from "@/components/zodiac-form";
 
 const STAGES = [
   "idea",
@@ -469,6 +470,11 @@ export default async function HackathonPage({
               </form>
             ))}
           </div>
+          {(hack.stage === "idea" || hack.stage === "team_forming") && (
+            <div className="mt-4 border-t border-brand-accent/30 pt-4">
+              <ZodiacForm hackathonId={hack.id} />
+            </div>
+          )}
           {hack.stage === "voting" && demos.length > 0 && (
             <form
               action={awardWinner}
