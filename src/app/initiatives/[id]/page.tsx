@@ -48,6 +48,7 @@ import {
   checkParticipationRule,
   getParticipationStatus,
 } from "@/lib/participation";
+import { formatLondon } from "@/lib/tz";
 import { getCategoryMap } from "@/lib/categories-server";
 import { interests, initiativeCitations } from "@/db/schema";
 import { ApplicantNote } from "@/components/applicant-note";
@@ -200,10 +201,7 @@ export default async function InitiativePage({
     initiative.subscriptionsOpenAt != null &&
     new Date(initiative.subscriptionsOpenAt).getTime() > Date.now();
   const opensLabel = notOpenYet
-    ? new Date(initiative.subscriptionsOpenAt!).toLocaleString("en-GB", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      })
+    ? formatLondon(new Date(initiative.subscriptionsOpenAt!))
     : "";
   // Admins/tech can join early to test; members must wait for the window.
   const canJoinWindow = !notOpenYet || ruleExempt;

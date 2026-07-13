@@ -234,7 +234,7 @@ export function NewInitiativeForm({
               placeholder="e.g. Core Banking Platform"
             />
             <Field
-              label="Subscriptions open at"
+              label="Subscriptions open at (UK time)"
               name="subscriptionsOpenAt"
               type="datetime-local"
               defaultValue={initial.subscriptionsOpenAt}

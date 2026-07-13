@@ -13,6 +13,7 @@ import {
 } from "@/lib/participation";
 import { notify } from "@/lib/notifications-server";
 import { logAudit } from "@/lib/audit";
+import { formatLondon } from "@/lib/tz";
 
 function isExempt(u: { email: string; role: string }) {
   return (
@@ -36,11 +37,11 @@ export async function requestToJoin(initiativeId: string, note?: string) {
       initiative.subscriptionsOpenAt &&
       initiative.subscriptionsOpenAt.getTime() > Date.now()
     ) {
-      const when = initiative.subscriptionsOpenAt.toLocaleString("en-GB", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-      throw new Error(`NOT_OPEN_YET: Subscriptions open ${when}.`);
+      throw new Error(
+        `NOT_OPEN_YET: Subscriptions open ${formatLondon(
+          initiative.subscriptionsOpenAt
+        )}.`
+      );
     }
     const status = await getParticipationStatus(me.id);
     const verdict = checkParticipationRule(status);

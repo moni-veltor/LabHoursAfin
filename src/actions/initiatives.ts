@@ -16,6 +16,7 @@ import {
 import { customCategories } from "@/db/schema";
 import { getBoolSetting } from "@/lib/settings-server";
 import { slugify } from "@/lib/slug";
+import { parseLondonLocal } from "@/lib/tz";
 
 async function uniqueSlug(base: string, excludeId?: string) {
   const candidate = base || "initiative";
@@ -175,7 +176,7 @@ export async function createInitiative(formData: FormData) {
       capacity: parsed.capacity,
       timeCommitment: parsed.timeCommitment,
       subscriptionsOpenAt: parsed.subscriptionsOpenAt
-        ? new Date(parsed.subscriptionsOpenAt)
+        ? parseLondonLocal(parsed.subscriptionsOpenAt)
         : null,
       requiresApproval: parsed.requiresApproval,
       crossTeam: parsed.crossTeam,
@@ -279,7 +280,7 @@ export async function updateInitiative(formData: FormData) {
       capacity: parsed.capacity ?? null,
       timeCommitment: parsed.timeCommitment ?? null,
       subscriptionsOpenAt: parsed.subscriptionsOpenAt
-        ? new Date(parsed.subscriptionsOpenAt)
+        ? parseLondonLocal(parsed.subscriptionsOpenAt)
         : null,
       requiresApproval: parsed.requiresApproval,
       crossTeam: parsed.crossTeam,

@@ -12,6 +12,7 @@ import {
   getParticipationStatus,
 } from "@/lib/participation";
 import { promoteFromWaitlist } from "@/actions/approvals";
+import { formatLondon } from "@/lib/tz";
 
 function isExempt(u: { email: string; role: string }) {
   return (
@@ -37,11 +38,11 @@ export async function subscribe(
       initiative?.subscriptionsOpenAt &&
       initiative.subscriptionsOpenAt.getTime() > Date.now()
     ) {
-      const when = initiative.subscriptionsOpenAt.toLocaleString("en-GB", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
-      throw new Error(`NOT_OPEN_YET: Subscriptions open ${when}.`);
+      throw new Error(
+        `NOT_OPEN_YET: Subscriptions open ${formatLondon(
+          initiative.subscriptionsOpenAt
+        )}.`
+      );
     }
     const status = await getParticipationStatus(me.id);
     const verdict = checkParticipationRule(status);

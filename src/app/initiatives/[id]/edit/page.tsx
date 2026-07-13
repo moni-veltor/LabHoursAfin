@@ -7,6 +7,7 @@ import { initiatives, initiativeTags, tags, users } from "@/db/schema";
 import { eq, inArray, or } from "drizzle-orm";
 import { loadAllCategories } from "@/lib/categories-server";
 import { EditInitiativeForm } from "@/components/edit-initiative-form";
+import { formatLondonInput } from "@/lib/tz";
 
 export default async function EditInitiativePage({
   params,
@@ -68,7 +69,7 @@ export default async function EditInitiativePage({
     capacity: t.capacity != null ? String(t.capacity) : "",
     timeCommitment: t.timeCommitment ?? "",
     subscriptionsOpenAt: t.subscriptionsOpenAt
-      ? new Date(t.subscriptionsOpenAt).toISOString().slice(0, 16)
+      ? formatLondonInput(new Date(t.subscriptionsOpenAt))
       : "",
     tags: tagRows.map((tt) => tt.slug).join(", "),
     coverImage: t.coverImage ?? "",
