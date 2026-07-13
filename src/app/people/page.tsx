@@ -9,6 +9,23 @@ import { DeleteUserButton } from "@/components/delete-user-button";
 import { ResetPinButton } from "@/components/reset-pin-button";
 import { isAdmin } from "@/lib/admin";
 import { isTechTeam } from "@/lib/tech-team";
+import { ZODIAC_EMOJI, CHINESE_EMOJI } from "@/lib/zodiac";
+
+function formatDob(d: Date | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function sign(value: string | null, emoji: Record<string, string>) {
+  if (!value) return "—";
+  const e = emoji[value];
+  return e ? `${e} ${value}` : value;
+}
 
 const PAGE_SIZE = 24;
 
@@ -197,68 +214,84 @@ export default async function PeoplePage({
           No matches.
         </div>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {paged.map((u) => {
-            const hobbies = (u.hobbies ?? "")
-              .split(/[,;]/)
-              .map((h) => h.trim())
-              .filter(Boolean);
-            return (
-              <li
-                key={u.id}
-                className="relative rounded-xl border border-line bg-surface p-4 transition hover:border-brand-primary/40 hover:shadow-glow-soft"
-              >
+        <div className="overflow-x-auto rounded-xl border border-line">
+          <table className="w-full min-w-[760px] border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-line bg-raised text-left font-mono text-[10px] uppercase tracking-wider text-dim">
+                <th className="px-3 py-2 font-medium">Person</th>
+                <th className="px-3 py-2 font-medium">Department</th>
+                <th className="px-3 py-2 font-medium">Job title</th>
+                <th className="px-3 py-2 font-medium">Born</th>
+                <th className="px-3 py-2 font-medium">Zodiac</th>
+                <th className="px-3 py-2 font-medium">Chinese sign</th>
                 {adminAccess && (
-                  <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
-                    <ResetPinButton userId={u.id} name={u.name ?? u.email} />
-                    {u.id !== me.id &&
-                      !isAdmin(u.email) &&
-                      !isTechTeam(u.email) && (
-                        <DeleteUserButton
+                  <th className="px-3 py-2 text-right font-medium">Actions</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {paged.map((u) => (
+                <tr
+                  key={u.id}
+                  className="border-b border-line/60 last:border-0 hover:bg-raised/40"
+                >
+                  <td className="px-3 py-2">
+                    <Link
+                      href={`/u/${u.id}`}
+                      className="flex items-center gap-2.5"
+                    >
+                      <Avatar name={u.name} email={u.email} size={32} />
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2">
+                          <span className="truncate font-medium text-ink-text hover:text-brand-primary-glow">
+                            {u.name ?? u.email}
+                          </span>
+                          <RoleBadge role={u.role} />
+                        </span>
+                        <span className="block truncate font-mono text-[11px] text-dim">
+                          {u.email}
+                        </span>
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2 text-muted">
+                    {u.department ?? "—"}
+                  </td>
+                  <td className="px-3 py-2 text-muted">
+                    {u.jobTitle ?? "—"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-muted">
+                    {formatDob(u.dateOfBirth)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-ink-text">
+                    {sign(u.zodiac, ZODIAC_EMOJI)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2 text-ink-text">
+                    {sign(u.chineseZodiac, CHINESE_EMOJI)}
+                  </td>
+                  {adminAccess && (
+                    <td className="px-3 py-2">
+                      <div className="flex items-center justify-end gap-1">
+                        <ResetPinButton
                           userId={u.id}
                           name={u.name ?? u.email}
                         />
-                      )}
-                  </div>
-                )}
-                <Link href={`/u/${u.id}`} className="flex items-start gap-3">
-                  <Avatar name={u.name} email={u.email} size={44} />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold tracking-tight text-ink-text">
-                        {u.name ?? u.email}
-                      </span>
-                      <RoleBadge role={u.role} />
-                    </div>
-                    {u.jobTitle && (
-                      <p className="text-sm text-ink-text/90">{u.jobTitle}</p>
-                    )}
-                    <p className="font-mono text-[11px] text-dim">
-                      {u.department ?? "—"} · {u.email}
-                    </p>
-                    {hobbies.length > 0 && (
-                      <ul className="mt-2 flex flex-wrap gap-1.5">
-                        {hobbies.slice(0, 8).map((h) => (
-                          <li
-                            key={h}
-                            className="rounded-full border border-line bg-raised px-2 py-0.5 font-mono text-[10px] text-muted"
-                          >
-                            {h.toLowerCase()}
-                          </li>
-                        ))}
-                        {hobbies.length > 8 && (
-                          <li className="font-mono text-[10px] text-dim">
-                            +{hobbies.length - 8} more
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                        {u.id !== me.id &&
+                          !isAdmin(u.email) &&
+                          !isTechTeam(u.email) && (
+                            <DeleteUserButton
+                              userId={u.id}
+                              name={u.name ?? u.email}
+                            />
+                          )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
       <Pagination page={page} hasNext={hasNext} sp={sp} />
