@@ -13,11 +13,12 @@ import {
   hackVotes,
   hackAwards,
   hackJudges,
+  hackParticipants,
   users,
 } from "@/db/schema";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { eq, and, isNotNull, isNull, sql as dsql, count } from "drizzle-orm";
-import { JUDGE_POOL, JUDGE_PANEL } from "@/lib/hack";
+import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
 import {
@@ -225,6 +226,11 @@ export async function formTeam(formData: FormData) {
     .values({ hackathonId, leaderId: me.id, ideaId, name, blurb, track })
     .returning();
   await db.insert(hackTeamMembers).values({ teamId: team.id, userId: me.id });
+  // Team members are competitors — keep them on the hackathon roster.
+  await db
+    .insert(hackParticipants)
+    .values({ hackathonId, userId: me.id })
+    .onConflictDoNothing();
   if (ideaId) {
     await db
       .update(hackIdeas)
@@ -261,6 +267,11 @@ export async function joinTeam(teamId: string) {
   await db
     .insert(hackTeamMembers)
     .values({ teamId, userId: me.id })
+    .onConflictDoNothing();
+  // Team members are competitors — keep them on the hackathon roster.
+  await db
+    .insert(hackParticipants)
+    .values({ hackathonId: team.hackathonId, userId: me.id })
     .onConflictDoNothing();
   revalidatePath("/hack");
 }
@@ -448,7 +459,16 @@ export async function applyAsJudge(hackathonId: string) {
     .where(eq(hackathons.id, hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
 
-  // Conflict of interest: competitors can't judge.
+  // Conflict of interest: competitors can't judge (roster sign-up or a team).
+  const competing = await db
+    .select()
+    .from(hackParticipants)
+    .where(
+      and(
+        eq(hackParticipants.hackathonId, hackathonId),
+        eq(hackParticipants.userId, me.id)
+      )
+    );
   const onTeam = await db
     .select({ userId: hackTeamMembers.userId })
     .from(hackTeamMembers)
@@ -459,7 +479,8 @@ export async function applyAsJudge(hackathonId: string) {
         eq(hackTeamMembers.userId, me.id)
       )
     );
-  if (onTeam.length) throw new Error("ALREADY_COMPETING");
+  if (competing.length || onTeam.length)
+    throw new Error("ALREADY_COMPETING");
 
   // Already in the pool? Nothing to do.
   const mine = await db
@@ -550,5 +571,82 @@ export async function clearJudgeDraw(hackathonId: string) {
     .update(hackJudges)
     .set({ selected: false })
     .where(eq(hackJudges.hackathonId, hackathonId));
+  if (hack) revalidatePath(`/hack/${hack.slug}`);
+}
+
+// Participant roster: people who've signed up to compete. Capped at two full
+// teams (2 × teamCapacity) — e.g. 10 for two teams of five.
+export async function joinHackathon(hackathonId: string) {
+  const me = await requireUser();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  if (!hack) throw new Error("NOT_FOUND");
+  if (hack.stage === "done") throw new Error("HACK_CLOSED");
+
+  // Conflict of interest: judges can't compete.
+  const judging = await db
+    .select()
+    .from(hackJudges)
+    .where(
+      and(
+        eq(hackJudges.hackathonId, hackathonId),
+        eq(hackJudges.userId, me.id)
+      )
+    );
+  if (judging.length) throw new Error("ALREADY_JUDGING");
+
+  // Already signed up? Nothing to do.
+  const mine = await db
+    .select()
+    .from(hackParticipants)
+    .where(
+      and(
+        eq(hackParticipants.hackathonId, hackathonId),
+        eq(hackParticipants.userId, me.id)
+      )
+    );
+  if (mine.length) {
+    revalidatePath(`/hack/${hack.slug}`);
+    return;
+  }
+
+  const [{ c } = { c: 0 }] = await db
+    .select({ c: count() })
+    .from(hackParticipants)
+    .where(eq(hackParticipants.hackathonId, hackathonId));
+  if (Number(c) >= hackCapacity(hack.teamCapacity))
+    throw new Error("HACK_FULL");
+
+  await db
+    .insert(hackParticipants)
+    .values({ hackathonId, userId: me.id })
+    .onConflictDoNothing();
+  revalidatePath(`/hack/${hack.slug}`);
+}
+
+export async function leaveHackathon(hackathonId: string) {
+  const me = await requireUser();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  await db
+    .delete(hackParticipants)
+    .where(
+      and(
+        eq(hackParticipants.hackathonId, hackathonId),
+        eq(hackParticipants.userId, me.id)
+      )
+    );
+  // Leaving the hackathon also drops you from any team in it.
+  await db.execute(dsql`
+    delete from hack_team_member
+    where user_id = ${me.id}
+      and team_id in (select id from hack_team where hackathon_id = ${hackathonId})
+  `);
   if (hack) revalidatePath(`/hack/${hack.slug}`);
 }

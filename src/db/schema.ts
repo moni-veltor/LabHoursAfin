@@ -503,6 +503,23 @@ export const hackAwards = pgTable("hack_award", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const hackParticipants = pgTable(
+  "hack_participant",
+  {
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.hackathonId, t.userId] }),
+    index("hack_participant_hack_idx").on(t.hackathonId),
+  ]
+);
+
 export const hackJudges = pgTable(
   "hack_judge",
   {

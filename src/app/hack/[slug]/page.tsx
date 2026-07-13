@@ -11,6 +11,7 @@ import {
   hackVotes,
   hackAwards,
   hackJudges,
+  hackParticipants,
   users,
 } from "@/db/schema";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
@@ -30,8 +31,10 @@ import {
   withdrawAsJudge,
   drawJudges,
   clearJudgeDraw,
+  joinHackathon,
+  leaveHackathon,
 } from "@/actions/hack";
-import { JUDGE_POOL, JUDGE_PANEL } from "@/lib/hack";
+import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
 import { ZodiacForm } from "@/components/zodiac-form";
 
 const STAGES = [
@@ -115,6 +118,20 @@ export default async function HackathonPage({
     .from(hackAwards)
     .where(eq(hackAwards.hackathonId, hack.id));
 
+  const participants = await db
+    .select({
+      userId: hackParticipants.userId,
+      name: users.name,
+      email: users.email,
+    })
+    .from(hackParticipants)
+    .leftJoin(users, eq(users.id, hackParticipants.userId))
+    .where(eq(hackParticipants.hackathonId, hack.id))
+    .orderBy(hackParticipants.createdAt);
+  const iAmParticipant = participants.some((p) => p.userId === me.id);
+  const hackCap = hackCapacity(hack.teamCapacity);
+  const hackFull = participants.length >= hackCap;
+
   const judges = await db
     .select({
       userId: hackJudges.userId,
@@ -149,6 +166,7 @@ export default async function HackathonPage({
   );
   // A person can't be both a competitor and a judge in the same hackathon.
   const iAmOnATeam = myMemberships.size > 0;
+  const iAmCompeting = iAmParticipant || iAmOnATeam;
   const iAmAJudge = !!myJudge;
 
   return (
@@ -186,6 +204,78 @@ export default async function HackathonPage({
           {hack.tracks && <Card title="Tracks" body={hack.tracks} />}
         </section>
       )}
+
+      <section className="rounded-xl border border-brand-accent/30 bg-surface p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+            🙌 Competitors
+          </h2>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-dim">
+            {participants.length}/{hackCap} signed up · two teams of{" "}
+            {hack.teamCapacity}
+          </span>
+        </div>
+        {participants.length > 0 ? (
+          <ul className="mt-3 flex flex-wrap gap-2">
+            {participants.map((p) => (
+              <li
+                key={p.userId}
+                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-3 py-1 text-sm text-ink-text"
+              >
+                <UserChip id={p.userId} name={p.name} email={p.email} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-3 text-sm text-dim">
+            No one signed up yet. Be the first to jump in.
+          </p>
+        )}
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {iAmParticipant ? (
+            <form
+              action={async () => {
+                "use server";
+                await leaveHackathon(hack.id);
+              }}
+            >
+              <button className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-muted hover:text-ink-text">
+                You're in · leave hackathon
+              </button>
+            </form>
+          ) : iAmAJudge ? (
+            <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+              You signed up to judge — you can't also compete.
+            </span>
+          ) : hackFull ? (
+            <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+              Hackathon is full ({hackCap}/{hackCap})
+            </span>
+          ) : hack.stage === "done" ? (
+            <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+              This hackathon has wrapped up.
+            </span>
+          ) : (
+            <form
+              action={async () => {
+                "use server";
+                await joinHackathon(hack.id);
+              }}
+            >
+              <button className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-ink shadow-glow-accent hover:bg-brand-accent-dark">
+                🙌 Count me in
+              </button>
+            </form>
+          )}
+          {iAmParticipant && (
+            <span className="font-mono text-[10px] uppercase tracking-wider text-dim">
+              {hack.stage === "team_forming"
+                ? "Now join or form a team below."
+                : "Teams form when the hackathon moves to team-forming."}
+            </span>
+          )}
+        </div>
+      </section>
 
       <section className="rounded-xl border border-line bg-surface p-5">
         <div className="flex flex-wrap items-center gap-3">
@@ -258,9 +348,9 @@ export default async function HackathonPage({
                     You're in the pool · withdraw
                   </button>
                 </form>
-              ) : iAmOnATeam ? (
+              ) : iAmCompeting ? (
                 <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
-                  You're competing on a team — judges can't also compete.
+                  You're competing in this hackathon — judges can't also compete.
                 </span>
               ) : judgePoolFull ? (
                 <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
