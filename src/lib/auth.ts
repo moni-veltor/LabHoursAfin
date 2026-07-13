@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { authConfig } from "@/lib/auth.config";
 import { isTechTeam } from "@/lib/tech-team";
 import { isAdmin } from "@/lib/admin";
+import { verifyPin, isValidPinFormat } from "@/lib/pin";
 
 const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.toLowerCase();
 
@@ -19,51 +20,41 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
-      name: "Email",
+      name: "Email + PIN",
       credentials: {
         email: { label: "Email", type: "email" },
-        name: { label: "Display name", type: "text" },
+        pin: { label: "4-digit PIN", type: "password" },
       },
       authorize: async (creds) => {
         const email = String(creds?.email ?? "").trim().toLowerCase();
+        const pin = String(creds?.pin ?? "").trim();
         if (!email || !email.includes("@")) return null;
+        if (!isValidPinFormat(pin)) return null;
         if (allowedDomain && !email.endsWith(`@${allowedDomain}`)) return null;
 
-        const wantedRole = roleFor(email);
-        const fallbackName =
-          String(creds?.name ?? "").trim() || email.split("@")[0];
-
+        // Accounts are pre-provisioned with a PIN — no self sign-up.
         const existing = await db
           .select()
           .from(users)
           .where(eq(users.email, email))
           .limit(1);
+        const user = existing[0];
+        if (!user || user.deletedAt) return null;
+        if (!verifyPin(pin, user.pinHash)) return null;
 
-        if (existing[0]) {
-          if (existing[0].role !== wantedRole) {
-            await db
-              .update(users)
-              .set({ role: wantedRole })
-              .where(eq(users.id, existing[0].id));
-          }
-          return {
-            id: existing[0].id,
-            email,
-            name: existing[0].name ?? fallbackName,
-            role: wantedRole,
-          } as any;
+        const wantedRole = roleFor(email);
+        if (user.role !== wantedRole) {
+          await db
+            .update(users)
+            .set({ role: wantedRole })
+            .where(eq(users.id, user.id));
         }
 
-        const [created] = await db
-          .insert(users)
-          .values({ email, name: fallbackName, role: wantedRole })
-          .returning();
-
         return {
-          id: created.id,
+          id: user.id,
           email,
-          name: created.name ?? fallbackName,
-          role: created.role,
+          name: user.name ?? email.split("@")[0],
+          role: wantedRole,
         } as any;
       },
     }),

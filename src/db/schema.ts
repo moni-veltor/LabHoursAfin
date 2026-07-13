@@ -62,6 +62,7 @@ export const users = pgTable("user", {
   emailVerified: timestamp("emailVerified", { mode: "date" }),
   image: text("image"),
   role: userRole("role").notNull().default("member"),
+  pinHash: text("pin_hash"),
   department: text("department"),
   jobTitle: text("job_title"),
   hobbies: text("hobbies"),

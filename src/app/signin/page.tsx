@@ -20,12 +20,12 @@ export default async function SignInPage({
           Welcome to Lab Hours
         </h1>
         <p className="mt-2 text-muted">
-          Sign in with your work email — that's it. No password, no link to
-          click. We just need to know who you are.
+          Sign in with your work email and your 4-digit PIN. Don't have a PIN
+          yet? Ask an admin.
         </p>
         {sp.error && (
           <p className="mt-3 rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
-            That email isn't allowed. Try a different one.
+            Email or PIN not recognised. Check both and try again.
           </p>
         )}
         <form
@@ -33,7 +33,7 @@ export default async function SignInPage({
             "use server";
             await signIn("credentials", {
               email: String(fd.get("email") ?? ""),
-              name: String(fd.get("name") ?? ""),
+              pin: String(fd.get("pin") ?? ""),
               redirectTo: sp.callbackUrl ?? "/",
             });
           }}
@@ -47,19 +47,24 @@ export default async function SignInPage({
               type="email"
               name="email"
               required
-              placeholder="you@yourcompany.com"
+              placeholder="you@afinbank.com"
               className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm focus:border-brand-primary focus:outline-none"
             />
           </div>
           <div>
             <label className="block font-mono text-[11px] uppercase tracking-wider text-muted">
-              display name (optional)
+              4-digit PIN
             </label>
             <input
-              type="text"
-              name="name"
-              placeholder="How you'd like to appear"
-              className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm focus:border-brand-primary focus:outline-none"
+              type="password"
+              name="pin"
+              required
+              inputMode="numeric"
+              pattern="\d{4}"
+              maxLength={4}
+              autoComplete="off"
+              placeholder="••••"
+              className="mt-1 w-full rounded-md border border-line bg-raised px-3 py-2 text-sm tracking-[0.4em] focus:border-brand-primary focus:outline-none"
             />
           </div>
           <button
