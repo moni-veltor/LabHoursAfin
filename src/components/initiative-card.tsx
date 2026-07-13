@@ -98,8 +98,6 @@ export function InitiativeCard(p: Props) {
         <p className="mt-1 line-clamp-2 text-sm text-muted">{p.summary}</p>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-dim">
-          <span>by {p.ownerName ?? "—"}</span>
-          <span className="text-line-strong">·</span>
           <span>{FORMATS[p.format].label.toLowerCase()}</span>
           {p.difficulty !== "any" && (
             <>
