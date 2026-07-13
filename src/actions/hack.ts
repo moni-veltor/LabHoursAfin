@@ -12,10 +12,12 @@ import {
   hackDemos,
   hackVotes,
   hackAwards,
+  hackJudges,
   users,
 } from "@/db/schema";
 import { requireAdmin, requireUser } from "@/lib/auth";
-import { eq, and, isNotNull, isNull } from "drizzle-orm";
+import { eq, and, isNotNull, isNull, sql as dsql, count } from "drizzle-orm";
+import { JUDGE_POOL, JUDGE_PANEL } from "@/lib/hack";
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
 import {
@@ -415,4 +417,105 @@ export async function awardWinner(formData: FormData) {
     id: hackathonId,
   });
   revalidatePath("/hack");
+}
+
+export async function applyAsJudge(hackathonId: string) {
+  const me = await requireUser();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  if (!hack) throw new Error("NOT_FOUND");
+
+  // Already in the pool? Nothing to do.
+  const mine = await db
+    .select()
+    .from(hackJudges)
+    .where(
+      and(
+        eq(hackJudges.hackathonId, hackathonId),
+        eq(hackJudges.userId, me.id)
+      )
+    );
+  if (mine.length) {
+    revalidatePath(`/hack/${hack.slug}`);
+    return;
+  }
+
+  const [{ c } = { c: 0 }] = await db
+    .select({ c: count() })
+    .from(hackJudges)
+    .where(eq(hackJudges.hackathonId, hackathonId));
+  if (Number(c) >= JUDGE_POOL) throw new Error("JUDGE_POOL_FULL");
+
+  await db
+    .insert(hackJudges)
+    .values({ hackathonId, userId: me.id })
+    .onConflictDoNothing();
+  revalidatePath(`/hack/${hack.slug}`);
+}
+
+export async function withdrawAsJudge(hackathonId: string) {
+  const me = await requireUser();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  await db
+    .delete(hackJudges)
+    .where(
+      and(
+        eq(hackJudges.hackathonId, hackathonId),
+        eq(hackJudges.userId, me.id)
+      )
+    );
+  if (hack) revalidatePath(`/hack/${hack.slug}`);
+}
+
+export async function drawJudges(hackathonId: string) {
+  const me = await requireAdmin();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  if (!hack) throw new Error("NOT_FOUND");
+
+  // Clear any previous draw, then randomly select up to JUDGE_PANEL from the pool.
+  await db
+    .update(hackJudges)
+    .set({ selected: false })
+    .where(eq(hackJudges.hackathonId, hackathonId));
+  await db.execute(dsql`
+    update hack_judge
+    set selected = true
+    where hackathon_id = ${hackathonId}
+      and user_id in (
+        select user_id from hack_judge
+        where hackathon_id = ${hackathonId}
+        order by random()
+        limit ${JUDGE_PANEL}
+      )
+  `);
+  await logAudit(me.id, "hackathon.draw_judges", {
+    type: "hackathon",
+    id: hackathonId,
+  });
+  revalidatePath(`/hack/${hack.slug}`);
+}
+
+export async function clearJudgeDraw(hackathonId: string) {
+  const me = await requireAdmin();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  await db
+    .update(hackJudges)
+    .set({ selected: false })
+    .where(eq(hackJudges.hackathonId, hackathonId));
+  if (hack) revalidatePath(`/hack/${hack.slug}`);
 }

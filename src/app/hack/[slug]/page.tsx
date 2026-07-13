@@ -10,6 +10,7 @@ import {
   hackDemos,
   hackVotes,
   hackAwards,
+  hackJudges,
   users,
 } from "@/db/schema";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
@@ -25,7 +26,12 @@ import {
   voteDemo,
   setHackStage,
   awardWinner,
+  applyAsJudge,
+  withdrawAsJudge,
+  drawJudges,
+  clearJudgeDraw,
 } from "@/actions/hack";
+import { JUDGE_POOL, JUDGE_PANEL } from "@/lib/hack";
 import { ZodiacForm } from "@/components/zodiac-form";
 
 const STAGES = [
@@ -109,6 +115,22 @@ export default async function HackathonPage({
     .from(hackAwards)
     .where(eq(hackAwards.hackathonId, hack.id));
 
+  const judges = await db
+    .select({
+      userId: hackJudges.userId,
+      selected: hackJudges.selected,
+      name: users.name,
+      email: users.email,
+    })
+    .from(hackJudges)
+    .leftJoin(users, eq(users.id, hackJudges.userId))
+    .where(eq(hackJudges.hackathonId, hack.id))
+    .orderBy(hackJudges.createdAt);
+  const myJudge = judges.find((j) => j.userId === me.id);
+  const sharks = judges.filter((j) => j.selected);
+  const judgesDrawn = sharks.length > 0;
+  const judgePoolFull = judges.length >= JUDGE_POOL;
+
   const memberByTeam = new Map<string, typeof members>();
   for (const m of members) {
     if (!memberByTeam.has(m.teamId)) memberByTeam.set(m.teamId, []);
@@ -161,6 +183,131 @@ export default async function HackathonPage({
           {hack.tracks && <Card title="Tracks" body={hack.tracks} />}
         </section>
       )}
+
+      <section className="rounded-xl border border-line bg-surface p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+            🦈 Shark Tank judges
+          </h2>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-dim">
+            {judges.length}/{JUDGE_POOL} signed up · {JUDGE_PANEL} judge
+          </span>
+        </div>
+
+        {judgesDrawn ? (
+          <>
+            <p className="mt-3 text-sm text-muted">
+              The panel is set — meet your {sharks.length} shark
+              {sharks.length === 1 ? "" : "s"}:
+            </p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {sharks.map((j) => (
+                <li
+                  key={j.userId}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-accent/40 bg-brand-accent-950 px-3 py-1 text-sm text-brand-accent"
+                >
+                  <span>🦈</span>
+                  <UserChip id={j.userId} name={j.name} email={j.email} />
+                </li>
+              ))}
+            </ul>
+            {judges.length > sharks.length && (
+              <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-dim">
+                Not drawn this time:{" "}
+                {judges
+                  .filter((j) => !j.selected)
+                  .map((j) => j.name ?? j.email)
+                  .join(", ")}
+              </p>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="mt-2 text-sm text-muted">
+              Fancy grilling the teams? Put your name in. When sign-ups close, an
+              admin draws {JUDGE_PANEL} judges at random from the pool.
+            </p>
+            {judges.length > 0 ? (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {judges.map((j) => (
+                  <li
+                    key={j.userId}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-raised px-3 py-1 text-sm text-ink-text"
+                  >
+                    <UserChip id={j.userId} name={j.name} email={j.email} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-dim">
+                No judges yet. Be the first to volunteer.
+              </p>
+            )}
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {myJudge ? (
+                <form
+                  action={async () => {
+                    "use server";
+                    await withdrawAsJudge(hack.id);
+                  }}
+                >
+                  <button className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-muted hover:text-ink-text">
+                    You're in the pool · withdraw
+                  </button>
+                </form>
+              ) : judgePoolFull ? (
+                <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+                  Judge pool is full ({JUDGE_POOL}/{JUDGE_POOL})
+                </span>
+              ) : (
+                <form
+                  action={async () => {
+                    "use server";
+                    await applyAsJudge(hack.id);
+                  }}
+                >
+                  <button className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-ink shadow-glow-accent hover:bg-brand-accent-dark">
+                    🙋 Apply to be a judge
+                  </button>
+                </form>
+              )}
+            </div>
+          </>
+        )}
+
+        {adminAccess && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+              Admin
+            </span>
+            <form
+              action={async () => {
+                "use server";
+                await drawJudges(hack.id);
+              }}
+            >
+              <button
+                disabled={judges.length === 0}
+                className="rounded-md border border-brand-accent/40 bg-brand-accent-950 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-accent hover:bg-brand-accent hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                🦈 {judgesDrawn ? "Re-draw" : "Draw"} {JUDGE_PANEL} judges
+              </button>
+            </form>
+            {judgesDrawn && (
+              <form
+                action={async () => {
+                  "use server";
+                  await clearJudgeDraw(hack.id);
+                }}
+              >
+                <button className="rounded-md border border-line bg-raised px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-ink-text">
+                  Clear draw
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+      </section>
 
       {(hack.stage === "idea" || hack.stage === "team_forming") && (
         <section>

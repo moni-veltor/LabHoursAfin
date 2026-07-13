@@ -503,6 +503,24 @@ export const hackAwards = pgTable("hack_award", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const hackJudges = pgTable(
+  "hack_judge",
+  {
+    hackathonId: uuid("hackathon_id")
+      .notNull()
+      .references(() => hackathons.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    selected: boolean("selected").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.hackathonId, t.userId] }),
+    index("hack_judge_hack_idx").on(t.hackathonId),
+  ]
+);
+
 export const initiativesRelations = relations(initiatives, ({ one, many }) => ({
   owner: one(users, { fields: [initiatives.ownerId], references: [users.id] }),
   subscriptions: many(subscriptions),
