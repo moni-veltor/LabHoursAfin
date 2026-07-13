@@ -11,8 +11,6 @@ import {
   checkParticipationRule,
   getParticipationStatus,
 } from "@/lib/participation";
-import { CATEGORIES, type Category } from "@/lib/categories";
-import { getCategoryMap, categoryKeyOf } from "@/lib/categories-server";
 import { notify } from "@/lib/notifications-server";
 import { logAudit } from "@/lib/audit";
 
@@ -34,14 +32,8 @@ export async function requestToJoin(initiativeId: string, note?: string) {
   if (!initiative) throw new Error("NOT_FOUND");
 
   if (!isExempt(me)) {
-    const catKey = categoryKeyOf(initiative);
-    const map = await getCategoryMap();
     const status = await getParticipationStatus(me.id);
-    const verdict = checkParticipationRule(
-      status,
-      catKey,
-      map.get(catKey)?.label ?? catKey
-    );
+    const verdict = checkParticipationRule(status);
     if (!verdict.ok) {
       throw new Error(`PARTICIPATION_RULE: ${verdict.message}`);
     }

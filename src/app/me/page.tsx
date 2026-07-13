@@ -6,14 +6,7 @@ import { and, eq, desc, inArray } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
 import { isTechTeam } from "@/lib/tech-team";
 import { isAdmin } from "@/lib/admin";
-import {
-  getParticipationStatus,
-  TERM_CAP,
-  termRange,
-  formatTermStart,
-  nextTermKey,
-} from "@/lib/participation";
-import { CATEGORIES, type Category } from "@/lib/categories";
+import { getParticipationStatus } from "@/lib/participation";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { hourAwareGreeting } from "@/lib/greeting";
 import { computeStreak } from "@/lib/streaks";
@@ -40,11 +33,10 @@ export default async function MyBoardPage() {
   const ids = mySubs.map((s) => s.id);
 
   if (ids.length === 0) {
-    const emptyCatMap = await getCategoryMap();
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold tracking-tight">My board</h1>
-        {status && <TermPanel status={status} catMap={emptyCatMap} />}
+        {status && <TermPanel status={status} />}
         <p className="text-muted">You haven't subscribed to anything yet.</p>
       </div>
     );
@@ -114,7 +106,7 @@ export default async function MyBoardPage() {
         </div>
       </div>
 
-      {status && <TermPanel status={status} catMap={catMap} />}
+      {status && <TermPanel status={status} />}
 
       <Section
         title="Owned by me"
@@ -134,90 +126,51 @@ export default async function MyBoardPage() {
 
 function TermPanel({
   status,
-  catMap,
 }: {
   status: Awaited<ReturnType<typeof getParticipationStatus>>;
-  catMap: Awaited<ReturnType<typeof getCategoryMap>>;
 }) {
-  const slotsLeft = Math.max(0, TERM_CAP - status.currentSlotsUsed);
+  const slotsLeft = Math.max(0, status.cap - status.activeCount);
+  const atCap = slotsLeft === 0;
   return (
     <section className="rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center gap-3">
         <span className="rounded-md border border-brand-primary/40 bg-brand-primary-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
-          {status.currentLabel}
+          Participation
         </span>
         <span className="font-mono text-[11px] uppercase tracking-wider text-muted">
-          {status.currentSlotsUsed}/{TERM_CAP} slots used
+          {status.activeCount}/{status.cap} active
         </span>
-        <span className="ml-auto font-mono text-[10px] text-dim">
-          next term · {status.nextStart}
-        </span>
+        {status.completedCount > 0 && (
+          <span className="ml-auto font-mono text-[10px] text-dim">
+            {status.completedCount} completed
+          </span>
+        )}
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <div>
-          <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-            This term · joined
-          </h3>
-          {status.currentCategories.length === 0 ? (
-            <p className="mt-2 text-xs text-dim">
-              No categories yet. {slotsLeft} slots open this term.
-            </p>
-          ) : (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
-              {status.currentCategories.map((c) => (
-                <CatPill key={c} k={c} tone="primary" catMap={catMap} />
-              ))}
-            </ul>
-          )}
-        </div>
-        <div>
-          <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-            Locked this term · from {status.previousLabel}
-          </h3>
-          {status.previousCategories.length === 0 ? (
-            <p className="mt-2 text-xs text-dim">
-              Nothing locked. You participated in no categories last term.
-            </p>
-          ) : (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
-              {status.previousCategories.map((c) => (
-                <CatPill key={c} k={c} tone="locked" catMap={catMap} />
-              ))}
-            </ul>
-          )}
-        </div>
+      <div className="mt-4">
+        <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+          In progress right now
+        </h3>
+        {status.active.length === 0 ? (
+          <p className="mt-2 text-xs text-dim">
+            Nothing on the go. You can join up to {status.cap}.
+          </p>
+        ) : (
+          <ul className="mt-2 space-y-1">
+            {status.active.map((a) => (
+              <li key={a.id} className="text-sm text-ink-text">
+                <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full bg-brand-primary align-middle" />
+                {a.title}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <p className="mt-4 font-mono text-[10px] text-dim">
-        Rule · 2 initiatives per quarter · different categories · no repeats from
-        the previous quarter
+        {atCap
+          ? `You're at the limit of ${status.cap}. Finish one (it gets marked done) to free a slot.`
+          : `Rule · up to ${status.cap} initiatives at once · finish one to take on another.`}
       </p>
     </section>
-  );
-}
-
-function CatPill({
-  k,
-  tone,
-  catMap,
-}: {
-  k: string;
-  tone: "primary" | "locked";
-  catMap: Awaited<ReturnType<typeof getCategoryMap>>;
-}) {
-  const meta = catMap.get(k);
-  const cls =
-    tone === "locked"
-      ? "border-brand-accent/30 bg-brand-accent-950 text-brand-accent"
-      : "border-brand-primary/30 bg-brand-primary-950 text-brand-primary-glow";
-  return (
-    <li
-      className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cls}`}
-    >
-      <span
-        className={`inline-block h-1.5 w-1.5 rounded-full ${meta?.dot ?? "bg-stone-500"}`}
-      />
-      {meta?.label ?? k}
-    </li>
   );
 }
 

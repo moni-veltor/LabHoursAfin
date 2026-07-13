@@ -13,9 +13,6 @@ import { SearchInput } from "@/components/search-input";
 import { RecommendStrip } from "@/components/recommend";
 import { auth } from "@/lib/auth";
 import { loadAllCategories, categoryKeyOf } from "@/lib/categories-server";
-import { getParticipationStatus } from "@/lib/participation";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
 
 const PAGE_SIZE = 20;
 
@@ -44,16 +41,9 @@ export default async function HomePage({
   const catMap = new Map(allCats.map((c) => [c.key, c]));
   const fallbackCat = catMap.get("other")!;
 
-  const ruleApplies = !!(
-    me &&
-    me.role === "member" &&
-    !isTechTeam(me.email) &&
-    !isAdmin(me.email)
-  );
-  const status = me?.id && ruleApplies ? await getParticipationStatus(me.id) : null;
-  const lockedSet = new Set(
-    status ? [...status.currentCategories, ...status.previousCategories] : []
-  );
+  // Participation is capped by how many initiatives you're in at once (enforced
+  // on subscribe), not by category — so nothing is locked on the board itself.
+  const lockedSet = new Set<string>();
 
   const filters = [ne(initiatives.status, "archived"), eq(initiatives.awaitingReview, false)];
   if (sp.status) filters.push(eq(initiatives.status, sp.status as any));

@@ -193,11 +193,7 @@ export default async function InitiativePage({
 
   const ruleVerdict =
     me?.id && !ruleExempt
-      ? checkParticipationRule(
-          await getParticipationStatus(me.id),
-          catKey,
-          catMeta.label
-        )
+      ? checkParticipationRule(await getParticipationStatus(me.id))
       : { ok: true as const };
 
   const myInterest = me?.id

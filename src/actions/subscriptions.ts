@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { initiatives, subscriptions } from "@/db/schema";
+import { subscriptions } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 import { isTechTeam } from "@/lib/tech-team";
@@ -11,7 +11,6 @@ import {
   checkParticipationRule,
   getParticipationStatus,
 } from "@/lib/participation";
-import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { promoteFromWaitlist } from "@/actions/approvals";
 
 function isExempt(u: { email: string; role: string }) {
@@ -30,19 +29,8 @@ export async function subscribe(
   const me = await requireUser();
 
   if (role === "participant" && !isExempt(me)) {
-    const [initiative] = await db
-      .select()
-      .from(initiatives)
-      .where(eq(initiatives.id, initiativeId));
-    if (!initiative) throw new Error("NOT_FOUND");
-    const catKey = categoryKeyOf(initiative);
-    const map = await getCategoryMap();
     const status = await getParticipationStatus(me.id);
-    const verdict = checkParticipationRule(
-      status,
-      catKey,
-      map.get(catKey)?.label ?? catKey
-    );
+    const verdict = checkParticipationRule(status);
     if (!verdict.ok) {
       throw new Error(`PARTICIPATION_RULE: ${verdict.message}`);
     }

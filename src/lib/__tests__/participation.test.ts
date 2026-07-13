@@ -37,66 +37,43 @@ describe("term math", () => {
 
 describe("checkParticipationRule", () => {
   const baseStatus = {
-    currentKey: "2026-Q2",
-    currentLabel: "Q2 2026",
-    previousKey: "2026-Q1",
-    previousLabel: "Q1 2026",
-    nextKey: "2026-Q3",
-    nextStart: "1 Jul 2026",
-    currentSlotsUsed: 0,
-    currentCap: TERM_CAP,
+    activeCount: 0,
+    cap: TERM_CAP,
     extraSlots: 0,
-    currentCategories: [] as string[],
-    previousCategories: [] as string[],
+    completedCount: 0,
+    active: [] as { id: string; title: string; category: string }[],
   };
 
-  it("allows when fresh", () => {
-    const v = checkParticipationRule(baseStatus, "ai", "AI");
-    expect(v.ok).toBe(true);
-  });
-
-  it("blocks when term cap reached", () => {
-    const v = checkParticipationRule(
-      { ...baseStatus, currentSlotsUsed: 2 },
-      "ai",
-      "AI"
+  it("allows when below the cap", () => {
+    expect(checkParticipationRule({ ...baseStatus, activeCount: 1 }).ok).toBe(
+      true
     );
-    expect(v.ok).toBe(false);
-    if (!v.ok) expect(v.reason).toBe("TERM_CAP");
   });
 
-  it("blocks duplicate category in current term", () => {
-    const v = checkParticipationRule(
-      { ...baseStatus, currentSlotsUsed: 1, currentCategories: ["ai"] },
-      "ai",
-      "AI"
-    );
+  it("blocks when already at the concurrent cap", () => {
+    const v = checkParticipationRule({ ...baseStatus, activeCount: 2 });
     expect(v.ok).toBe(false);
-    if (!v.ok) expect(v.reason).toBe("DUP_CATEGORY");
+    if (!v.ok) expect(v.reason).toBe("ACTIVE_CAP");
   });
 
-  it("blocks repeating a previous-term category", () => {
-    const v = checkParticipationRule(
-      { ...baseStatus, previousCategories: ["data_architecture"] },
-      "data_architecture",
-      "Data Architecture"
-    );
-    expect(v.ok).toBe(false);
-    if (!v.ok) expect(v.reason).toBe("PREV_TERM_CATEGORY");
-  });
-
-  it("respects extra slots from override", () => {
-    const v = checkParticipationRule(
-      {
+  it("frees a slot as active count drops (after completing one)", () => {
+    // Two joined, one completed → activeCount back to 1 → can join again.
+    expect(
+      checkParticipationRule({
         ...baseStatus,
-        currentCap: TERM_CAP + 1,
-        extraSlots: 1,
-        currentSlotsUsed: 2,
-        currentCategories: ["ai", "data_architecture"],
-      },
-      "third_parties",
-      "3rd Parties"
-    );
+        activeCount: 1,
+        completedCount: 1,
+      }).ok
+    ).toBe(true);
+  });
+
+  it("respects extra slots from an admin override", () => {
+    const v = checkParticipationRule({
+      ...baseStatus,
+      cap: TERM_CAP + 1,
+      extraSlots: 1,
+      activeCount: 2,
+    });
     expect(v.ok).toBe(true);
   });
 });

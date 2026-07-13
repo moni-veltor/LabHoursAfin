@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { initiatives, participationOverrides, subscriptions } from "@/db/schema";
-import { and, eq, gte, lt, or } from "drizzle-orm";
-import type { Category } from "@/lib/categories";
+import { and, eq, or } from "drizzle-orm";
 
 export const TERM_CAP = 2;
 
@@ -51,34 +50,40 @@ export function formatTermStart(key: string) {
   });
 }
 
-export type ParticipationStatus = {
-  currentKey: string;
-  currentLabel: string;
-  previousKey: string;
-  previousLabel: string;
-  nextKey: string;
-  nextStart: string;
-  currentSlotsUsed: number;
-  currentCap: number;
-  extraSlots: number;
-  currentCategories: string[];
-  previousCategories: string[];
+export type ActiveParticipation = {
+  id: string;
+  title: string;
+  category: string;
 };
 
+export type ParticipationStatus = {
+  // How many initiatives the user is currently in (not yet completed).
+  activeCount: number;
+  // Max concurrent initiatives (TERM_CAP plus any admin-granted extra slots).
+  cap: number;
+  extraSlots: number;
+  // How many initiatives the user has finished (reached "done").
+  completedCount: number;
+  // The active ones, for display.
+  active: ActiveParticipation[];
+};
+
+/**
+ * Concurrent-participation model: a member may be in at most `cap` initiatives
+ * at once. An initiative stops counting once it's marked "done" (completed) or
+ * "archived", which frees a slot — so to take on another, you finish one first.
+ */
 export async function getParticipationStatus(
   userId: string
 ): Promise<ParticipationStatus> {
   const now = new Date();
-  const currentKey = termKey(now);
-  const previousKey = previousTermKey(currentKey);
-  const nextKey = nextTermKey(currentKey);
 
-  const { start: currentStart, end: currentEnd } = termRange(currentKey);
-  const { start: prevStart, end: prevEnd } = termRange(previousKey);
-
-  const [currentRows, previousRows, override] = await Promise.all([
+  const [rows, override] = await Promise.all([
     db
       .select({
+        id: initiatives.id,
+        title: initiatives.title,
+        status: initiatives.status,
         category: initiatives.category,
         custom: initiatives.customCategorySlug,
       })
@@ -90,24 +95,7 @@ export async function getParticipationStatus(
           or(
             eq(subscriptions.role, "participant"),
             eq(subscriptions.role, "pending")
-          ),
-          gte(subscriptions.joinedAt, currentStart),
-          lt(subscriptions.joinedAt, currentEnd)
-        )
-      ),
-    db
-      .select({
-        category: initiatives.category,
-        custom: initiatives.customCategorySlug,
-      })
-      .from(subscriptions)
-      .innerJoin(initiatives, eq(initiatives.id, subscriptions.initiativeId))
-      .where(
-        and(
-          eq(subscriptions.userId, userId),
-          eq(subscriptions.role, "participant"),
-          gte(subscriptions.joinedAt, prevStart),
-          lt(subscriptions.joinedAt, prevEnd)
+          )
         )
       ),
     db
@@ -116,62 +104,43 @@ export async function getParticipationStatus(
       .where(
         and(
           eq(participationOverrides.userId, userId),
-          eq(participationOverrides.termKey, currentKey)
+          eq(participationOverrides.termKey, termKey(now))
         )
       ),
   ]);
 
-  const keyOf = (r: { category: string; custom: string | null }) =>
-    r.custom ?? r.category;
-  const currentCategories = Array.from(new Set(currentRows.map(keyOf)));
-  const previousCategories = Array.from(new Set(previousRows.map(keyOf)));
+  const active = rows.filter(
+    (r) => r.status !== "done" && r.status !== "archived"
+  );
+  const completedCount = rows.filter((r) => r.status === "done").length;
   const extraSlots = override[0]?.extraSlots ?? 0;
 
   return {
-    currentKey,
-    currentLabel: termLabel(currentKey),
-    previousKey,
-    previousLabel: termLabel(previousKey),
-    nextKey,
-    nextStart: formatTermStart(nextKey),
-    currentSlotsUsed: currentRows.length,
-    currentCap: TERM_CAP + extraSlots,
+    activeCount: active.length,
+    cap: TERM_CAP + extraSlots,
     extraSlots,
-    currentCategories,
-    previousCategories,
+    completedCount,
+    active: active.map((r) => ({
+      id: r.id,
+      title: r.title,
+      category: r.custom ?? r.category,
+    })),
   };
 }
 
 export type RuleVerdict =
   | { ok: true }
-  | { ok: false; reason: "TERM_CAP"; message: string }
-  | { ok: false; reason: "DUP_CATEGORY"; message: string }
-  | { ok: false; reason: "PREV_TERM_CATEGORY"; message: string };
+  | { ok: false; reason: "ACTIVE_CAP"; message: string };
 
 export function checkParticipationRule(
-  status: ParticipationStatus,
-  categoryKey: string,
-  categoryLabel: string
+  status: ParticipationStatus
 ): RuleVerdict {
-  if (status.currentSlotsUsed >= status.currentCap) {
+  if (status.activeCount >= status.cap) {
+    const n = status.activeCount;
     return {
       ok: false,
-      reason: "TERM_CAP",
-      message: `You've used all ${status.currentCap} of your slots for ${status.currentLabel}. Next term opens ${status.nextStart}.`,
-    };
-  }
-  if (status.currentCategories.includes(categoryKey)) {
-    return {
-      ok: false,
-      reason: "DUP_CATEGORY",
-      message: `You're already in a ${categoryLabel} initiative this term — your two slots must be different categories.`,
-    };
-  }
-  if (status.previousCategories.includes(categoryKey)) {
-    return {
-      ok: false,
-      reason: "PREV_TERM_CATEGORY",
-      message: `Your last term (${status.previousLabel}) already included ${categoryLabel}. To diversify, this category re-opens for you in ${termLabel(nextTermKey(status.currentKey))} (${formatTermStart(nextTermKey(status.currentKey))}).`,
+      reason: "ACTIVE_CAP",
+      message: `You're already in ${n} initiative${n === 1 ? "" : "s"} at once (the limit is ${status.cap}). Finish one — it needs to be marked done — before subscribing to another.`,
     };
   }
   return { ok: true };
