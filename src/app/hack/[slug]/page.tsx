@@ -4,7 +4,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
   hackathons,
-  hackIdeas,
   hackTeams,
   hackTeamMembers,
   hackDemos,
@@ -18,7 +17,6 @@ import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { isAdmin } from "@/lib/admin";
 import { UserChip } from "@/components/avatar";
 import {
-  pitchIdea,
   formTeam,
   joinTeam,
   leaveTeam,
@@ -64,18 +62,6 @@ export default async function HackathonPage({
     .from(hackathons)
     .where(eq(hackathons.slug, slug));
   if (!hack) notFound();
-
-  const ideas = await db
-    .select({
-      i: hackIdeas,
-      authorName: users.name,
-      authorEmail: users.email,
-      authorId: users.id,
-    })
-    .from(hackIdeas)
-    .leftJoin(users, eq(users.id, hackIdeas.authorId))
-    .where(eq(hackIdeas.hackathonId, hack.id))
-    .orderBy(desc(hackIdeas.createdAt));
 
   const teams = await db
     .select()
@@ -405,84 +391,6 @@ export default async function HackathonPage({
         )}
       </section>
 
-      {(hack.stage === "idea" || hack.stage === "team_forming") && (
-        <section>
-          <h2 className="mb-3 flex items-center justify-between font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
-            <span>Idea pitches · {ideas.length}</span>
-          </h2>
-          {hack.stage === "idea" && (
-            <form
-              action={pitchIdea}
-              className="mb-4 space-y-2 rounded-xl border border-line bg-surface p-4"
-            >
-              <input type="hidden" name="hackathonId" value={hack.id} />
-              <input
-                name="title"
-                required
-                placeholder="A one-line idea — what you'd build"
-                className="w-full rounded-md border border-line bg-raised px-3 py-2 text-sm placeholder:text-dim focus:border-brand-accent focus:outline-none"
-              />
-              <textarea
-                name="body"
-                rows={3}
-                placeholder="Optional: a few sentences on why."
-                className="w-full resize-y rounded-md border border-line bg-raised px-3 py-2 text-sm placeholder:text-dim focus:border-brand-accent focus:outline-none"
-              />
-              <div className="flex justify-end">
-                <button className="rounded-md bg-brand-accent px-3 py-1.5 text-sm font-medium text-ink shadow-glow-accent hover:bg-brand-accent-dark">
-                  Pitch it
-                </button>
-              </div>
-            </form>
-          )}
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {ideas.length === 0 && (
-              <li className="rounded-xl border border-dashed border-line bg-surface p-5 text-center text-sm text-muted sm:col-span-2">
-                No pitches yet. Be the first.
-              </li>
-            )}
-            {ideas.map(({ i, authorName, authorEmail, authorId }) => (
-              <li
-                key={i.id}
-                className="rounded-xl border border-line bg-surface p-4"
-              >
-                <p className="font-medium text-ink-text">{i.title}</p>
-                {i.body && (
-                  <p className="mt-1 text-sm text-muted">{i.body}</p>
-                )}
-                <p className="mt-3 text-xs">
-                  <UserChip
-                    id={authorId}
-                    name={authorName}
-                    email={authorEmail}
-                    size={16}
-                  />
-                </p>
-                {hack.stage === "team_forming" && !i.teamId && !iAmAJudge && (
-                  <form action={formTeam} className="mt-3 flex gap-2">
-                    <input type="hidden" name="hackathonId" value={hack.id} />
-                    <input type="hidden" name="ideaId" value={i.id} />
-                    <input
-                      name="name"
-                      required
-                      placeholder="Team name"
-                      className="flex-1 rounded-md border border-line bg-raised px-2 py-1 text-sm placeholder:text-dim focus:border-brand-accent focus:outline-none"
-                    />
-                    <button className="rounded-md bg-brand-accent px-2 py-1 text-xs font-medium text-ink hover:bg-brand-accent-dark">
-                      Lead this idea →
-                    </button>
-                  </form>
-                )}
-                {i.teamId && (
-                  <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-brand-success">
-                    ✓ team formed
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {(hack.stage === "team_forming" ||
         hack.stage === "build" ||
