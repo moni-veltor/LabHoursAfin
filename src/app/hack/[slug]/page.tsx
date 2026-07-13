@@ -16,7 +16,6 @@ import {
 } from "@/db/schema";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { isAdmin } from "@/lib/admin";
-import { Countdown } from "@/components/countdown";
 import { UserChip } from "@/components/avatar";
 import {
   pitchIdea,
@@ -805,16 +804,17 @@ function Hero({ hack, adminAccess }: { hack: any; adminAccess: boolean }) {
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
           {hack.name}
         </h1>
-        {hack.endsAt && new Date(hack.endsAt).getTime() > Date.now() && (
-          <div className="mt-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">
-              countdown to end
-            </p>
-            <div className="mt-2">
-              <Countdown to={hack.endsAt} />
-            </div>
-          </div>
-        )}
+        <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] text-dim">
+          {hack.startsAt
+            ? `📅 ${new Date(hack.startsAt).toLocaleDateString("en-GB", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+                timeZone: "UTC",
+              })}`
+            : "One-day event · date set once sign-ups close"}
+        </p>
       </div>
     </header>
   );

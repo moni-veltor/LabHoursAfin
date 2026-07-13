@@ -147,25 +147,16 @@ function Grid({ rows }: { rows: any[] }) {
             {h.theme && (
               <p className="mt-1 line-clamp-2 text-sm text-muted">{h.theme}</p>
             )}
-            {h.startsAt && (
-              <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-dim">
-                {new Date(h.startsAt).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-                {h.endsAt && (
-                  <>
-                    {" → "}
-                    {new Date(h.endsAt).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </>
-                )}
-              </p>
-            )}
+            <p className="mt-2 font-mono text-[10px] uppercase tracking-wider text-dim">
+              {h.startsAt
+                ? new Date(h.startsAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })
+                : "one-day event · date tbc"}
+            </p>
           </div>
         </Link>
       ))}

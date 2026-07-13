@@ -77,17 +77,10 @@ export default async function NewHackathonPage() {
             name="prizes"
             placeholder="Bragging rights, lunch with CTO, $200 vouchers"
           />
-          <Field
-            label="Starts at"
-            name="startsAt"
-            type="datetime-local"
-          />
-          <Field
-            label="Ends at"
-            name="endsAt"
-            type="datetime-local"
-          />
         </div>
+        <p className="font-mono text-[10px] uppercase tracking-wider text-dim">
+          One-day event · the date is set later, once sign-ups close.
+        </p>
 
         <fieldset className="rounded-md border border-brand-accent/30 bg-brand-accent-950 p-3">
           <legend className="px-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
