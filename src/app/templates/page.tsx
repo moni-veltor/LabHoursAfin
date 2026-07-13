@@ -79,10 +79,9 @@ export default async function TemplatesPage() {
                 </div>
                 <h3 className="mt-3 text-lg font-semibold tracking-tight">{r.title}</h3>
                 <p className="mt-1 line-clamp-2 text-sm text-muted">{r.summary}</p>
-                <p className="mt-2 text-xs text-muted">
-                  by {r.ownerName ?? "—"}
-                  {r.timeCommitment && <> · {r.timeCommitment}</>}
-                </p>
+                {r.timeCommitment && (
+                  <p className="mt-2 text-xs text-muted">{r.timeCommitment}</p>
+                )}
                 <div className="mt-4 flex items-center gap-2">
                   <Link
                     href={`/initiatives/new?template=${r.id}`}

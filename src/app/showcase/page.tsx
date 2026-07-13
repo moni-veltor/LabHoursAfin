@@ -102,9 +102,7 @@ export default async function ShowcasePage() {
                     ))}
                   </div>
                 )}
-                <p className="mt-auto text-xs text-muted">
-                  by {r.ownerName ?? "—"}
-                </p>
+                <div className="mt-auto" />
               </Link>
             );
           })}
