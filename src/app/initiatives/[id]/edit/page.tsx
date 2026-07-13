@@ -67,6 +67,9 @@ export default async function EditInitiativePage({
     effort: t.effort ?? "",
     capacity: t.capacity != null ? String(t.capacity) : "",
     timeCommitment: t.timeCommitment ?? "",
+    subscriptionsOpenAt: t.subscriptionsOpenAt
+      ? new Date(t.subscriptionsOpenAt).toISOString().slice(0, 16)
+      : "",
     tags: tagRows.map((tt) => tt.slug).join(", "),
     coverImage: t.coverImage ?? "",
     recordings: t.recordings ?? "",

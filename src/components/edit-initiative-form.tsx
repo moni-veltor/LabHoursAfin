@@ -31,6 +31,7 @@ type Initial = {
   effort: string;
   capacity: string;
   timeCommitment: string;
+  subscriptionsOpenAt: string;
   tags: string;
   status: string;
   requiresApproval: boolean;
@@ -137,6 +138,12 @@ export function EditInitiativeForm({
             label="Subcategory"
             name="subcategory"
             defaultValue={initial.subcategory}
+          />
+          <Field
+            label="Subscriptions open at"
+            name="subscriptionsOpenAt"
+            type="datetime-local"
+            defaultValue={initial.subscriptionsOpenAt}
           />
         </div>
         <Field

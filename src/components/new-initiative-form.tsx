@@ -31,6 +31,7 @@ type Initial = Partial<{
   effort: string;
   capacity: string;
   timeCommitment: string;
+  subscriptionsOpenAt: string;
   tags: string;
   status: string;
   requiresApproval: boolean;
@@ -231,6 +232,13 @@ export function NewInitiativeForm({
               name="subcategory"
               defaultValue={initial.subcategory}
               placeholder="e.g. Core Banking Platform"
+            />
+            <Field
+              label="Subscriptions open at"
+              name="subscriptionsOpenAt"
+              type="datetime-local"
+              defaultValue={initial.subscriptionsOpenAt}
+              placeholder="leave blank to open now"
             />
           </div>
           <Field

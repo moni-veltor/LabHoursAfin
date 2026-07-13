@@ -54,6 +54,7 @@ const InitiativeSchema = z.object({
   prerequisites: z.string().max(1000).optional(),
   capacity: z.coerce.number().int().min(1).max(500).optional(),
   timeCommitment: z.string().max(80).optional(),
+  subscriptionsOpenAt: z.string().max(40).optional(),
   tags: z.string().max(200).optional(),
   requiresApproval: z
     .union([z.literal("on"), z.literal("true"), z.literal("false"), z.literal("")])
@@ -122,6 +123,7 @@ export async function createInitiative(formData: FormData) {
     prerequisites: emptyToUndef(formData.get("prerequisites")),
     capacity: emptyToUndef(formData.get("capacity")),
     timeCommitment: emptyToUndef(formData.get("timeCommitment")),
+    subscriptionsOpenAt: emptyToUndef(formData.get("subscriptionsOpenAt")),
     tags: emptyToUndef(formData.get("tags")),
     requiresApproval: (formData.get("requiresApproval") as any) ?? "",
     crossTeam: (formData.get("crossTeam") as any) ?? "",
@@ -172,6 +174,9 @@ export async function createInitiative(formData: FormData) {
       prerequisites: parsed.prerequisites,
       capacity: parsed.capacity,
       timeCommitment: parsed.timeCommitment,
+      subscriptionsOpenAt: parsed.subscriptionsOpenAt
+        ? new Date(parsed.subscriptionsOpenAt)
+        : null,
       requiresApproval: parsed.requiresApproval,
       crossTeam: parsed.crossTeam,
       awaitingReview,
@@ -219,6 +224,7 @@ export async function updateInitiative(formData: FormData) {
     prerequisites: emptyToUndef(formData.get("prerequisites")),
     capacity: emptyToUndef(formData.get("capacity")),
     timeCommitment: emptyToUndef(formData.get("timeCommitment")),
+    subscriptionsOpenAt: emptyToUndef(formData.get("subscriptionsOpenAt")),
     tags: emptyToUndef(formData.get("tags")),
     requiresApproval: (formData.get("requiresApproval") as any) ?? "",
     crossTeam: (formData.get("crossTeam") as any) ?? "",
@@ -272,6 +278,9 @@ export async function updateInitiative(formData: FormData) {
       prerequisites: parsed.prerequisites ?? null,
       capacity: parsed.capacity ?? null,
       timeCommitment: parsed.timeCommitment ?? null,
+      subscriptionsOpenAt: parsed.subscriptionsOpenAt
+        ? new Date(parsed.subscriptionsOpenAt)
+        : null,
       requiresApproval: parsed.requiresApproval,
       crossTeam: parsed.crossTeam,
       coverImage: parsed.coverImage ?? null,

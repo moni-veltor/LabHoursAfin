@@ -196,6 +196,18 @@ export default async function InitiativePage({
       ? checkParticipationRule(await getParticipationStatus(me.id))
       : { ok: true as const };
 
+  const notOpenYet =
+    initiative.subscriptionsOpenAt != null &&
+    new Date(initiative.subscriptionsOpenAt).getTime() > Date.now();
+  const opensLabel = notOpenYet
+    ? new Date(initiative.subscriptionsOpenAt!).toLocaleString("en-GB", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "";
+  // Admins/tech can join early to test; members must wait for the window.
+  const canJoinWindow = !notOpenYet || ruleExempt;
+
   const myInterest = me?.id
     ? await db
         .select()
@@ -476,17 +488,23 @@ export default async function InitiativePage({
                   Leave
                 </button>
               </form>
-              {myRole === "subscriber" && !capacityFull && ruleVerdict.ok && (
-                <ApplicantNote
-                  initiativeId={initiative.id}
-                  ctaLabel={
-                    initiative.requiresApproval
-                      ? "Apply to join"
-                      : "I'm in — count me as a participant"
-                  }
-                  requiresApproval={!!initiative.requiresApproval}
-                />
+              {myRole === "subscriber" && notOpenYet && (
+                <OpensBlock date={opensLabel} exempt={ruleExempt} />
               )}
+              {myRole === "subscriber" &&
+                !capacityFull &&
+                ruleVerdict.ok &&
+                canJoinWindow && (
+                  <ApplicantNote
+                    initiativeId={initiative.id}
+                    ctaLabel={
+                      initiative.requiresApproval
+                        ? "Apply to join"
+                        : "I'm in — count me as a participant"
+                    }
+                    requiresApproval={!!initiative.requiresApproval}
+                  />
+                )}
               {myRole === "subscriber" && !ruleVerdict.ok && (
                 <RuleBlock message={ruleVerdict.message} />
               )}
@@ -503,7 +521,10 @@ export default async function InitiativePage({
                   Follow updates
                 </button>
               </form>
-              {!capacityFull && ruleVerdict.ok && (
+              {notOpenYet && (
+                <OpensBlock date={opensLabel} exempt={ruleExempt} />
+              )}
+              {!capacityFull && ruleVerdict.ok && canJoinWindow && (
                 <ApplicantNote
                   initiativeId={initiative.id}
                   ctaLabel={
@@ -674,6 +695,20 @@ function RuleBlock({ message }: { message: string }) {
         Quarter rule
       </p>
       <p className="mt-1 text-xs text-muted">{message}</p>
+    </div>
+  );
+}
+
+function OpensBlock({ date, exempt }: { date: string; exempt: boolean }) {
+  return (
+    <div className="rounded-md border border-line bg-raised p-3">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
+        🔒 Not open yet
+      </p>
+      <p className="mt-1 text-xs text-muted">
+        Subscriptions open <span className="text-ink-text">{date}</span>.
+        {exempt && " (You can join early as an admin.)"}
+      </p>
     </div>
   );
 }

@@ -134,6 +134,7 @@ export const initiatives = pgTable(
     prerequisites: text("prerequisites"),
     capacity: integer("capacity"),
     timeCommitment: text("time_commitment"),
+    subscriptionsOpenAt: timestamp("subscriptions_open_at"),
     startsAt: timestamp("starts_at"),
     endsAt: timestamp("ends_at"),
     requiresApproval: boolean("requires_approval").notNull().default(false),

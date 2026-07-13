@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { subscriptions } from "@/db/schema";
+import { initiatives, subscriptions } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
 import { isTechTeam } from "@/lib/tech-team";
@@ -29,6 +29,20 @@ export async function subscribe(
   const me = await requireUser();
 
   if (role === "participant" && !isExempt(me)) {
+    const [initiative] = await db
+      .select({ subscriptionsOpenAt: initiatives.subscriptionsOpenAt })
+      .from(initiatives)
+      .where(eq(initiatives.id, initiativeId));
+    if (
+      initiative?.subscriptionsOpenAt &&
+      initiative.subscriptionsOpenAt.getTime() > Date.now()
+    ) {
+      const when = initiative.subscriptionsOpenAt.toLocaleString("en-GB", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+      throw new Error(`NOT_OPEN_YET: Subscriptions open ${when}.`);
+    }
     const status = await getParticipationStatus(me.id);
     const verdict = checkParticipationRule(status);
     if (!verdict.ok) {

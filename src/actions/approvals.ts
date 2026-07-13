@@ -32,6 +32,16 @@ export async function requestToJoin(initiativeId: string, note?: string) {
   if (!initiative) throw new Error("NOT_FOUND");
 
   if (!isExempt(me)) {
+    if (
+      initiative.subscriptionsOpenAt &&
+      initiative.subscriptionsOpenAt.getTime() > Date.now()
+    ) {
+      const when = initiative.subscriptionsOpenAt.toLocaleString("en-GB", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      });
+      throw new Error(`NOT_OPEN_YET: Subscriptions open ${when}.`);
+    }
     const status = await getParticipationStatus(me.id);
     const verdict = checkParticipationRule(status);
     if (!verdict.ok) {
