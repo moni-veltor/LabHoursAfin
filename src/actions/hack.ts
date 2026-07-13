@@ -210,6 +210,16 @@ export async function formTeam(formData: FormData) {
   const blurb = String(formData.get("blurb") ?? "").slice(0, 280) || null;
   const track = (formData.get("track") as string) || null;
   if (!hackathonId || !name) throw new Error("MISSING");
+  const judging = await db
+    .select()
+    .from(hackJudges)
+    .where(
+      and(
+        eq(hackJudges.hackathonId, hackathonId),
+        eq(hackJudges.userId, me.id)
+      )
+    );
+  if (judging.length) throw new Error("ALREADY_JUDGING");
   const [team] = await db
     .insert(hackTeams)
     .values({ hackathonId, leaderId: me.id, ideaId, name, blurb, track })
@@ -233,6 +243,16 @@ export async function joinTeam(teamId: string) {
     .from(hackathons)
     .where(eq(hackathons.id, team.hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
+  const judging = await db
+    .select()
+    .from(hackJudges)
+    .where(
+      and(
+        eq(hackJudges.hackathonId, team.hackathonId),
+        eq(hackJudges.userId, me.id)
+      )
+    );
+  if (judging.length) throw new Error("ALREADY_JUDGING");
   const members = await db
     .select()
     .from(hackTeamMembers)
@@ -427,6 +447,19 @@ export async function applyAsJudge(hackathonId: string) {
     .from(hackathons)
     .where(eq(hackathons.id, hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
+
+  // Conflict of interest: competitors can't judge.
+  const onTeam = await db
+    .select({ userId: hackTeamMembers.userId })
+    .from(hackTeamMembers)
+    .innerJoin(hackTeams, eq(hackTeams.id, hackTeamMembers.teamId))
+    .where(
+      and(
+        eq(hackTeams.hackathonId, hackathonId),
+        eq(hackTeamMembers.userId, me.id)
+      )
+    );
+  if (onTeam.length) throw new Error("ALREADY_COMPETING");
 
   // Already in the pool? Nothing to do.
   const mine = await db

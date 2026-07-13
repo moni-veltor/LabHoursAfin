@@ -147,6 +147,9 @@ export default async function HackathonPage({
   const myMemberships = new Set(
     members.filter((m) => m.userId === me.id).map((m) => m.teamId)
   );
+  // A person can't be both a competitor and a judge in the same hackathon.
+  const iAmOnATeam = myMemberships.size > 0;
+  const iAmAJudge = !!myJudge;
 
   return (
     <div className="space-y-8">
@@ -255,6 +258,10 @@ export default async function HackathonPage({
                     You're in the pool · withdraw
                   </button>
                 </form>
+              ) : iAmOnATeam ? (
+                <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+                  You're competing on a team — judges can't also compete.
+                </span>
               ) : judgePoolFull ? (
                 <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
                   Judge pool is full ({JUDGE_POOL}/{JUDGE_POOL})
@@ -362,7 +369,7 @@ export default async function HackathonPage({
                     size={16}
                   />
                 </p>
-                {hack.stage === "team_forming" && !i.teamId && (
+                {hack.stage === "team_forming" && !i.teamId && !iAmAJudge && (
                   <form action={formTeam} className="mt-3 flex gap-2">
                     <input type="hidden" name="hackathonId" value={hack.id} />
                     <input type="hidden" name="ideaId" value={i.id} />
@@ -397,7 +404,13 @@ export default async function HackathonPage({
           <h2 className="mb-3 font-mono text-[10px] uppercase tracking-[0.2em] text-muted">
             Teams · {teams.length}
           </h2>
-          {hack.stage === "team_forming" && (
+          {hack.stage === "team_forming" && iAmAJudge && (
+            <p className="mb-4 rounded-xl border border-dashed border-line bg-surface p-4 text-sm text-dim">
+              You signed up as a judge — you can't also compete on a team. Withdraw
+              from the judge pool above if you'd rather build.
+            </p>
+          )}
+          {hack.stage === "team_forming" && !iAmAJudge && (
             <form
               action={formTeam}
               className="mb-4 space-y-2 rounded-xl border border-line bg-surface p-4"
@@ -466,6 +479,10 @@ export default async function HackathonPage({
                             Leave
                           </button>
                         </form>
+                      ) : iAmAJudge ? (
+                        <span className="rounded-md border border-line bg-raised px-2 py-1 text-xs text-dim">
+                          Judging — can't join
+                        </span>
                       ) : (
                         <form
                           action={async () => {
