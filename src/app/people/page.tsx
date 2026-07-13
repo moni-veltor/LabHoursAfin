@@ -6,6 +6,7 @@ import { users } from "@/db/schema";
 import { and, asc, desc, ilike, isNull, or } from "drizzle-orm";
 import { Avatar } from "@/components/avatar";
 import { DeleteUserButton } from "@/components/delete-user-button";
+import { ResetPinButton } from "@/components/reset-pin-button";
 import { isAdmin } from "@/lib/admin";
 import { isTechTeam } from "@/lib/tech-team";
 
@@ -207,14 +208,19 @@ export default async function PeoplePage({
                 key={u.id}
                 className="relative rounded-xl border border-line bg-surface p-4 transition hover:border-brand-primary/40 hover:shadow-glow-soft"
               >
-                {adminAccess &&
-                  u.id !== me.id &&
-                  !isAdmin(u.email) &&
-                  !isTechTeam(u.email) && (
-                    <div className="absolute right-3 top-3 z-10">
-                      <DeleteUserButton userId={u.id} name={u.name ?? u.email} />
-                    </div>
-                  )}
+                {adminAccess && (
+                  <div className="absolute right-3 top-3 z-10 flex items-center gap-1">
+                    <ResetPinButton userId={u.id} name={u.name ?? u.email} />
+                    {u.id !== me.id &&
+                      !isAdmin(u.email) &&
+                      !isTechTeam(u.email) && (
+                        <DeleteUserButton
+                          userId={u.id}
+                          name={u.name ?? u.email}
+                        />
+                      )}
+                  </div>
+                )}
                 <Link href={`/u/${u.id}`} className="flex items-start gap-3">
                   <Avatar name={u.name} email={u.email} size={44} />
                   <div className="min-w-0 flex-1">

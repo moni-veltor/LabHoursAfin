@@ -8,6 +8,29 @@ import { logAudit } from "@/lib/audit";
 import { count, eq } from "drizzle-orm";
 import { isAdmin } from "@/lib/admin";
 import { isTechTeam } from "@/lib/tech-team";
+import { generatePin, hashPin } from "@/lib/pin";
+
+// Reset a user's sign-in PIN to a fresh random 4-digit code. Returns the new
+// PIN in plaintext once so the admin can hand it over — it's only stored hashed.
+export async function resetUserPin(userId: string): Promise<string> {
+  const me = await requireAdmin();
+  if (!userId) throw new Error("MISSING_USER_ID");
+  const [target] = await db.select().from(users).where(eq(users.id, userId));
+  if (!target) throw new Error("NOT_FOUND");
+
+  const pin = generatePin();
+  await db
+    .update(users)
+    .set({ pinHash: hashPin(pin) })
+    .where(eq(users.id, userId));
+  await logAudit(
+    me.id,
+    "user.reset_pin",
+    { type: "user", id: userId },
+    { email: target.email }
+  );
+  return pin;
+}
 
 export async function softDeleteUser(formData: FormData) {
   const me = await requireAdmin();

@@ -1,4 +1,9 @@
-import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { randomBytes, randomInt, scryptSync, timingSafeEqual } from "crypto";
+
+// A fresh, uniform 4-digit PIN (1000–9999, always four digits).
+export function generatePin(): string {
+  return String(randomInt(1000, 10000));
+}
 
 // 4-digit sign-in PINs are stored hashed (never plaintext) as "saltHex:hashHex".
 // scryptSync uses Node's defaults on both sides, so hashing and verifying stay
