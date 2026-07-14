@@ -13,7 +13,7 @@ import {
   hackParticipants,
   users,
 } from "@/db/schema";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, ne, inArray, sql } from "drizzle-orm";
 import { isAdmin } from "@/lib/admin";
 import { UserChip } from "@/components/avatar";
 import {
@@ -166,6 +166,27 @@ export default async function HackathonPage({
   // Admins can sign up early to test.
   const signupsBlocked = signupsNotOpen && !adminAccess;
 
+  // One hackathon at a time: is this member already competing in another live one?
+  const otherHack =
+    adminAccess || iAmParticipant
+      ? null
+      : (
+          await db
+            .select({ name: hackathons.name, slug: hackathons.slug })
+            .from(hackParticipants)
+            .innerJoin(
+              hackathons,
+              eq(hackathons.id, hackParticipants.hackathonId)
+            )
+            .where(
+              and(
+                eq(hackParticipants.userId, me.id),
+                ne(hackParticipants.hackathonId, hack.id),
+                ne(hackathons.stage, "done")
+              )
+            )
+        )[0] ?? null;
+
   return (
     <div className="space-y-8">
       {sp.warn === "not-enough-signs" && (
@@ -255,6 +276,17 @@ export default async function HackathonPage({
           ) : signupsBlocked ? (
             <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
               🔒 Sign-ups open {signupsLabel}
+            </span>
+          ) : otherHack ? (
+            <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+              You're already in{" "}
+              <Link
+                href={`/hack/${otherHack.slug}`}
+                className="text-brand-accent hover:underline"
+              >
+                {otherHack.name}
+              </Link>{" "}
+              — one hackathon at a time.
             </span>
           ) : (
             <form

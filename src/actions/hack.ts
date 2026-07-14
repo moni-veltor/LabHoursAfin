@@ -17,10 +17,36 @@ import {
   users,
 } from "@/db/schema";
 import { requireAdmin, requireUser } from "@/lib/auth";
-import { eq, and, isNotNull, isNull, sql as dsql, count } from "drizzle-orm";
+import { eq, ne, and, isNotNull, isNull, sql as dsql, count } from "drizzle-orm";
 import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
 import { isAdmin } from "@/lib/admin";
 import { parseLondonLocal, formatLondon } from "@/lib/tz";
+
+// One hackathon at a time: throw if this member already competes in another
+// live (not-done) hackathon. Admins are exempt so they can test.
+async function assertNotInOtherHackathon(
+  userId: string,
+  email: string | null | undefined,
+  hackathonId: string
+) {
+  if (isAdmin(email)) return;
+  const [other] = await db
+    .select({ name: hackathons.name })
+    .from(hackParticipants)
+    .innerJoin(hackathons, eq(hackathons.id, hackParticipants.hackathonId))
+    .where(
+      and(
+        eq(hackParticipants.userId, userId),
+        ne(hackParticipants.hackathonId, hackathonId),
+        ne(hackathons.stage, "done")
+      )
+    );
+  if (other) {
+    throw new Error(
+      `ONE_HACKATHON: You're already signed up for "${other.name}". You can only be in one hackathon at a time.`
+    );
+  }
+}
 
 // Sign-ups (compete or judge) are blocked until this instant, for non-admins.
 function signupsClosed(
@@ -268,6 +294,7 @@ export async function formTeam(formData: FormData) {
       )
     );
   if (judging.length) throw new Error("ALREADY_JUDGING");
+  await assertNotInOtherHackathon(me.id, me.email, hackathonId);
   const [team] = await db
     .insert(hackTeams)
     .values({ hackathonId, leaderId: me.id, ideaId, name, blurb, track })
@@ -306,6 +333,7 @@ export async function joinTeam(teamId: string) {
       )
     );
   if (judging.length) throw new Error("ALREADY_JUDGING");
+  await assertNotInOtherHackathon(me.id, me.email, team.hackathonId);
   const members = await db
     .select()
     .from(hackTeamMembers)
@@ -648,6 +676,9 @@ export async function joinHackathon(hackathonId: string) {
       )
     );
   if (judging.length) throw new Error("ALREADY_JUDGING");
+
+  // One hackathon at a time.
+  await assertNotInOtherHackathon(me.id, me.email, hackathonId);
 
   // Already signed up? Nothing to do.
   const mine = await db
