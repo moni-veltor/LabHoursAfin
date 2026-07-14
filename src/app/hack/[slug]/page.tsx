@@ -187,6 +187,24 @@ export default async function HackathonPage({
             )
         )[0] ?? null;
 
+  // One hackathon at a time (judging): already a judge in another live one?
+  const otherJudging =
+    adminAccess || iAmAJudge
+      ? null
+      : (
+          await db
+            .select({ name: hackathons.name, slug: hackathons.slug })
+            .from(hackJudges)
+            .innerJoin(hackathons, eq(hackathons.id, hackJudges.hackathonId))
+            .where(
+              and(
+                eq(hackJudges.userId, me.id),
+                ne(hackJudges.hackathonId, hack.id),
+                ne(hackathons.stage, "done")
+              )
+            )
+        )[0] ?? null;
+
   return (
     <div className="space-y-8">
       {sp.warn === "not-enough-signs" && (
@@ -392,6 +410,17 @@ export default async function HackathonPage({
               ) : signupsBlocked ? (
                 <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
                   🔒 Sign-ups open {signupsLabel}
+                </span>
+              ) : otherJudging ? (
+                <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+                  You're already judging{" "}
+                  <Link
+                    href={`/hack/${otherJudging.slug}`}
+                    className="text-brand-accent hover:underline"
+                  >
+                    {otherJudging.name}
+                  </Link>{" "}
+                  — one hackathon at a time.
                 </span>
               ) : (
                 <form

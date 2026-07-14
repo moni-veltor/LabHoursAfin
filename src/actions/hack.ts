@@ -48,6 +48,32 @@ async function assertNotInOtherHackathon(
   }
 }
 
+// One hackathon at a time (judging): throw if this member is already in the
+// judge pool of another live (not-done) hackathon. Admins are exempt.
+async function assertNotJudgingOtherHackathon(
+  userId: string,
+  email: string | null | undefined,
+  hackathonId: string
+) {
+  if (isAdmin(email)) return;
+  const [other] = await db
+    .select({ name: hackathons.name })
+    .from(hackJudges)
+    .innerJoin(hackathons, eq(hackathons.id, hackJudges.hackathonId))
+    .where(
+      and(
+        eq(hackJudges.userId, userId),
+        ne(hackJudges.hackathonId, hackathonId),
+        ne(hackathons.stage, "done")
+      )
+    );
+  if (other) {
+    throw new Error(
+      `ONE_JUDGING: You're already a judge for "${other.name}". You can only judge one hackathon at a time.`
+    );
+  }
+}
+
 // Sign-ups (compete or judge) are blocked until this instant, for non-admins.
 function signupsClosed(
   hack: { subscriptionsOpenAt: Date | null },
@@ -558,6 +584,9 @@ export async function applyAsJudge(hackathonId: string) {
     );
   if (competing.length || onTeam.length)
     throw new Error("ALREADY_COMPETING");
+
+  // One hackathon at a time (judging).
+  await assertNotJudgingOtherHackathon(me.id, me.email, hackathonId);
 
   // Already in the pool? Nothing to do.
   const mine = await db
