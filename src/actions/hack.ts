@@ -19,6 +19,23 @@ import {
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { eq, and, isNotNull, isNull, sql as dsql, count } from "drizzle-orm";
 import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
+import { isAdmin } from "@/lib/admin";
+import { parseLondonLocal, formatLondon } from "@/lib/tz";
+
+// Sign-ups (compete or judge) are blocked until this instant, for non-admins.
+function signupsClosed(
+  hack: { subscriptionsOpenAt: Date | null },
+  email: string | null | undefined
+): string | null {
+  if (isAdmin(email)) return null;
+  if (
+    hack.subscriptionsOpenAt &&
+    hack.subscriptionsOpenAt.getTime() > Date.now()
+  ) {
+    return `NOT_OPEN_YET: Sign-ups open ${formatLondon(hack.subscriptionsOpenAt)}.`;
+  }
+  return null;
+}
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
 import {
@@ -35,6 +52,7 @@ const HackSchema = z.object({
   tracks: z.string().max(280).optional(),
   prizes: z.string().max(500).optional(),
   teamCapacity: z.coerce.number().int().min(1).max(20).default(5),
+  subscriptionsOpenAt: z.string().max(40).optional(),
 });
 
 export async function createHackathon(formData: FormData) {
@@ -47,6 +65,8 @@ export async function createHackathon(formData: FormData) {
     tracks: (formData.get("tracks") as string) || undefined,
     prizes: (formData.get("prizes") as string) || undefined,
     teamCapacity: formData.get("teamCapacity") ?? 5,
+    subscriptionsOpenAt:
+      (formData.get("subscriptionsOpenAt") as string) || undefined,
   });
   const startsAtRaw = formData.get("startsAt") as string | null;
   const endsAtRaw = formData.get("endsAt") as string | null;
@@ -78,6 +98,9 @@ export async function createHackathon(formData: FormData) {
       tracks: parsed.tracks,
       prizes: parsed.prizes,
       teamCapacity: parsed.teamCapacity,
+      subscriptionsOpenAt: parsed.subscriptionsOpenAt
+        ? parseLondonLocal(parsed.subscriptionsOpenAt)
+        : null,
       startsAt: startsAtRaw ? new Date(startsAtRaw) : null,
       endsAt: endsAtRaw ? new Date(endsAtRaw) : null,
       createdBy: me.id,
@@ -184,6 +207,30 @@ export async function setHackStage(
     id: hackathonId,
   });
   revalidatePath("/hack");
+}
+
+export async function setHackSignupsOpen(formData: FormData) {
+  const me = await requireAdmin();
+  const hackathonId = String(formData.get("hackathonId"));
+  const raw = String(formData.get("subscriptionsOpenAt") ?? "").trim();
+  if (!hackathonId) throw new Error("MISSING");
+  const [hack] = await db
+    .select()
+    .from(hackathons)
+    .where(eq(hackathons.id, hackathonId));
+  if (!hack) throw new Error("NOT_FOUND");
+  await db
+    .update(hackathons)
+    .set({
+      subscriptionsOpenAt: raw ? parseLondonLocal(raw) : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(hackathons.id, hackathonId));
+  await logAudit(me.id, "hackathon.set_signups_open", {
+    type: "hackathon",
+    id: hackathonId,
+  });
+  revalidatePath(`/hack/${hack.slug}`);
 }
 
 export async function pitchIdea(formData: FormData) {
@@ -458,6 +505,8 @@ export async function applyAsJudge(hackathonId: string) {
     .from(hackathons)
     .where(eq(hackathons.id, hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
+  const closed = signupsClosed(hack, me.email);
+  if (closed) throw new Error(closed);
 
   // Conflict of interest: competitors can't judge (roster sign-up or a team).
   const competing = await db
@@ -585,6 +634,8 @@ export async function joinHackathon(hackathonId: string) {
     .where(eq(hackathons.id, hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
   if (hack.stage === "done") throw new Error("HACK_CLOSED");
+  const closed = signupsClosed(hack, me.email);
+  if (closed) throw new Error(closed);
 
   // Conflict of interest: judges can't compete.
   const judging = await db

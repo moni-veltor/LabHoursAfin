@@ -77,6 +77,11 @@ export default async function NewHackathonPage() {
             name="prizes"
             placeholder="Bragging rights, lunch with CTO, $200 vouchers"
           />
+          <Field
+            label="Sign-ups open at (UK time)"
+            name="subscriptionsOpenAt"
+            type="datetime-local"
+          />
         </div>
         <p className="font-mono text-[10px] uppercase tracking-wider text-dim">
           One-day event · the date is set later, once sign-ups close.

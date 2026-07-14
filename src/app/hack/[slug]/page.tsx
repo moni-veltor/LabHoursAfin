@@ -30,8 +30,10 @@ import {
   clearJudgeDraw,
   joinHackathon,
   leaveHackathon,
+  setHackSignupsOpen,
 } from "@/actions/hack";
 import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
+import { formatLondon, formatLondonInput } from "@/lib/tz";
 import { ZodiacForm } from "@/components/zodiac-form";
 
 const STAGES = [
@@ -154,6 +156,16 @@ export default async function HackathonPage({
   const iAmCompeting = iAmParticipant || iAmOnATeam;
   const iAmAJudge = !!myJudge;
 
+  // Sign-ups (compete or judge) are locked until this UK-time instant.
+  const signupsOpenAt = hack.subscriptionsOpenAt
+    ? new Date(hack.subscriptionsOpenAt)
+    : null;
+  const signupsNotOpen =
+    signupsOpenAt != null && signupsOpenAt.getTime() > Date.now();
+  const signupsLabel = signupsOpenAt ? formatLondon(signupsOpenAt) : "";
+  // Admins can sign up early to test.
+  const signupsBlocked = signupsNotOpen && !adminAccess;
+
   return (
     <div className="space-y-8">
       {sp.warn === "not-enough-signs" && (
@@ -239,6 +251,10 @@ export default async function HackathonPage({
           ) : hack.stage === "done" ? (
             <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
               This hackathon has wrapped up.
+            </span>
+          ) : signupsBlocked ? (
+            <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+              🔒 Sign-ups open {signupsLabel}
             </span>
           ) : (
             <form
@@ -340,6 +356,10 @@ export default async function HackathonPage({
               ) : judgePoolFull ? (
                 <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
                   Judge pool is full ({JUDGE_POOL}/{JUDGE_POOL})
+                </span>
+              ) : signupsBlocked ? (
+                <span className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-dim">
+                  🔒 Sign-ups open {signupsLabel}
                 </span>
               ) : (
                 <form
@@ -647,6 +667,33 @@ export default async function HackathonPage({
               </form>
             ))}
           </div>
+          <form
+            action={setHackSignupsOpen}
+            className="mt-4 flex flex-wrap items-end gap-2 border-t border-brand-accent/30 pt-4"
+          >
+            <input type="hidden" name="hackathonId" value={hack.id} />
+            <label className="flex flex-col gap-1">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-brand-accent">
+                Sign-ups open at (UK time) · blank = open now
+              </span>
+              <input
+                type="datetime-local"
+                name="subscriptionsOpenAt"
+                defaultValue={
+                  signupsOpenAt ? formatLondonInput(signupsOpenAt) : ""
+                }
+                className="rounded-md border border-line bg-raised px-2 py-1 text-sm"
+              />
+            </label>
+            <button className="rounded-md bg-brand-accent px-3 py-1.5 text-xs font-medium text-ink hover:bg-brand-accent-dark">
+              Save
+            </button>
+            {signupsOpenAt && (
+              <span className="font-mono text-[10px] text-dim">
+                currently: {signupsLabel}
+              </span>
+            )}
+          </form>
           {(hack.stage === "idea" || hack.stage === "team_forming") && (
             <div className="mt-4 border-t border-brand-accent/30 pt-4">
               <ZodiacForm hackathonId={hack.id} />
@@ -723,6 +770,12 @@ function Hero({ hack, adminAccess }: { hack: any; adminAccess: boolean }) {
               })}`
             : "One-day event · date set once sign-ups close"}
         </p>
+        {hack.subscriptionsOpenAt &&
+          new Date(hack.subscriptionsOpenAt).getTime() > Date.now() && (
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+              🔒 Sign-ups open {formatLondon(new Date(hack.subscriptionsOpenAt))}
+            </p>
+          )}
       </div>
     </header>
   );

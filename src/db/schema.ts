@@ -402,6 +402,7 @@ export const hackathons = pgTable(
     stage: hackathonStage("stage").notNull().default("draft"),
     teamCapacity: integer("team_capacity").notNull().default(5),
     prizes: text("prizes"),
+    subscriptionsOpenAt: timestamp("subscriptions_open_at"),
     startsAt: timestamp("starts_at"),
     endsAt: timestamp("ends_at"),
     createdBy: text("created_by").references(() => users.id, {
