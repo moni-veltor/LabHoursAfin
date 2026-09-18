@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createUser, updateUser } from "@/actions/admin-users";
-import {
-  zodiacFromDate, chineseZodiacFromDate, ZODIAC_EMOJI, CHINESE_EMOJI,
-} from "@/lib/zodiac";
 
 type Role = "member" | "tech" | "admin";
 
@@ -28,7 +25,6 @@ export type EditableUser = {
   role: Role;
   department: string | null;
   jobTitle: string | null;
-  dateOfBirth: string | null;
 };
 
 /**
@@ -37,6 +33,9 @@ export type EditableUser = {
  * Sign-in is pre-provisioned, so an admin has to be able to create accounts
  * without a database console. The same form edits, because the fields are the
  * same fields — only creating hands back a one-time PIN at the end.
+ *
+ * No birthday here any more: who somebody is — birthday and signs included —
+ * moved to People on the hub, where the person sets it themselves.
  */
 export function UserEditor({
   mode,
@@ -57,20 +56,6 @@ export function UserEditor({
   const [role, setRole] = useState<Role>(user?.role ?? "member");
   const [dept, setDept] = useState(user?.department ?? "");
   const [job, setJob] = useState(user?.jobTitle ?? "");
-  const [dob, setDob] = useState(user?.dateOfBirth ?? "");
-
-  // The two signs are a function of the date, shown live as it is picked so
-  // the admin sees what will be saved rather than saving blind. Same
-  // functions the server uses, parsed as UTC to match.
-  const signs =
-    /^\d{4}-\d{2}-\d{2}$/.test(dob) && !Number.isNaN(new Date(`${dob}T00:00:00Z`).getTime())
-      ? (() => {
-          const d = new Date(`${dob}T00:00:00Z`);
-          const z = zodiacFromDate(d);
-          const c = chineseZodiacFromDate(d);
-          return { z, c };
-        })()
-      : null;
 
   function close() {
     setOpen(false);
@@ -78,7 +63,7 @@ export function UserEditor({
     setPin(null);
     setCopied(false);
     if (mode === "create") {
-      setEmail(""); setName(""); setRole("member"); setDept(""); setJob(""); setDob("");
+      setEmail(""); setName(""); setRole("member"); setDept(""); setJob("");
     }
   }
 
@@ -89,13 +74,11 @@ export function UserEditor({
       if (mode === "create") {
         const res = await createUser({
           email, name, role, department: dept || null, jobTitle: job || null,
-          dateOfBirth: dob || null,
         });
         setPin(res.pin);
       } else if (user) {
         await updateUser({
           userId: user.id, name, role, department: dept || null, jobTitle: job || null,
-          dateOfBirth: dob || null,
         });
         router.refresh();
         close();
@@ -247,34 +230,6 @@ export function UserEditor({
                     />
                   </Field>
                 </div>
-
-                <Field label="Date of birth">
-                  <input
-                    type="date"
-                    value={dob}
-                    max="2015-12-31"
-                    onChange={(e) => setDob(e.target.value)}
-                    className="w-full rounded-md border border-line bg-raised px-3 py-2 text-sm text-ink-text focus-visible:outline-2 focus-visible:outline-brand-primary [color-scheme:dark]"
-                  />
-                  <div className="mt-1.5 flex items-center gap-2 text-xs">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-dim">
-                      Signs
-                    </span>
-                    {signs ? (
-                      <>
-                        <span className="rounded-full border border-line bg-raised px-2 py-0.5 text-ink-text">
-                          {ZODIAC_EMOJI[signs.z]} {signs.z}
-                        </span>
-                        <span className="rounded-full border border-line bg-raised px-2 py-0.5 text-ink-text">
-                          {CHINESE_EMOJI[signs.c]} {signs.c}
-                        </span>
-                        <span className="text-dim">— set automatically</span>
-                      </>
-                    ) : (
-                      <span className="text-dim">appear once a date is chosen</span>
-                    )}
-                  </div>
-                </Field>
 
                 {err && <p className="text-xs text-brand-coral-ink">{err}</p>}
 

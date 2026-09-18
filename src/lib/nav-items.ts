@@ -76,6 +76,8 @@ export function navFor(opts: {
         { href: "/admin", label: "Overview", icon: "admin" },
         { href: "/admin/queue", label: "Queue", icon: "queue" },
         { href: "/admin/categories", label: "Categories", icon: "categories" },
+        // Accounts, roles and PINs. The directory itself moved to the hub.
+        { href: "/admin/people", label: "Accounts", icon: "people" },
         // Was reachable only from the old mobile drawer.
         { href: "/admin/audit", label: "Audit log", icon: "audit" },
         { href: "/admin/settings", label: "Settings", icon: "settings" },

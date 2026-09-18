@@ -36,6 +36,6 @@ export async function deleteUser(formData: FormData) {
     { email: target.email, name: target.name }
   );
 
-  revalidatePath("/people");
+  revalidatePath("/admin/people");
   revalidatePath("/admin/audit");
 }

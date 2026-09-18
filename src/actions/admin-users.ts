@@ -62,7 +62,7 @@ export async function softDeleteUser(formData: FormData) {
     { type: "user", id: userId },
     { email: target.email, name: target.name, reason }
   );
-  revalidatePath("/people");
+  revalidatePath("/admin/people");
   revalidatePath("/admin/audit");
 }
 
@@ -73,13 +73,17 @@ export async function reactivateUser(userId: string) {
     .set({ deletedAt: null })
     .where(eq(users.id, userId));
   await logAudit(me.id, "user.reactivate", { type: "user", id: userId });
-  revalidatePath("/people");
+  revalidatePath("/admin/people");
   revalidatePath("/admin/audit");
 }
 
 
 /**
- * A date of birth, and the two signs it implies.
+ * A date of birth, and the two signs it implies — or nothing at all when no
+ * date was offered. The admin editor no longer offers one (birthdays moved to
+ * People on the hub), and an edit that did not mention the birthday must not
+ * erase it: before, saving a name change blanked the date and both signs.
+ *
  *
  * Zodiac and Chinese sign are never entered by hand — they are a function of
  * the birth date, so the admin sets the date and these are derived. Parsed as
@@ -88,6 +92,7 @@ export async function reactivateUser(userId: string) {
  * anyone west of UTC.
  */
 function bornFields(dob: string | null | undefined) {
+  if (dob === undefined) return {};
   if (!dob || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
     return { dateOfBirth: null, zodiac: null, chineseZodiac: null };
   }
@@ -153,7 +158,7 @@ export async function createUser(input: {
     .returning({ id: users.id });
 
   await logAudit(me.id, "user.create", { type: "user", id: created.id }, { email, name, role });
-  revalidatePath("/people");
+  revalidatePath("/admin/people");
   revalidatePath("/admin/audit");
   return { id: created.id, pin };
 }
@@ -203,6 +208,6 @@ export async function updateUser(input: {
     me.id, "user.update", { type: "user", id: input.userId },
     { email: target.email, role, from: target.role },
   );
-  revalidatePath("/people");
+  revalidatePath("/admin/people");
   revalidatePath("/admin/audit");
 }
