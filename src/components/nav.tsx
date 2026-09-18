@@ -1,148 +1,97 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
-import { isTechTeam } from "@/lib/tech-team";
 import { unreadCount } from "@/lib/notifications-server";
-import { NotificationBell } from "@/components/notification-bell";
-import { MobileNav } from "@/components/mobile-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { DensityToggle } from "@/components/density-toggle";
+import { SidebarNav } from "@/components/sidebar-nav";
+import { navFor } from "@/lib/nav-items";
+import { isTech, ownsAnyInitiative } from "@/lib/can-create";
 
+/**
+ * The rail, assembled server-side.
+ *
+ * Was a horizontal bar carrying twelve things across the top of every page.
+ * Everything it held is still reachable — see navFor — but a column has the
+ * room to label things properly instead of squeezing "admin" into a mono chip.
+ */
 export async function Nav() {
   const session = await auth();
   const user = session?.user as
     | { id?: string; name?: string; email?: string; role?: "member" | "tech" | "admin" }
     | undefined;
-  const canPost =
-    user?.role === "tech" ||
-    user?.role === "admin" ||
-    isTechTeam(user?.email) ||
-    isAdmin(user?.email);
+
+  // Tech, admin, or anyone who already owns an initiative can post.
+  const canPost = isTech(user) || (user?.id ? await ownsAnyInitiative(user.id) : false);
   const adminAccess = isAdmin(user?.email);
   const unread = user?.id ? await unreadCount(user.id) : 0;
 
-  const mobileLinks: { href: string; label: string; emphasis?: "primary" | "accent" }[] = [
-    { href: "/", label: "Browse" },
-  ];
-  if (user)
-    mobileLinks.push({
-      href: "/hack",
-      label: "🔥 Hack",
-      emphasis: "accent",
-    });
-  mobileLinks.push({ href: "/showcase", label: "Showcase" });
-  if (user) mobileLinks.push({ href: "/people", label: "People" });
-  if (user) mobileLinks.push({ href: "/inbox", label: `Inbox${unread ? ` (${unread})` : ""}` });
-  if (canPost) mobileLinks.push({ href: "/owner", label: "Owner dashboard" });
-  if (canPost) mobileLinks.push({ href: "/templates", label: "Templates" });
-  if (user) mobileLinks.push({ href: "/me", label: "My board" });
-  if (adminAccess) {
-    mobileLinks.push({ href: "/admin", label: "Admin", emphasis: "accent" });
-    mobileLinks.push({ href: "/admin/queue", label: "Queue" });
-    mobileLinks.push({ href: "/admin/categories", label: "Categories" });
-    mobileLinks.push({ href: "/admin/audit", label: "Audit log" });
-    mobileLinks.push({ href: "/admin/settings", label: "Settings" });
-  }
-  if (canPost)
-    mobileLinks.push({
-      href: "/initiatives/new",
-      label: "+ New initiative",
-      emphasis: "primary",
-    });
+  const groups = navFor({
+    signedIn: !!user,
+    canPost,
+    adminAccess,
+    unread,
+  });
 
-  return (
-    <header className="sticky top-0 z-30 border-b border-line bg-ink/85 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link
-          href="/"
-          className="group flex items-center gap-2.5 font-semibold tracking-tight"
-        >
-          <BrandMark />
-          <span className="text-ink-text">Lab Hours</span>
-          <span className="hidden font-mono text-xs text-dim group-hover:text-muted sm:inline">
-            v0.6
-          </span>
-        </Link>
-
-        <nav className="hidden items-center gap-1 text-sm sm:flex">
-          <NavLink href="/">Browse</NavLink>
-          {user && (
-            <Link
-              href="/hack"
-              className="inline-flex items-center gap-1.5 rounded-md bg-brand-accent px-3 py-1.5 text-sm font-semibold text-ink shadow-glow-accent transition hover:bg-brand-accent-dark"
-            >
-              <span aria-hidden>🔥</span>
-              <span>Hack</span>
-            </Link>
-          )}
-          <NavLink href="/showcase">Showcase</NavLink>
-          {user && <NavLink href="/people">People</NavLink>}
-          {canPost && <NavLink href="/owner">Owner</NavLink>}
-          {canPost && <NavLink href="/templates">Templates</NavLink>}
-          {user && <NavLink href="/me">My board</NavLink>}
-          {adminAccess && (
-            <Link
-              href="/admin"
-              className="rounded-md border border-brand-accent/40 bg-brand-accent-950 px-2.5 py-1 font-mono text-xs uppercase tracking-wide text-brand-accent hover:bg-brand-accent-900"
-            >
-              admin
-            </Link>
-          )}
-          {canPost && (
-            <Link
-              href="/initiatives/new"
-              className="ml-1 rounded-md bg-brand-primary px-3 py-1.5 text-sm font-medium text-white shadow-glow transition hover:bg-brand-primary-dark"
-            >
-              + New
-            </Link>
-          )}
-          {user && <NotificationBell unread={unread} />}
-          <span className="ml-2 hidden items-center gap-1 rounded-md border border-line px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-dim md:inline-flex">
-            <kbd>⌘</kbd>
-            <kbd>K</kbd>
-          </span>
-          {user ? (
-            <form
-              className="ml-1"
-              action={async () => {
-                "use server";
-                await signOut({ redirectTo: "/signin" });
-              }}
-            >
-              <button className="px-2 py-1 text-sm text-muted hover:text-ink-text">
-                Sign out
-              </button>
-            </form>
-          ) : (
-            <NavLink href="/signin">Sign in</NavLink>
-          )}
-        </nav>
-
-        <div className="flex items-center gap-2 sm:hidden">
-          {user && <NotificationBell unread={unread} />}
-          <MobileNav links={mobileLinks} />
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-md px-2.5 py-1.5 text-muted transition hover:bg-raised hover:text-ink-text"
-    >
-      {children}
+  const brand = (
+    <Link href="/" className="group flex items-center gap-2.5">
+      <BrandMark />
+      <span className="min-w-0">
+        <span className="block font-semibold tracking-tight text-chrome-ink">Lab Hours</span>
+        <span className="block font-mono text-[10px] text-chrome-soft">Afin Bank · v0.6</span>
+      </span>
     </Link>
+  );
+
+  const identity = user ? (
+    <div className="space-y-2">
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-chrome-ink">
+          {user.name ?? user.email}
+        </p>
+        <p className="truncate text-xs capitalize text-chrome-soft">{user.role ?? "member"}</p>
+      </div>
+      {/* A fixed 28px action row — the estate's three rails size their feet
+          from this row, so it is pinned rather than content-driven. */}
+      <div className="flex h-7 items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1 rounded-md border border-white/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-chrome-soft">
+          <kbd>⌘</kbd>
+          <kbd>K</kbd>
+        </span>
+        <form
+          action={async () => {
+            "use server";
+            await signOut({ redirectTo: "/signin" });
+          }}
+        >
+          <button className="text-xs font-medium text-chrome-muted transition hover:text-chrome-ink">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+  ) : (
+    <Link
+      href="/signin"
+      className="block rounded-md border border-white/20 px-3 py-2 text-center text-sm font-medium text-chrome-ink transition hover:bg-white/10"
+    >
+      Sign in
+    </Link>
+  );
+
+  return (
+    <SidebarNav
+      groups={groups}
+      primary={canPost ? { href: "/initiatives/new", label: "New initiative" } : undefined}
+      brand={brand}
+      identity={identity}
+    />
   );
 }
 
 function BrandMark() {
   return (
-    <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-primary shadow-glow">
-      <span className="h-2 w-2 rounded-full bg-brand-accent" />
-      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-brand-success ring-2 ring-ink" />
+    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-success">
+      <span className="h-2 w-2 rounded-full bg-ink" />
+      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-brand-accent ring-2 ring-chrome" />
     </span>
   );
 }

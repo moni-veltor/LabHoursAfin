@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { canCreateInitiative } from "@/lib/can-create";
 import { db } from "@/lib/db";
 import { initiatives, initiativeTags, tags } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -22,20 +21,15 @@ export default async function NewInitiativePage({
   searchParams: Promise<{ template?: string }>;
 }) {
   const session = await auth();
-  const user = session?.user as { role?: string; email?: string } | undefined;
+  const user = session?.user as { id?: string; role?: string; email?: string } | undefined;
   if (!user) redirect("/signin?callbackUrl=/initiatives/new");
-  const allowed =
-    user.role === "tech" ||
-    user.role === "admin" ||
-    isTechTeam(user.email) ||
-    isAdmin(user.email);
-  if (!allowed) {
+  if (!(await canCreateInitiative(user))) {
     return (
       <div className="rounded-xl border border-line bg-surface p-8">
-        <h1 className="text-xl font-semibold">Tech team only</h1>
+        <h1 className="text-xl font-semibold">Not available yet</h1>
         <p className="mt-2 text-muted">
-          Only the tech team (Monica, Mohammed, Emmanuel) can post initiatives.
-          Have an idea? Pitch it to one of them.
+          The tech team and initiative owners can post initiatives. Have an idea?
+          Pitch it to the tech team and they can hand you the first one.
         </p>
       </div>
     );

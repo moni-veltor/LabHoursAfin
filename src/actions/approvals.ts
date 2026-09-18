@@ -32,6 +32,13 @@ export async function requestToJoin(initiativeId: string, note?: string) {
     .where(eq(initiatives.id, initiativeId));
   if (!initiative) throw new Error("NOT_FOUND");
 
+  // Closed to new members — following updates is still allowed elsewhere.
+  // The owner's intent overrides the tech/admin exemption here: closed is
+  // closed, whoever is asking.
+  if (initiative.subscriptionsClosed) {
+    throw new Error("CLOSED: This initiative is not accepting new members.");
+  }
+
   if (!isExempt(me)) {
     if (
       initiative.subscriptionsOpenAt &&

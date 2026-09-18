@@ -41,6 +41,7 @@ export default async function ProfilePage({
           outcomeBody: initiatives.outcomeBody,
           timeCommitment: initiatives.timeCommitment,
           capacity: initiatives.capacity,
+      subscriptionsClosed: initiatives.subscriptionsClosed,
           createdAt: initiatives.createdAt,
           ownerName: users.name,
         })
@@ -194,6 +195,7 @@ function Section({
     featured: boolean;
     timeCommitment: string | null;
     capacity: number | null;
+    subscriptionsClosed: boolean;
     createdAt: Date;
     ownerName: string | null;
   }[];
@@ -217,6 +219,7 @@ function Section({
             difficulty={r.difficulty as any}
             coverImage={r.coverImage}
             crossTeam={r.crossTeam}
+            closedToMembers={!!r.subscriptionsClosed}
             featured={r.featured}
             ownerName={r.ownerName}
             timeCommitment={r.timeCommitment}

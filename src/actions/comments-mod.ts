@@ -43,6 +43,28 @@ export async function unpinComment(initiativeId: string) {
   revalidatePath(`/initiatives/${initiativeId}`);
 }
 
+/**
+ * Close or reopen an initiative to new participants.
+ *
+ * Capacity queued over-subscribers as pending only when approval was on, so
+ * an initiative with no approval and no capacity accepted everyone. This is
+ * the explicit switch an owner asked for: closed means no new participants,
+ * full stop. Following updates stays open, and anyone already pending can
+ * still be approved — closing only stops NEW requests.
+ */
+export async function toggleSubscriptionsClosed(initiativeId: string) {
+  const { me, initiative } = await ensureOwnerOrAdmin(initiativeId);
+  await db
+    .update(initiatives)
+    .set({ subscriptionsClosed: !initiative.subscriptionsClosed, updatedAt: new Date() })
+    .where(eq(initiatives.id, initiativeId));
+  await logAudit(me.id, initiative.subscriptionsClosed ? "subscriptions.reopen" : "subscriptions.close", {
+    type: "initiative",
+    id: initiativeId,
+  });
+  revalidatePath(`/initiatives/${initiativeId}`);
+}
+
 export async function toggleCommentsLock(initiativeId: string) {
   const { me, initiative } = await ensureOwnerOrAdmin(initiativeId);
   await db

@@ -105,6 +105,7 @@ export default async function HomePage({
       coverImage: initiatives.coverImage,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
+      subscriptionsClosed: initiatives.subscriptionsClosed,
       createdAt: initiatives.createdAt,
       ownerName: users.name,
     })
@@ -242,6 +243,7 @@ function mapRow(
     tags: tagsByInitiative.get(r.id) ?? [],
     coverImage: r.coverImage,
     crossTeam: r.crossTeam,
+    closedToMembers: !!r.subscriptionsClosed,
     featured: r.featured,
     locked: lockedSet.has(key),
   };

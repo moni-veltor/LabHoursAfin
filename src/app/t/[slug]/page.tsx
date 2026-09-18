@@ -28,6 +28,7 @@ export default async function TagPage({
       crossTeam: initiatives.crossTeam,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
+      subscriptionsClosed: initiatives.subscriptionsClosed,
       featured: initiatives.featured,
       createdAt: initiatives.createdAt,
       ownerName: users.name,
@@ -69,6 +70,7 @@ export default async function TagPage({
               difficulty={r.difficulty as any}
               coverImage={r.coverImage}
               crossTeam={r.crossTeam}
+              closedToMembers={!!r.subscriptionsClosed}
               ownerName={r.ownerName}
               timeCommitment={r.timeCommitment}
               capacity={r.capacity}

@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { initiatives, subscriptions, tags, initiativeTags } from "@/db/schema";
-import { requireTech, requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
+import { canCreateInitiative } from "@/lib/can-create";
 import { eq } from "drizzle-orm";
 import {
   CATEGORY_KEYS,
@@ -109,7 +110,9 @@ function emptyToUndef(v: FormDataEntryValue | null) {
 }
 
 export async function createInitiative(formData: FormData) {
-  const me = await requireTech();
+  // Tech, admin, or anyone who already owns an initiative — see canCreateInitiative.
+  const me = await requireUser();
+  if (!(await canCreateInitiative(me))) throw new Error("FORBIDDEN");
   const parsed = InitiativeSchema.parse({
     title: formData.get("title"),
     summary: formData.get("summary"),

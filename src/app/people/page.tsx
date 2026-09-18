@@ -7,6 +7,7 @@ import { and, asc, desc, ilike, isNull, or } from "drizzle-orm";
 import { Avatar } from "@/components/avatar";
 import { DeleteUserButton } from "@/components/delete-user-button";
 import { ResetPinButton } from "@/components/reset-pin-button";
+import { UserEditor } from "@/components/user-editor";
 import { isAdmin } from "@/lib/admin";
 import { isTechTeam } from "@/lib/tech-team";
 import { ZODIAC_EMOJI, CHINESE_EMOJI } from "@/lib/zodiac";
@@ -103,12 +104,15 @@ export default async function PeoplePage({
           </p>
         </div>
         {adminAccess && (
-          <a
-            href="/api/people/csv"
-            className="rounded-md border border-line bg-raised px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-ink-text"
-          >
-            ↓ csv
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href="/api/people/csv"
+              className="rounded-md border border-line bg-raised px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-muted hover:text-ink-text"
+            >
+              ↓ csv
+            </a>
+            <UserEditor mode="create" />
+          </div>
         )}
       </div>
 
@@ -272,6 +276,20 @@ export default async function PeoplePage({
                   {adminAccess && (
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-1">
+                        <UserEditor
+                          mode="edit"
+                          user={{
+                            id: u.id,
+                            email: u.email,
+                            name: u.name,
+                            role: u.role,
+                            department: u.department,
+                            jobTitle: u.jobTitle,
+                            dateOfBirth: u.dateOfBirth
+                              ? new Date(u.dateOfBirth).toISOString().slice(0, 10)
+                              : null,
+                          }}
+                        />
                         <ResetPinButton
                           userId={u.id}
                           name={u.name ?? u.email}

@@ -24,6 +24,7 @@ type Props = {
   coverImage?: string | null;
   crossTeam?: boolean;
   locked?: boolean;
+  closedToMembers?: boolean;
 };
 
 const statusDot: Record<string, { dot: string; live?: boolean }> = {
@@ -79,16 +80,24 @@ export function InitiativeCard(p: Props) {
               locked
             </span>
           )}
-          <span className="ml-auto inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted">
+          <span
+            className={`ml-auto inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider ${
+              p.closedToMembers ? "text-brand-accent-ink" : "text-muted"
+            }`}
+          >
             <span className="relative inline-flex h-1.5 w-1.5">
-              <span className={`relative h-1.5 w-1.5 rounded-full ${s.dot}`} />
-              {s.live && (
+              <span
+                className={`relative h-1.5 w-1.5 rounded-full ${
+                  p.closedToMembers ? "bg-brand-accent" : s.dot
+                }`}
+              />
+              {s.live && !p.closedToMembers && (
                 <span
                   className={`absolute inset-0 rounded-full ${s.dot} animate-pulse-soft opacity-60`}
                 />
               )}
             </span>
-            {p.status.replace("_", " ")}
+            {p.closedToMembers ? "Closed" : p.status.replace("_", " ")}
           </span>
         </div>
 

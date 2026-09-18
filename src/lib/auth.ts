@@ -7,14 +7,10 @@ import { authConfig } from "@/lib/auth.config";
 import { isTechTeam } from "@/lib/tech-team";
 import { isAdmin } from "@/lib/admin";
 import { verifyPin, isValidPinFormat } from "@/lib/pin";
+import { effectiveRole, type Role } from "@/lib/roles";
 
 const allowedDomain = process.env.ALLOWED_EMAIL_DOMAIN?.toLowerCase();
 
-function roleFor(email: string): "admin" | "tech" | "member" {
-  if (isAdmin(email)) return "admin";
-  if (isTechTeam(email)) return "tech";
-  return "member";
-}
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -42,7 +38,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!user || user.deletedAt) return null;
         if (!verifyPin(pin, user.pinHash)) return null;
 
-        const wantedRole = roleFor(email);
+        const wantedRole = effectiveRole(email, (user.role ?? "member") as Role);
         if (user.role !== wantedRole) {
           await db
             .update(users)

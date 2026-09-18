@@ -29,6 +29,16 @@ export async function subscribe(
 ) {
   const me = await requireUser();
 
+  if (role === "participant") {
+    const [gate] = await db
+      .select({ subscriptionsClosed: initiatives.subscriptionsClosed })
+      .from(initiatives)
+      .where(eq(initiatives.id, initiativeId));
+    if (gate?.subscriptionsClosed) {
+      throw new Error("CLOSED: This initiative is not accepting new members.");
+    }
+  }
+
   if (role === "participant" && !isExempt(me)) {
     const [initiative] = await db
       .select({ subscriptionsOpenAt: initiatives.subscriptionsOpenAt })

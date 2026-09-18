@@ -2,30 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ────────────────────────────────────────────────────────────────────────────
+   Afin house style, shared with the Bank Academy.
+   Light ground, ink and slate-green structure, mint as the one affirmative
+   accent. The values here are the Academy's tokens, not an approximation of
+   them — two Afin products should not disagree about what colour the page is.
+   ──────────────────────────────────────────────────────────────────────────── */
 :root {
-  color-scheme: dark;
-  --brand-primary: #7c3aed;
-  --brand-accent: #ffbf00;
-  --brand-success: #31b897;
+  color-scheme: light;
+
+  --afin-ink: #0c2d3b;
+  --afin-mint: #31b897;
+  --afin-teal: #1a4a54;
+  --afin-amber: #ffbf00;
+  --afin-coral: #ff6b61;
+  --afin-goldenrod: #715207;
+
+  --canvas: #f5f4f1;
+  --surface: #ffffff;
+  --raised: #ecebe6;
+  --line: #dedbd3;
+  --line-strong: #c5c1b6;
+
+  --ink-text: #0c2d3b;
+  --muted: #313c3f;
+  --dim: #454f52;
+
+  --mint-tint: #e4f4ef;
+  --coral-tint: #fdeae8;
+  --amber-tint: #fbf1d8;
+  --mist-tint: #e8eef0;
+
+  --brand-primary: var(--afin-teal);
+  --brand-accent: var(--afin-amber);
+  --brand-success: var(--afin-mint);
+
+  --ease-instrument: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 html, body {
-  background: #0a0814;
-  color: #eae8f0;
+  background: var(--canvas);
+  color: var(--ink-text);
   font-feature-settings: "ss01", "cv11";
 }
 
-body {
-  background-image:
-    radial-gradient(rgba(124, 58, 237, 0.05) 1px, transparent 1px),
-    radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 55%);
-  background-size: 22px 22px, auto;
-  background-attachment: fixed;
-}
+/* The violet dot-grid and glow belonged to the dark theme. On a light ground
+   the paper is the texture, so there is nothing to add. */
 
 ::selection {
-  background: rgba(124, 58, 237, 0.4);
-  color: #ffffff;
+  background: var(--mint-tint);
+  color: var(--afin-ink);
 }
 
 a:focus-visible,
@@ -33,57 +59,90 @@ button:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 1px solid var(--brand-primary);
+  outline: 2px solid var(--brand-primary);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 input, textarea, select {
-  background-color: #1b1730;
-  color: #eae8f0;
-  border-color: #2a2440;
+  background-color: var(--surface);
+  color: var(--ink-text);
+  border-color: var(--line);
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #5c5879;
+  color: var(--dim);
 }
 
 input[type="checkbox"] {
   accent-color: var(--brand-primary);
 }
 
-.prose-tight p { margin: 0.4rem 0; }
-.prose-tight ul { margin: 0.4rem 0; padding-left: 1.2rem; }
-.prose-tight code {
-  background: #1b1730;
-  color: #c4b5fd;
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  border: 1px solid #2a2440;
+/* Markdown output from react-markdown, which arrives with no classes of its
+   own — so nothing here competes with a utility. Layered anyway, so the
+   cascade check can stay strict rather than carry an exception list. */
+@layer components {
+  .prose-tight p { margin: 0.4rem 0; }
+  .prose-tight ul { margin: 0.4rem 0; padding-left: 1.2rem; }
+  .prose-tight code {
+    background: var(--raised);
+    color: var(--afin-teal);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    border: 1px solid var(--line);
+  }
+  .prose-tight a {
+    color: var(--brand-primary);
+    text-decoration: underline;
+    text-decoration-color: rgba(26, 74, 84, 0.4);
+  }
+  .prose-tight h1, .prose-tight h2, .prose-tight h3 { color: var(--ink-text); }
 }
-.prose-tight a {
-  color: var(--brand-primary);
-  text-decoration: underline;
-  text-decoration-color: rgba(124, 58, 237, 0.4);
-}
-.prose-tight h1, .prose-tight h2, .prose-tight h3 {
-  color: #eae8f0;
+
+/* An eyebrow, matching the Academy's.
+
+   In @layer components, not bare. A bare rule lands after Tailwind's layers
+   and beats every `text-*` utility written beside it, so an eyebrow on the
+   dark rail asking for a light tone would silently get --muted instead:
+   #313c3f on #0c2d3b, 1.27:1, invisible. That is exactly what happened in
+   the Academy. Inside the components layer a utility wins. */
+@layer components {
+  /* The estate's type roles, applied at the base so the utility classes on
+     1,300 components did not each need editing: headings and the nav wear
+     Sora, eyebrows wear Space Grotesk, everything else reads in Source Sans. */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display-primary), ui-sans-serif, system-ui, sans-serif;
+  }
+  nav a, aside a {
+    font-family: var(--font-display-primary), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .eyebrow {
+    font-family: var(--font-label-primary), ui-sans-serif, system-ui, sans-serif;
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
 }
 
 .lh-grid-bg {
   background-image:
-    linear-gradient(to right, rgba(124, 58, 237, 0.08) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(124, 58, 237, 0.08) 1px, transparent 1px);
+    linear-gradient(to right, rgba(12, 45, 59, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(12, 45, 59, 0.045) 1px, transparent 1px);
   background-size: 32px 32px;
 }
 
+/* Was three neon radials. The same three-hue idea at a weight that reads on
+   paper rather than on a screen in a dark room. */
 .lh-mesh {
   background:
-    radial-gradient(60% 80% at 20% 0%, rgba(124, 58, 237, 0.25), transparent 70%),
-    radial-gradient(50% 60% at 90% 10%, rgba(255, 191, 0, 0.18), transparent 60%),
-    radial-gradient(60% 70% at 60% 90%, rgba(49, 184, 151, 0.15), transparent 65%);
+    radial-gradient(60% 80% at 20% 0%, rgba(26, 74, 84, 0.10), transparent 70%),
+    radial-gradient(50% 60% at 90% 10%, rgba(255, 191, 0, 0.12), transparent 60%),
+    radial-gradient(60% 70% at 60% 90%, rgba(49, 184, 151, 0.10), transparent 65%);
 }
 
 .lh-live::before {
@@ -100,9 +159,14 @@ input[type="checkbox"] {
   80%, 100% { transform: scale(2.4); opacity: 0; }
 }
 
+/* A button that acknowledges the press before the page has done anything. */
+.btn-press { transition: transform 140ms var(--ease-instrument), background-color 140ms linear; }
+.btn-press:active { transform: translateY(1px) scale(0.985); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
@@ -112,4 +176,16 @@ input[type="checkbox"] {
 
 @media print {
   body { background: white; color: black; }
+}
+
+
+/* A screen arriving, the way a pushed view arrives on a phone — per
+   ESTATE.md. Gone entirely under reduced motion. */
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.screen-in { animation: screen-in 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .screen-in { animation: none; }
 }

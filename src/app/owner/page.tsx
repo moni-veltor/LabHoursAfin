@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { isTech } from "@/lib/can-create";
 import { db } from "@/lib/db";
 import {
   comments,
@@ -20,25 +19,13 @@ export default async function OwnerPage() {
   const session = await auth();
   const me = session?.user as { id?: string; email?: string; role?: string } | undefined;
   if (!me?.id) redirect("/signin?callbackUrl=/owner");
-  const allowed =
-    me.role === "tech" ||
-    me.role === "admin" ||
-    isTechTeam(me.email) ||
-    isAdmin(me.email);
-  if (!allowed) {
-    return (
-      <div className="rounded-xl border border-line bg-surface p-8">
-        <h1 className="text-xl font-semibold">Tech team only</h1>
-      </div>
-    );
-  }
-
   const owned = await db
     .select()
     .from(initiatives)
     .where(eq(initiatives.ownerId, me.id))
     .orderBy(desc(initiatives.updatedAt));
 
+  const canCreate = isTech(me) || owned.length > 0;
   const ids = owned.map((o) => o.id);
   const categoryMap = await getCategoryMap();
 
@@ -105,16 +92,28 @@ export default async function OwnerPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Owner dashboard</h1>
-        <p className="mt-1 text-muted">
-          Health check on initiatives you own.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Owner dashboard</h1>
+          <p className="mt-1 text-muted">
+            Health check on initiatives you own.
+          </p>
+        </div>
+        {canCreate && (
+          <Link
+            href="/initiatives/new"
+            className="rounded-md bg-brand-primary px-3 py-1.5 text-sm font-semibold text-white hover:bg-brand-primary-dark"
+          >
+            + New initiative
+          </Link>
+        )}
       </div>
 
       {owned.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line bg-surface py-12 text-center text-muted">
-          You don't own any initiatives yet. <Link href="/initiatives/new" className="text-brand-primary-glow hover:underline">Post one</Link>.
+          You don't own any initiatives yet.{canCreate && (
+            <> <Link href="/initiatives/new" className="text-brand-primary-glow hover:underline">Post one</Link>.</>
+          )}
         </div>
       ) : (
         <ul className="space-y-3">

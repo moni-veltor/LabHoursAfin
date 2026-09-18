@@ -143,6 +143,8 @@ export const initiatives = pgTable(
     isTemplate: boolean("is_template").notNull().default(false),
     awaitingReview: boolean("awaiting_review").notNull().default(false),
     commentsLocked: boolean("comments_locked").notNull().default(false),
+    // Owner switch: stop accepting new participants (following still allowed).
+    subscriptionsClosed: boolean("subscriptions_closed").notNull().default(false),
     customCategorySlug: text("custom_category_slug"),
     pinnedCommentId: uuid("pinned_comment_id"),
     slug: text("slug"),

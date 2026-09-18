@@ -57,6 +57,7 @@ export default async function MyBoardPage() {
       featured: initiatives.featured,
       timeCommitment: initiatives.timeCommitment,
       capacity: initiatives.capacity,
+      subscriptionsClosed: initiatives.subscriptionsClosed,
       createdAt: initiatives.createdAt,
       ownerName: users.name,
     })
@@ -192,6 +193,7 @@ function Section({
     featured: boolean;
     timeCommitment: string | null;
     capacity: number | null;
+    subscriptionsClosed: boolean;
     createdAt: Date;
     ownerName: string | null;
   }[];
@@ -215,6 +217,7 @@ function Section({
             difficulty={r.difficulty as any}
             coverImage={r.coverImage}
             crossTeam={r.crossTeam}
+            closedToMembers={!!r.subscriptionsClosed}
             ownerName={r.ownerName}
             timeCommitment={r.timeCommitment}
             capacity={r.capacity}

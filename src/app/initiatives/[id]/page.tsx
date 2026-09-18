@@ -16,6 +16,7 @@ import { subscribe, unsubscribe } from "@/actions/subscriptions";
 import { addComment } from "@/actions/comments";
 import { postUpdate } from "@/actions/updates";
 import { updateInitiativeStatus } from "@/actions/initiatives";
+import { CloseToggle } from "@/components/close-toggle";
 import {
   requestToJoin,
   approveParticipant,
@@ -176,6 +177,7 @@ export default async function InitiativePage({
   const myRole = mySub[0]?.role;
   const capacityFull =
     initiative.capacity != null && participantCount >= initiative.capacity;
+  const closed = !!initiative.subscriptionsClosed;
 
   const showcasable =
     initiative.status === "done" &&
@@ -237,8 +239,14 @@ export default async function InitiativePage({
         <header className="space-y-3">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <CategoryBadge meta={catMeta} />
-            <span className="rounded-full bg-raised px-2 py-0.5 text-ink-text">
-              {initiative.status.replace("_", " ")}
+            <span
+              className={`rounded-full px-2 py-0.5 ${
+                closed
+                  ? "bg-brand-accent-50 font-medium text-brand-accent-ink"
+                  : "bg-raised text-ink-text"
+              }`}
+            >
+              {closed ? "Closed" : initiative.status.replace("_", " ")}
             </span>
             {initiative.featured && (
               <span className="rounded-full bg-brand-accent-950 px-2 py-0.5 font-medium text-brand-accent">
@@ -490,6 +498,7 @@ export default async function InitiativePage({
                 <OpensBlock date={opensLabel} exempt={ruleExempt} />
               )}
               {myRole === "subscriber" &&
+                !closed &&
                 !capacityFull &&
                 ruleVerdict.ok &&
                 canJoinWindow && (
@@ -503,6 +512,12 @@ export default async function InitiativePage({
                     requiresApproval={!!initiative.requiresApproval}
                   />
                 )}
+              {myRole === "subscriber" && closed && (
+                <p className="rounded-md border border-line bg-raised px-3 py-2 text-xs text-muted">
+                  Closed to new members. You are following updates and will see
+                  everything that is posted.
+                </p>
+              )}
               {myRole === "subscriber" && !ruleVerdict.ok && (
                 <RuleBlock message={ruleVerdict.message} />
               )}
@@ -522,7 +537,7 @@ export default async function InitiativePage({
               {notOpenYet && (
                 <OpensBlock date={opensLabel} exempt={ruleExempt} />
               )}
-              {!capacityFull && ruleVerdict.ok && canJoinWindow && (
+              {!closed && !capacityFull && ruleVerdict.ok && canJoinWindow && (
                 <ApplicantNote
                   initiativeId={initiative.id}
                   ctaLabel={
@@ -533,12 +548,17 @@ export default async function InitiativePage({
                   requiresApproval={!!initiative.requiresApproval}
                 />
               )}
+              {closed && (
+                <p className="text-xs text-muted">
+                  Not accepting new members. You can still follow updates.
+                </p>
+              )}
               <InterestButton
                 initiativeId={initiative.id}
                 isInterested={myInterest.length > 0}
                 signedIn={!!me}
               />
-              {capacityFull && ruleVerdict.ok && (
+              {!closed && capacityFull && ruleVerdict.ok && (
                 <p className="text-xs text-muted">
                   At capacity. You can still follow updates.
                 </p>
@@ -633,6 +653,9 @@ export default async function InitiativePage({
                 Update status
               </button>
             </form>
+            <div className="mt-2">
+              <CloseToggle initiativeId={initiative.id} closed={closed} />
+            </div>
             <form
               className="mt-2"
               action={async () => {
