@@ -21,7 +21,7 @@ export async function Nav() {
 
   // Tech, admin, or anyone who already owns an initiative can post.
   const canPost = isTech(user) || (user?.id ? await ownsAnyInitiative(user.id) : false);
-  const adminAccess = isAdmin(user?.email);
+  const adminAccess = isAdmin(user);
   const unread = user?.id ? await unreadCount(user.id) : 0;
 
   const groups = navFor({

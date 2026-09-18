@@ -2,7 +2,12 @@ import type { NextAuthConfig } from "next-auth";
 
 export const authConfig = {
   pages: { signIn: "/signin" },
-  session: { strategy: "jwt" },
+  // Twelve hours, and never extended. The hub re-reads a person's row on every
+  // page, so switching them off there is immediate; this app cannot ask the
+  // hub, so the session is what bounds it. A rolling session would let
+  // somebody switched off in People stay in for as long as they kept clicking —
+  // updateAge equal to maxAge means the expiry set at the crossing is final.
+  session: { strategy: "jwt", maxAge: 12 * 60 * 60, updateAge: 12 * 60 * 60 },
   trustHost: true,
   providers: [],
   callbacks: {

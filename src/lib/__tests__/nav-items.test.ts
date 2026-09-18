@@ -8,13 +8,13 @@ import { navFor, type NavGroup } from "@/lib/nav-items";
  * tested rather than asserted in a commit message.
  *
  * This list is every destination the old bar and drawer offered, taken from
- * the component as it stood before the change.
+ * the component as it stood before the change — less /people, which left
+ * Labhours on purpose: People lives on the hub, and so does access.
  */
 const OLD_NAV: { href: string; when: "always" | "signedIn" | "canPost" | "admin" }[] = [
   { href: "/",                  when: "always" },
   { href: "/hack",              when: "signedIn" },
   { href: "/showcase",          when: "always" },
-  { href: "/people",            when: "signedIn" },
   { href: "/inbox",             when: "signedIn" },
   { href: "/me",                when: "signedIn" },
   { href: "/owner",             when: "canPost" },
@@ -61,7 +61,7 @@ describe("the rail reaches everywhere the old bar did", () => {
 describe("the rail does not over-share", () => {
   it("shows a signed-out visitor nothing personal or privileged", () => {
     const got = hrefs(navFor(AUDIENCES.visitor));
-    for (const h of ["/me", "/inbox", "/people", "/owner", "/templates", "/admin"]) {
+    for (const h of ["/me", "/inbox", "/owner", "/templates", "/admin"]) {
       expect(got, `${h} should not be offered to a visitor`).not.toContain(h);
     }
   });
@@ -100,5 +100,15 @@ describe("the rail stays legible", () => {
       .flatMap((g) => g.items)
       .find((i) => i.href === "/inbox");
     expect(inbox?.badge).toBe(3);
+  });
+});
+
+describe("people are not Labhours' any more", () => {
+  it("offers nobody a people page or account admin", () => {
+    for (const who of Object.values(AUDIENCES)) {
+      const got = hrefs(navFor(who));
+      expect(got).not.toContain("/people");
+      expect(got.some((h) => h.startsWith("/admin/people"))).toBe(false);
+    }
   });
 });

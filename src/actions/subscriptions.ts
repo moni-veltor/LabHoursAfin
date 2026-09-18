@@ -5,8 +5,7 @@ import { db } from "@/lib/db";
 import { initiatives, subscriptions } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { and, eq } from "drizzle-orm";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, isTech } from "@/lib/admin";
 import {
   checkParticipationRule,
   getParticipationStatus,
@@ -18,8 +17,8 @@ function isExempt(u: { email: string; role: string }) {
   return (
     u.role === "tech" ||
     u.role === "admin" ||
-    isTechTeam(u.email) ||
-    isAdmin(u.email)
+    isTech(u) ||
+    isAdmin(u)
   );
 }
 

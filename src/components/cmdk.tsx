@@ -8,10 +8,8 @@ type Item = { id: string; title: string; category: string };
 const STATIC_LINKS = [
   { href: "/", label: "Browse initiatives" },
   { href: "/showcase", label: "Showcase" },
-  { href: "/people", label: "People" },
   { href: "/inbox", label: "Inbox" },
   { href: "/me", label: "My board" },
-  { href: "/me/edit", label: "Edit my profile" },
   { href: "/me/portfolio", label: "My portfolio" },
   { href: "/owner", label: "Owner dashboard" },
   { href: "/templates", label: "Templates" },

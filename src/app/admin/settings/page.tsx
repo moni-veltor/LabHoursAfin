@@ -13,7 +13,7 @@ export default async function AdminSettingsPage() {
   const session = await auth();
   const me = session?.user as { email?: string } | undefined;
   if (!me) redirect("/signin?callbackUrl=/admin/settings");
-  if (!isAdmin(me.email)) {
+  if (!isAdmin(me)) {
     return (
       <div className="rounded-xl border border-line bg-surface p-8">
         <h1 className="text-xl font-semibold">Admins only</h1>

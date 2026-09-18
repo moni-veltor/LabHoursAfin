@@ -13,8 +13,10 @@ describe("isTech", () => {
     expect(isTech({ role: "tech" })).toBe(true);
     expect(isTech({ role: "admin" })).toBe(true);
   });
-  it("is true for a founding admin/tech email regardless of stored role", () => {
-    expect(isTech({ role: "member", email: "monica.velasquez@afinbank.com" })).toBe(true);
+  // It used to be: a founding email counted whatever the stored role said.
+  // People on the hub controls access now, so the role it sends is the answer.
+  it("is false for a founding email without the role — the hub decides", () => {
+    expect(isTech({ role: "member", email: "monica.velasquez@afinbank.com" })).toBe(false);
   });
   it("is false for an ordinary member — they qualify only by owning one", () => {
     expect(isTech({ role: "member", email: "jane.smith@afinbank.com" })).toBe(false);

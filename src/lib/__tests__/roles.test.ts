@@ -1,45 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { effectiveRole } from "@/lib/roles";
-import { ADMIN_EMAILS } from "@/lib/admin";
-import { TECH_TEAM_EMAILS } from "@/lib/tech-team";
+import { roleFromHub } from "@/lib/roles";
+import { isAdmin, isTech } from "@/lib/admin";
 
 /**
- * Roles were hardcoded and overwritten at every sign-in, so an admin could
- * not actually promote anyone. Now the database is the source of truth with
- * the founding lists as a floor. Two things must both hold: a normal edit
- * sticks, and a founder can never be locked out — which is exactly the pair a
- * "just read the DB" or a "just read the list" version would each get wrong.
+ * People on the hub controls access. These pin down the two ways that could
+ * quietly stop being true: a role Labhours decides for itself, and an email
+ * that counts for more than the role the hub sent.
  */
-const FOUNDER = ADMIN_EMAILS[0];
-const OUTSIDER = "jane.smith@afinbank.com";
-
-describe("effectiveRole — the DB is truth, the lists are a floor", () => {
-  it("lets an admin promote an ordinary colleague, and it sticks", () => {
-    expect(effectiveRole(OUTSIDER, "tech")).toBe("tech");
-    expect(effectiveRole(OUTSIDER, "admin")).toBe("admin");
+describe("the role comes from the hub", () => {
+  it("applies the Labhours role People sends, up or down", () => {
+    expect(roleFromHub({ hubRole: "MEMBER", labhoursRole: "tech" })).toBe("tech");
+    expect(roleFromHub({ hubRole: "ADMIN", labhoursRole: "member" })).toBe("member");
   });
 
-  it("leaves an ordinary member a member", () => {
-    expect(effectiveRole(OUTSIDER, "member")).toBe("member");
+  it("maps the hub role down when no Labhours role is sent", () => {
+    expect(roleFromHub({ hubRole: "ADMIN" })).toBe("admin");
+    expect(roleFromHub({ hubRole: "LEAD" })).toBe("tech");
+    expect(roleFromHub({ hubRole: "MEMBER" })).toBe("member");
   });
 
-  it("never demotes a founding admin, whatever the row says", () => {
-    expect(effectiveRole(FOUNDER, "member")).toBe("admin");
-    expect(effectiveRole(FOUNDER, "tech")).toBe("admin");
-    expect(effectiveRole(FOUNDER, "admin")).toBe("admin");
+  it("does not trust a Labhours role it does not know", () => {
+    expect(roleFromHub({ hubRole: "MEMBER", labhoursRole: "superuser" })).toBe("member");
+  });
+});
+
+describe("an email is not a permission", () => {
+  it("does not make a founder an admin without the role", () => {
+    const founder = { email: "monica.velasquez@afinbank.com", role: "member" };
+    expect(isAdmin(founder)).toBe(false);
+    expect(isTech(founder)).toBe(false);
   });
 
-  it("floors a founding tech email at tech but lets the DB raise it", () => {
-    const tech = TECH_TEAM_EMAILS.find((e) => !ADMIN_EMAILS.includes(e as never));
-    if (!tech) return; // all founders are admins in this config
-    expect(effectiveRole(tech, "member")).toBe("tech");
-    expect(effectiveRole(tech, "admin")).toBe("admin");
-  });
-
-  it("takes the higher of stored and floor, never the lower", () => {
-    for (const stored of ["member", "tech", "admin"] as const) {
-      const got = effectiveRole(FOUNDER, stored);
-      expect(["admin"]).toContain(got); // founder floor is admin
-    }
+  it("follows the role", () => {
+    expect(isAdmin({ role: "admin" })).toBe(true);
+    expect(isTech({ role: "tech" })).toBe(true);
+    expect(isTech({ role: "admin" })).toBe(true);
+    expect(isAdmin(null)).toBe(false);
   });
 });

@@ -26,10 +26,10 @@ import { parseLondonLocal, formatLondon } from "@/lib/tz";
 // live (not-done) hackathon. Admins are exempt so they can test.
 async function assertNotInOtherHackathon(
   userId: string,
-  email: string | null | undefined,
+  who: object | null | undefined,
   hackathonId: string
 ) {
-  if (isAdmin(email)) return;
+  if (isAdmin(who)) return;
   const [other] = await db
     .select({ name: hackathons.name })
     .from(hackParticipants)
@@ -52,10 +52,10 @@ async function assertNotInOtherHackathon(
 // judge pool of another live (not-done) hackathon. Admins are exempt.
 async function assertNotJudgingOtherHackathon(
   userId: string,
-  email: string | null | undefined,
+  who: object | null | undefined,
   hackathonId: string
 ) {
-  if (isAdmin(email)) return;
+  if (isAdmin(who)) return;
   const [other] = await db
     .select({ name: hackathons.name })
     .from(hackJudges)
@@ -77,9 +77,9 @@ async function assertNotJudgingOtherHackathon(
 // Sign-ups (compete or judge) are blocked until this instant, for non-admins.
 function signupsClosed(
   hack: { subscriptionsOpenAt: Date | null },
-  email: string | null | undefined
+  who: object | null | undefined
 ): string | null {
-  if (isAdmin(email)) return null;
+  if (isAdmin(who)) return null;
   if (
     hack.subscriptionsOpenAt &&
     hack.subscriptionsOpenAt.getTime() > Date.now()
@@ -90,11 +90,6 @@ function signupsClosed(
 }
 import { logAudit } from "@/lib/audit";
 import { slugify } from "@/lib/slug";
-import {
-  formZodiacTeams,
-  ZODIAC_EMOJI,
-  CHINESE_EMOJI,
-} from "@/lib/zodiac";
 
 const HackSchema = z.object({
   name: z.string().min(3).max(80),
@@ -123,14 +118,6 @@ export async function createHackathon(formData: FormData) {
   const startsAtRaw = formData.get("startsAt") as string | null;
   const endsAtRaw = formData.get("endsAt") as string | null;
 
-  const autoForm = formData.get("autoForm") === "on";
-  const autoSystem = (formData.get("autoSystem") as string) || "western";
-  const autoMode = (formData.get("autoMode") as string) || "compat";
-  const autoSize = Math.max(
-    2,
-    Math.min(10, Number(formData.get("autoSize") ?? 4))
-  );
-
   const baseSlug = slugify(parsed.name) || "hackathon";
   let slug = baseSlug;
   for (let i = 2; i < 50; i++) {
@@ -156,90 +143,10 @@ export async function createHackathon(formData: FormData) {
       startsAt: startsAtRaw ? new Date(startsAtRaw) : null,
       endsAt: endsAtRaw ? new Date(endsAtRaw) : null,
       createdBy: me.id,
-      stage: autoForm ? "team_forming" : "idea",
+      stage: "idea",
     })
     .returning();
   await logAudit(me.id, "hackathon.create", { type: "hackathon", id: slug });
-
-  if (autoForm) {
-    const signCol =
-      autoSystem === "western" ? users.zodiac : users.chineseZodiac;
-    const pool = await db
-      .select({
-        id: users.id,
-        name: users.name,
-        email: users.email,
-        sign: signCol,
-      })
-      .from(users)
-      .where(and(isNotNull(signCol), isNull(users.deletedAt)));
-    const candidates = pool
-      .filter((u) => u.sign)
-      .map((u) => ({
-        id: u.id,
-        sign: u.sign as string,
-        name: u.name,
-        email: u.email,
-      }));
-
-    if (candidates.length < autoSize * 2) {
-      await db
-        .update(hackathons)
-        .set({ stage: "idea" })
-        .where(eq(hackathons.id, hack.id));
-      revalidatePath("/hack");
-      redirect(
-        `/hack/${slug}?warn=not-enough-signs&pool=${candidates.length}&need=${autoSize * 2}`
-      );
-    }
-
-    const teams = formZodiacTeams(
-      candidates,
-      autoSize,
-      autoMode as "compat" | "chaos",
-      autoSystem as "western" | "chinese"
-    );
-    const emoji = autoSystem === "western" ? ZODIAC_EMOJI : CHINESE_EMOJI;
-    const labelMode = autoMode === "compat" ? "Harmony" : "Chaos";
-
-    for (let i = 0; i < teams.length; i++) {
-      const t = teams[i];
-      const dominantSign = t[0].sign;
-      const teamName = `${labelMode} ${i + 1} · ${(emoji as any)[dominantSign] ?? dominantSign}`;
-      const blurb = `Auto-formed at hackathon creation by ${
-        autoSystem === "western" ? "Western zodiac" : "Chinese zodiac"
-      } (${autoMode === "compat" ? "compatibility" : "chaos"}). Signs: ${t
-        .map((m) => (emoji as any)[m.sign] ?? m.sign)
-        .join(" ")}`;
-      const [created] = await db
-        .insert(hackTeams)
-        .values({
-          hackathonId: hack.id,
-          leaderId: t[0].id,
-          name: teamName,
-          blurb,
-        })
-        .returning();
-      for (const member of t) {
-        await db
-          .insert(hackTeamMembers)
-          .values({ teamId: created.id, userId: member.id })
-          .onConflictDoNothing();
-      }
-    }
-    await logAudit(
-      me.id,
-      "hackathon.zodiac_teams",
-      { type: "hackathon", id: hack.id },
-      {
-        system: autoSystem,
-        mode: autoMode,
-        size: autoSize,
-        created: teams.length,
-        atCreation: true,
-      }
-    );
-  }
 
   revalidatePath("/hack");
   redirect(`/hack/${slug}`);
@@ -320,7 +227,7 @@ export async function formTeam(formData: FormData) {
       )
     );
   if (judging.length) throw new Error("ALREADY_JUDGING");
-  await assertNotInOtherHackathon(me.id, me.email, hackathonId);
+  await assertNotInOtherHackathon(me.id, me, hackathonId);
   const [team] = await db
     .insert(hackTeams)
     .values({ hackathonId, leaderId: me.id, ideaId, name, blurb, track })
@@ -359,7 +266,7 @@ export async function joinTeam(teamId: string) {
       )
     );
   if (judging.length) throw new Error("ALREADY_JUDGING");
-  await assertNotInOtherHackathon(me.id, me.email, team.hackathonId);
+  await assertNotInOtherHackathon(me.id, me, team.hackathonId);
   const members = await db
     .select()
     .from(hackTeamMembers)
@@ -438,104 +345,6 @@ export async function voteDemo(demoId: string, category: string) {
   revalidatePath("/hack");
 }
 
-const TeamGenSchema = z.object({
-  hackathonId: z.string().uuid(),
-  system: z.enum(["western", "chinese"]),
-  mode: z.enum(["compat", "chaos"]),
-  size: z.coerce.number().int().min(2).max(10).default(4),
-  reset: z
-    .union([z.literal("on"), z.literal("true"), z.literal("false"), z.literal("")])
-    .optional()
-    .transform((v) => v === "on" || v === "true"),
-});
-
-export async function generateZodiacTeams(formData: FormData) {
-  const me = await requireAdmin();
-  const parsed = TeamGenSchema.parse({
-    hackathonId: formData.get("hackathonId"),
-    system: formData.get("system"),
-    mode: formData.get("mode"),
-    size: formData.get("size") ?? 4,
-    reset: (formData.get("reset") as any) ?? "",
-  });
-
-  const [hack] = await db
-    .select()
-    .from(hackathons)
-    .where(eq(hackathons.id, parsed.hackathonId));
-  if (!hack) throw new Error("NOT_FOUND");
-
-  const existingMembers = await db
-    .select({ userId: hackTeamMembers.userId, teamId: hackTeamMembers.teamId })
-    .from(hackTeamMembers)
-    .innerJoin(hackTeams, eq(hackTeams.id, hackTeamMembers.teamId))
-    .where(eq(hackTeams.hackathonId, parsed.hackathonId));
-  const alreadyOnTeam = new Set(existingMembers.map((m) => m.userId));
-
-  if (parsed.reset) {
-    await db.delete(hackTeams).where(eq(hackTeams.hackathonId, parsed.hackathonId));
-    alreadyOnTeam.clear();
-  }
-
-  const signCol = parsed.system === "western" ? users.zodiac : users.chineseZodiac;
-  const pool = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      sign: signCol,
-    })
-    .from(users)
-    .where(and(isNotNull(signCol), isNull(users.deletedAt)));
-
-  const candidates = pool
-    .filter((u) => !alreadyOnTeam.has(u.id) && u.sign)
-    .map((u) => ({ id: u.id, sign: u.sign as string, name: u.name, email: u.email }));
-
-  const teams = formZodiacTeams(candidates, parsed.size, parsed.mode, parsed.system);
-
-  const emoji = parsed.system === "western" ? ZODIAC_EMOJI : CHINESE_EMOJI;
-  const labelMode = parsed.mode === "compat" ? "Harmony" : "Chaos";
-
-  for (let i = 0; i < teams.length; i++) {
-    const t = teams[i];
-    const dominantSign = t[0].sign;
-    const teamName = `${labelMode} ${i + 1} · ${(emoji as any)[dominantSign] ?? dominantSign}`;
-    const blurb = `Auto-formed by ${parsed.system === "western" ? "Western zodiac" : "Chinese zodiac"} (${parsed.mode === "compat" ? "compatibility" : "chaos"}). Signs: ${t
-      .map((m) => (emoji as any)[m.sign] ?? m.sign)
-      .join(" ")}`;
-    const [created] = await db
-      .insert(hackTeams)
-      .values({
-        hackathonId: parsed.hackathonId,
-        leaderId: t[0].id,
-        name: teamName,
-        blurb,
-      })
-      .returning();
-    for (const member of t) {
-      await db
-        .insert(hackTeamMembers)
-        .values({ teamId: created.id, userId: member.id })
-        .onConflictDoNothing();
-    }
-  }
-
-  await logAudit(
-    me.id,
-    "hackathon.zodiac_teams",
-    { type: "hackathon", id: parsed.hackathonId },
-    {
-      system: parsed.system,
-      mode: parsed.mode,
-      size: parsed.size,
-      reset: parsed.reset,
-      created: teams.length,
-    }
-  );
-  revalidatePath(`/hack/${hack.slug}`);
-}
-
 export async function awardWinner(formData: FormData) {
   const me = await requireAdmin();
   const hackathonId = String(formData.get("hackathonId"));
@@ -559,7 +368,7 @@ export async function applyAsJudge(hackathonId: string) {
     .from(hackathons)
     .where(eq(hackathons.id, hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
-  const closed = signupsClosed(hack, me.email);
+  const closed = signupsClosed(hack, me);
   if (closed) throw new Error(closed);
 
   // Conflict of interest: competitors can't judge (roster sign-up or a team).
@@ -586,7 +395,7 @@ export async function applyAsJudge(hackathonId: string) {
     throw new Error("ALREADY_COMPETING");
 
   // One hackathon at a time (judging).
-  await assertNotJudgingOtherHackathon(me.id, me.email, hackathonId);
+  await assertNotJudgingOtherHackathon(me.id, me, hackathonId);
 
   // Already in the pool? Nothing to do.
   const mine = await db
@@ -691,7 +500,7 @@ export async function joinHackathon(hackathonId: string) {
     .where(eq(hackathons.id, hackathonId));
   if (!hack) throw new Error("NOT_FOUND");
   if (hack.stage === "done") throw new Error("HACK_CLOSED");
-  const closed = signupsClosed(hack, me.email);
+  const closed = signupsClosed(hack, me);
   if (closed) throw new Error(closed);
 
   // Conflict of interest: judges can't compete.
@@ -707,7 +516,7 @@ export async function joinHackathon(hackathonId: string) {
   if (judging.length) throw new Error("ALREADY_JUDGING");
 
   // One hackathon at a time.
-  await assertNotInOtherHackathon(me.id, me.email, hackathonId);
+  await assertNotInOtherHackathon(me.id, me, hackathonId);
 
   // Already signed up? Nothing to do.
   const mine = await db

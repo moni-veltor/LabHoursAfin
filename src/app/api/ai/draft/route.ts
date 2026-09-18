@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, isTech } from "@/lib/admin";
 import { aiDraftInitiative } from "@/lib/ai";
 
 export const runtime = "nodejs";
@@ -13,8 +12,8 @@ export async function POST(req: Request) {
   if (
     u.role !== "tech" &&
     u.role !== "admin" &&
-    !isTechTeam(u.email) &&
-    !isAdmin(u.email)
+    !isTech(u) &&
+    !isAdmin(u)
   ) {
     return new Response("Forbidden", { status: 403 });
   }

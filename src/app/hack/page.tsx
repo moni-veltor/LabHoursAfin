@@ -31,7 +31,7 @@ export default async function HackIndexPage() {
   const session = await auth();
   const me = session?.user as { email?: string } | undefined;
   if (!me) redirect("/signin?callbackUrl=/hack");
-  const adminAccess = isAdmin(me.email);
+  const adminAccess = isAdmin(me);
 
   const rows = await db
     .select()

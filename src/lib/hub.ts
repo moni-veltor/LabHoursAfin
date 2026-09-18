@@ -1,10 +1,10 @@
 /**
  * The tech-team hub, where People lives now.
  *
- * The directory, profiles and "edit my profile" moved there: who somebody is
- * describes the person, not their Labhours, and the hub is where the rest of
- * the estate looks them up. Labhours keeps its own accounts — roles, PINs,
- * removal — on /admin/people.
+ * Everything about people moved there: the directory, profiles, birthdays,
+ * and access itself — who may sign in, and as which Labhours role. Labhours
+ * keeps no people pages and no sign-in of its own; /api/sso applies what the
+ * hub decided.
  *
  * Same variable and fallback the rail's hub link already uses.
  */

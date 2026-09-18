@@ -24,7 +24,7 @@ export default async function EditInitiativePage({
   const [t] = await db.select().from(initiatives).where(eq(initiatives.id, id));
   if (!t) notFound();
 
-  const adminAccess = isAdmin(me.email);
+  const adminAccess = isAdmin(me);
   const canEdit = t.ownerId === me.id || adminAccess;
   if (!canEdit) {
     return (

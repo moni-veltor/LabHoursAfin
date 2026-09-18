@@ -1,22 +1,21 @@
-import { isAdmin } from "@/lib/admin";
-import { isTechTeam } from "@/lib/tech-team";
-
 export const ROLES = ["member", "tech", "admin"] as const;
 export type Role = (typeof ROLES)[number];
 
-const RANK: Record<Role, number> = { member: 0, tech: 1, admin: 2 };
-
 /**
- * The role an account signs in as.
+ * The role somebody arrives with, as the hub says.
  *
- * The database is the source of truth, so an admin can promote a colleague
- * in-app and have it persist. The founding lists are a FLOOR, not the whole
- * story: those emails can never be demoted or locked out, whatever the row
- * says. The rule is simply "the higher of the stored role and the guaranteed
- * one" — which also means an admin editing a row can raise a role but a
- * founder's floor still wins on their own account.
+ * People, on the hub, controls access: it sends `labhoursRole` on every
+ * crossing, and that is the role — raised or lowered, applied as sent. A hub
+ * that predates the field sends only its own role, which maps down as it
+ * always did (ADMIN → admin, LEAD → tech, anyone else → member).
+ *
+ * There is no floor any more. It used to be "the higher of the stored role and
+ * an email list", which meant a list in this app could outrank the hub. Now
+ * nothing here can: changing somebody's Labhours role is done in People.
  */
-export function effectiveRole(email: string, stored: Role): Role {
-  const floor: Role = isAdmin(email) ? "admin" : isTechTeam(email) ? "tech" : "member";
-  return RANK[stored] >= RANK[floor] ? stored : floor;
+export function roleFromHub(handoff: { hubRole?: string; labhoursRole?: string }): Role {
+  if (handoff.labhoursRole && (ROLES as readonly string[]).includes(handoff.labhoursRole)) {
+    return handoff.labhoursRole as Role;
+  }
+  return handoff.hubRole === "ADMIN" ? "admin" : handoff.hubRole === "LEAD" ? "tech" : "member";
 }

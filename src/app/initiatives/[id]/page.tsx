@@ -36,8 +36,7 @@ import {
   type Effort,
   type Format,
 } from "@/lib/categories";
-import { isAdmin } from "@/lib/admin";
-import { isTechTeam } from "@/lib/tech-team";
+import { isAdmin, isTech } from "@/lib/admin";
 import { UserChip } from "@/components/avatar";
 import { Reactions, REACTION_EMOJIS } from "@/components/reactions";
 import { CoverImage } from "@/components/cover-image";
@@ -86,7 +85,7 @@ export default async function InitiativePage({
   if (!row) notFound();
   const initiative = row.i;
   const isOwner = me?.id === initiative.ownerId;
-  const adminAccess = isAdmin(me?.email);
+  const adminAccess = isAdmin(me);
   const canEdit = isOwner || adminAccess;
 
   const [subs, ups, cmts, tagRows, mySub] = await Promise.all([
@@ -187,8 +186,8 @@ export default async function InitiativePage({
     !me?.id ||
     me.role === "tech" ||
     me.role === "admin" ||
-    isTechTeam(me.email) ||
-    isAdmin(me.email);
+    isTech(me) ||
+    isAdmin(me);
 
   const catKey = initiative.customCategorySlug ?? initiative.category;
   const catMap = await getCategoryMap();

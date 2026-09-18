@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, isTech } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { initiatives, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -16,8 +15,8 @@ export default async function TemplatesPage() {
   const allowed =
     me.role === "tech" ||
     me.role === "admin" ||
-    isTechTeam(me.email) ||
-    isAdmin(me.email);
+    isTech(me) ||
+    isAdmin(me);
   if (!allowed) {
     return (
       <div className="rounded-xl border border-line bg-surface p-8">

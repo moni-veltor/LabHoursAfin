@@ -1,8 +1,9 @@
 import { db } from "@/lib/db";
 import { initiatives } from "@/db/schema";
 import { eq, count } from "drizzle-orm";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { isTech } from "@/lib/admin";
+
+export { isTech };
 
 /**
  * Who may create an initiative.
@@ -16,15 +17,6 @@ import { isAdmin } from "@/lib/admin";
  * being a maker: an admin hands them their first initiative, and from then on
  * they are self-sufficient.
  */
-export function isTech(u: { role?: string | null; email?: string | null } | undefined | null) {
-  return (
-    u?.role === "tech" ||
-    u?.role === "admin" ||
-    isTechTeam(u?.email ?? undefined) ||
-    isAdmin(u?.email ?? undefined)
-  );
-}
-
 export async function ownsAnyInitiative(userId: string): Promise<boolean> {
   const [row] = await db
     .select({ c: count() })

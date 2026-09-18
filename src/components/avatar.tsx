@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { hub } from "@/lib/hub";
 
 export function initials(name?: string | null, email?: string | null) {
   const src = (name ?? email ?? "?").trim();
@@ -67,11 +67,13 @@ export function UserChip({
       <span className="truncate">{label}</span>
     </span>
   );
+  // Who somebody is lives in People on the hub, which knows every Labhours
+  // id — so a name here opens that person there.
   if (id) {
     return (
-      <Link href={`/u/${id}`} className="hover:text-brand-primary-glow hover:underline">
+      <a href={hub(`/people/${encodeURIComponent(id)}`)} className="hover:text-brand-primary-glow hover:underline">
         {inner}
-      </Link>
+      </a>
     );
   }
   return inner;

@@ -4,8 +4,7 @@ import { db } from "@/lib/db";
 import { initiatives, subscriptions, users } from "@/db/schema";
 import { and, eq, desc, inArray } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
-import { isTechTeam } from "@/lib/tech-team";
-import { isAdmin } from "@/lib/admin";
+import { isAdmin, isTech } from "@/lib/admin";
 import { getParticipationStatus } from "@/lib/participation";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { hourAwareGreeting } from "@/lib/greeting";
@@ -20,8 +19,8 @@ export default async function MyBoardPage() {
 
   const ruleApplies =
     me.role === "member" &&
-    !isTechTeam(me.email) &&
-    !isAdmin(me.email);
+    !isTech(me) &&
+    !isAdmin(me);
   const status = ruleApplies ? await getParticipationStatus(me.id) : null;
   const streak = await computeStreak(me.id);
   const greeting = hourAwareGreeting(me.name);

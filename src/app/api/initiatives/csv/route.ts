@@ -17,7 +17,7 @@ export async function GET() {
   const session = await auth();
   const me = session?.user as { email?: string } | undefined;
   if (!me) return new Response("Unauthorized", { status: 401 });
-  if (!isAdmin(me.email)) return new Response("Forbidden", { status: 403 });
+  if (!isAdmin(me)) return new Response("Forbidden", { status: 403 });
 
   const rows = await db
     .select({

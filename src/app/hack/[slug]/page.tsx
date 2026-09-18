@@ -34,7 +34,6 @@ import {
 } from "@/actions/hack";
 import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
 import { formatLondon, formatLondonInput } from "@/lib/tz";
-import { ZodiacForm } from "@/components/zodiac-form";
 
 const STAGES = [
   "idea",
@@ -57,7 +56,7 @@ export default async function HackathonPage({
   const session = await auth();
   const me = session?.user as { id?: string; email?: string } | undefined;
   if (!me?.id) redirect(`/signin?callbackUrl=/hack/${slug}`);
-  const adminAccess = isAdmin(me.email);
+  const adminAccess = isAdmin(me);
 
   const [hack] = await db
     .select()
@@ -207,19 +206,6 @@ export default async function HackathonPage({
 
   return (
     <div className="space-y-8">
-      {sp.warn === "not-enough-signs" && (
-        <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-200">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-rose-300">
-            ⚠ auto-form skipped
-          </p>
-          <p className="mt-1">
-            Couldn't auto-form teams: only {sp.pool ?? "0"} people with a known
-            birthday available, need at least {sp.need ?? "8"} for the chosen
-            team size. Falling back to the normal idea-pitch flow — you can run
-            zodiac team-builder later from the admin section.
-          </p>
-        </div>
-      )}
       <Hero hack={hack} adminAccess={adminAccess} />
 
       {hack.theme && (
@@ -755,11 +741,6 @@ export default async function HackathonPage({
               </span>
             )}
           </form>
-          {(hack.stage === "idea" || hack.stage === "team_forming") && (
-            <div className="mt-4 border-t border-brand-accent/30 pt-4">
-              <ZodiacForm hackathonId={hack.id} />
-            </div>
-          )}
           {hack.stage === "voting" && demos.length > 0 && (
             <form
               action={awardWinner}

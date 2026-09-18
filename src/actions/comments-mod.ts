@@ -15,7 +15,7 @@ async function ensureOwnerOrAdmin(initiativeId: string) {
     .from(initiatives)
     .where(eq(initiatives.id, initiativeId));
   if (!i) throw new Error("NOT_FOUND");
-  const allowed = i.ownerId === me.id || me.role === "admin" || isAdmin(me.email);
+  const allowed = i.ownerId === me.id || me.role === "admin" || isAdmin(me);
   if (!allowed) throw new Error("FORBIDDEN");
   return { me, initiative: i };
 }

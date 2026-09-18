@@ -5,7 +5,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { effectiveRole, type Role } from "@/lib/roles";
+import { roleFromHub } from "@/lib/roles";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,14 +16,19 @@ export const dynamic = "force-dynamic";
  * Same crossing the Academy accepts: the hub signs a sixty-second, single-
  * use HMAC token naming the person; we verify it, make sure they exist,
  * mint this app's own session cookie and put them where they were going.
- * The PIN screen survives as a fallback, but nobody needs a second
- * credential to get here any more.
+ *
+ * It is the only way in. People, on the hub, controls access: who may cross,
+ * and as which Labhours role. So the role and the name are applied as the hub
+ * sends them — raised or lowered — and the session is short, so switching
+ * somebody off in People reaches here within the day rather than the month.
  */
 
 type Handoff = {
   email: string;
   name: string;
   hubRole: string;
+  /** The Labhours role People gave them. Older hubs do not send it. */
+  labhoursRole?: string;
   /** Where the hub wanted them to land — a path on this app. */
   to?: string;
   jti?: string;
@@ -64,7 +69,7 @@ export async function GET(req: NextRequest) {
   }
 
   const handoff = verify(req.nextUrl.searchParams.get("token") ?? "", secret);
-  if (!handoff) return NextResponse.redirect(new URL("/signin", req.url));
+  if (!handoff) return NextResponse.redirect(new URL("/signin?error=handoff", req.url));
 
   // Single use: the unique insert is the lock.
   if (handoff.jti) {
@@ -72,7 +77,7 @@ export async function GET(req: NextRequest) {
       await db.execute(sql`insert into sso_ticket (jti) values (${handoff.jti})`);
       await db.execute(sql`delete from sso_ticket where at < now() - interval '10 minutes'`);
     } catch {
-      return NextResponse.redirect(new URL("/signin", req.url));
+      return NextResponse.redirect(new URL("/signin?error=handoff", req.url));
     }
   }
 
@@ -80,34 +85,28 @@ export async function GET(req: NextRequest) {
 
   const existing = (await db.select().from(users).where(eq(users.email, email)).limit(1))[0];
 
-  // Hub roles map down, never down-grade: ADMIN → admin, LEAD → tech, else
-  // member — and effectiveRole still applies its email floor.
-  const wanted: Role =
-    handoff.hubRole === "ADMIN" ? "admin" : handoff.hubRole === "LEAD" ? "tech" : "member";
-  const RANK: Record<Role, number> = { member: 0, tech: 1, admin: 2 };
+  // The hub's decision, applied as sent. Somebody Labhours had removed is
+  // restored: if People lets them cross, they are allowed in.
+  const role = roleFromHub(handoff);
+  const name = handoff.name || email.split("@")[0];
 
   let user = existing;
   if (!user) {
+    user = (await db.insert(users).values({ email, name, role }).returning())[0];
+  } else if (user.role !== role || user.name !== name || user.deletedAt) {
     user = (
-      await db
-        .insert(users)
-        .values({ email, name: handoff.name || email.split("@")[0], role: wanted })
-        .returning()
+      await db.update(users).set({ role, name, deletedAt: null }).where(eq(users.id, user.id)).returning()
     )[0];
-  } else if (RANK[wanted] > RANK[(user.role ?? "member") as Role]) {
-    await db.update(users).set({ role: wanted }).where(eq(users.id, user.id));
-    user = { ...user, role: wanted };
   }
-  if (user.deletedAt) return NextResponse.redirect(new URL("/signin", req.url));
-
-  const role = effectiveRole(email, (user.role ?? "member") as Role);
 
   // Mint the session this app's own sign-in would have minted: same shape
   // the jwt callback produces, encoded with the cookie's name as salt, which
   // is how Auth.js v5 keys its tokens.
   const secure = req.nextUrl.protocol === "https:";
   const cookieName = secure ? "__Secure-authjs.session-token" : "authjs.session-token";
-  const maxAge = 30 * 24 * 60 * 60;
+  // Twelve hours, as on the hub: a role changed or access removed in People
+  // takes effect here by the next working day at the latest.
+  const maxAge = 12 * 60 * 60;
   const session = await encode({
     token: { sub: user.id, id: user.id, role, name: user.name ?? email, email },
     secret: authSecret,
