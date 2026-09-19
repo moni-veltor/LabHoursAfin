@@ -1,4 +1,3 @@
-import { hub } from "@/lib/hub";
 
 export function initials(name?: string | null, email?: string | null) {
   const src = (name ?? email ?? "?").trim();
@@ -50,31 +49,23 @@ export function Avatar({
 }
 
 export function UserChip({
-  id,
   name,
   email,
   size = 20,
 }: {
+  /** Still accepted from callers; names no longer link anywhere. */
   id?: string | null;
   name?: string | null;
   email?: string | null;
   size?: number;
 }) {
   const label = name ?? email ?? "Unknown";
-  const inner = (
+  // A plain name. Who somebody is lives in People on the hub, which only
+  // administrators can open — so a name here is not a link into it.
+  return (
     <span className="inline-flex items-center gap-1.5">
       <Avatar name={name} email={email} size={size} />
       <span className="truncate">{label}</span>
     </span>
   );
-  // Who somebody is lives in People on the hub, which knows every Labhours
-  // id — so a name here opens that person there.
-  if (id) {
-    return (
-      <a href={hub(`/people/${encodeURIComponent(id)}`)} className="hover:text-brand-primary-glow hover:underline">
-        {inner}
-      </a>
-    );
-  }
-  return inner;
 }
