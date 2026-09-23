@@ -86,7 +86,7 @@ export function SidebarNav({
         <svg width="18" height="18" viewBox="0 0 32 32" aria-hidden>
           <rect width="32" height="32" rx="7.5" fill="rgba(255,255,255,.12)" />
           <path d="M9.5 23.5 L16 8.5 L22.5 23.5" fill="none" stroke="#eef2f2" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="16" cy="18.2" r="2.3" fill="#31b897" />
+          <circle cx="16" cy="18.2" r="2.3" fill="#00D68F" />
         </svg>
         <span className="min-w-0 flex-1 truncate">Afin Tech team</span>
         <span className="font-mono text-[9px] uppercase opacity-60">hub</span>

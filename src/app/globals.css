@@ -11,27 +11,27 @@
 :root {
   color-scheme: light;
 
-  --afin-ink: #0c2d3b;
-  --afin-mint: #31b897;
-  --afin-teal: #1a4a54;
-  --afin-amber: #ffbf00;
-  --afin-coral: #ff6b61;
-  --afin-goldenrod: #715207;
+  --afin-ink: #07202C;
+  --afin-mint: #00D68F;
+  --afin-teal: #0B63E5;
+  --afin-amber: #FFB300;
+  --afin-coral: #FF4D5E;
+  --afin-goldenrod: #944E00;
 
-  --canvas: #f5f4f1;
+  --canvas: #F3F7FA;
   --surface: #ffffff;
-  --raised: #ecebe6;
-  --line: #dedbd3;
-  --line-strong: #c5c1b6;
+  --raised: #E6EEF3;
+  --line: #D8E1E7;
+  --line-strong: #BCCAD2;
 
-  --ink-text: #0c2d3b;
-  --muted: #313c3f;
-  --dim: #454f52;
+  --ink-text: #07202C;
+  --muted: #254552;
+  --dim: #3A5864;
 
-  --mint-tint: #e4f4ef;
-  --coral-tint: #fdeae8;
-  --amber-tint: #fbf1d8;
-  --mist-tint: #e8eef0;
+  --mint-tint: #CBE2D5;
+  --coral-tint: #F7D5D4;
+  --amber-tint: #E8DBC7;
+  --mist-tint: #D4DFE2;
 
   --brand-primary: var(--afin-teal);
   --brand-accent: var(--afin-amber);
@@ -106,7 +106,7 @@ input[type="checkbox"] {
    In @layer components, not bare. A bare rule lands after Tailwind's layers
    and beats every `text-*` utility written beside it, so an eyebrow on the
    dark rail asking for a light tone would silently get --muted instead:
-   #313c3f on #0c2d3b, 1.27:1, invisible. That is exactly what happened in
+   #313c3f on #07202C, 1.27:1, invisible. That is exactly what happened in
    the Academy. Inside the components layer a utility wins. */
 @layer components {
   /* The estate's type roles, applied at the base so the utility classes on

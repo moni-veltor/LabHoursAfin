@@ -12,7 +12,7 @@ export function FlavourBand() {
       className="relative h-28 shrink-0 overflow-hidden sm:h-32"
       style={{
         background:
-          "linear-gradient(118deg, color-mix(in oklab, #1a4a54 82%, #0c2d3b) 0%, #1a4a54 62%, color-mix(in oklab, #1a4a54 72%, white) 100%)",
+          "linear-gradient(118deg, color-mix(in oklab, #0B63E5 82%, #07202C) 0%, #0B63E5 62%, color-mix(in oklab, #0B63E5 72%, white) 100%)",
       }}
     >
       <svg
