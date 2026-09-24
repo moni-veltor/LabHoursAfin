@@ -1,4 +1,7 @@
 import { db } from "@/lib/db";
+import { Suspense } from "react";
+import { LeaderboardStrip, NewsFeed } from "@/components/home/landing";
+import { SkPanel } from "@/components/ui/skeleton";
 import {
   initiatives,
   subscriptions,
@@ -157,9 +160,29 @@ export default async function HomePage({
   const featured = rows.filter((r) => r.featured);
   const rest = rows.filter((r) => !r.featured);
 
+  // Someone who has searched or filtered is looking for a thing, not for the
+  // news — the panels would just be in the way of the results.
+  const filtering = !!(sp.q || sp.category || sp.status || sp.tag || sp.surprise);
+
   return (
     <div className="space-y-8">
       <Hero count={rows.length} />
+
+      {/* What is going on, before what exists. Landing here used to mean a
+          list of everything ever posted, sorted by when it was created, which
+          answers "what is here" and never "what is happening". Both panels
+          stream: the leaderboard is five queries and the news is four, and
+          neither should hold up the initiatives behind them. */}
+      {!filtering && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Suspense fallback={<SkPanel lines={4} />}>
+            <LeaderboardStrip userId={me?.id} />
+          </Suspense>
+          <Suspense fallback={<SkPanel lines={5} />}>
+            <NewsFeed />
+          </Suspense>
+        </div>
+      )}
 
       <div className="space-y-3">
         <SearchInput q={sp.q} />

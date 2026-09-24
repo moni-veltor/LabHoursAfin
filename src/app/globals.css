@@ -285,3 +285,112 @@ input[type="checkbox"] {
 @media (prefers-reduced-motion: reduce) {
   .sk { animation: none; }
 }
+
+/* ── Depth on the board ────────────────────────────────────────────────────
+   Every colour here is mixed from a palette token rather than written as a
+   literal, so the contrast check still owns them and a future recolour
+   carries them along. Depth comes from three things and no images: a
+   vertical ramp across the face, a lighter cap where the light lands, and a
+   contact shadow underneath so the shape sits on the page. */
+
+.pod {
+  position: relative;
+  border-radius: 10px 10px 4px 4px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 55%, transparent),
+    inset -6px 0 12px -8px color-mix(in oklab, var(--afin-ink) 55%, transparent),
+    inset 6px 0 10px -8px color-mix(in oklab, white 45%, transparent),
+    0 12px 20px -12px color-mix(in oklab, var(--afin-ink) 60%, transparent);
+}
+/* The cap: the top face, catching the light. */
+.pod::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 9px;
+  border-radius: 10px 10px 50% 50% / 10px 10px 8px 8px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, white 72%, transparent),
+    transparent
+  );
+}
+.pod-gold {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--afin-amber) 52%, white) 0%,
+    var(--amber-tint) 55%,
+    color-mix(in oklab, var(--afin-amber) 32%, var(--amber-tint)) 100%
+  );
+}
+.pod-plain {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--raised) 55%, white) 0%,
+    var(--raised) 60%,
+    color-mix(in oklab, var(--raised) 78%, var(--afin-ink)) 100%
+  );
+}
+.pod-mine {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--afin-teal) 26%, white) 0%,
+    var(--mist-tint) 58%,
+    color-mix(in oklab, var(--afin-teal) 22%, var(--mist-tint)) 100%
+  );
+}
+
+/* A medal, as a struck disc rather than an emoji. */
+.medal {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 9999px;
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    inset 0 1px 1px color-mix(in oklab, white 75%, transparent),
+    inset 0 -2px 3px color-mix(in oklab, var(--afin-ink) 30%, transparent),
+    0 4px 8px -4px color-mix(in oklab, var(--afin-ink) 55%, transparent);
+}
+.medal::before {
+  content: "";
+  position: absolute;
+  inset: 12%;
+  border-radius: 9999px;
+  border: 1px solid color-mix(in oklab, white 40%, transparent);
+}
+.medal-1 {
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in oklab, white 68%, var(--afin-amber)), transparent 55%),
+    linear-gradient(160deg, color-mix(in oklab, var(--afin-amber) 88%, white), var(--amber-ink));
+  color: var(--amber-ink);
+}
+.medal-2 {
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in oklab, white 76%, transparent), transparent 55%),
+    linear-gradient(160deg, var(--mist-tint), color-mix(in oklab, var(--afin-ink) 34%, var(--mist-tint)));
+  color: var(--muted);
+}
+.medal-3 {
+  background:
+    radial-gradient(120% 120% at 30% 20%, color-mix(in oklab, white 58%, var(--afin-goldenrod)), transparent 55%),
+    linear-gradient(160deg, color-mix(in oklab, var(--afin-goldenrod) 52%, white), var(--afin-goldenrod));
+  color: #ffffff;
+}
+
+/* Score bars with a rounded, lit surface rather than a flat fill. */
+.bar3d {
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, white 60%, transparent),
+    inset 0 -2px 3px -1px color-mix(in oklab, var(--afin-ink) 34%, transparent);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, white 34%, transparent),
+    transparent 60%
+  );
+}
+.bar-track {
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 2px color-mix(in oklab, var(--afin-ink) 22%, transparent);
+}

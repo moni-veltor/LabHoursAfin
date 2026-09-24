@@ -16,7 +16,28 @@ import { LiveRefresh } from "@/components/live-refresh";
 export const metadata = { title: "Leaderboard — Lab Hours" };
 
 const ORDER: PointKind[] = ["attended", "ran", "outcome", "lessons", "demo", "award"];
-const MEDALS = ["🥇", "🥈", "🥉"];
+/**
+ * A medal as a struck disc — a radial highlight where the light lands, a
+ * rim, and a contact shadow. Emoji were doing this job and rendered as three
+ * different designs across three platforms.
+ */
+function Medal({ place, size = 34 }: { place: number; size?: number }) {
+  if (place > 3)
+    return (
+      <span className="w-8 shrink-0 text-center font-mono text-sm tabular-nums text-dim">
+        {place}
+      </span>
+    );
+  return (
+    <span
+      className={`medal medal-${place} shrink-0 font-display font-bold`}
+      style={{ width: size, height: size, fontSize: size * 0.44 }}
+      aria-label={`Position ${place}`}
+    >
+      {place}
+    </span>
+  );
+}
 
 /** How long ago, in the fewest characters that still say it. */
 function ago(d: Date) {
@@ -143,21 +164,21 @@ export default async function LeaderboardPage({
                   className="lb-row flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-surface px-4 py-3 shadow-card"
                   style={{ animationDelay: `${i * 55}ms` }}
                 >
-                  <span className="w-8 shrink-0 font-mono text-sm tabular-nums text-dim">
-                    {MEDALS[i] ?? i + 1}
-                  </span>
+                  <Medal place={i + 1} size={30} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{t.team}</span>
                     <span className="text-xs text-muted">
                       {t.people} scoring · {t.total} between them · {t.top} leading
                     </span>
-                    <span
-                      className="lb-bar mt-1.5 block h-1 rounded-full bg-brand-primary-glow/70"
-                      style={{
-                        width: `${Math.max(6, (t.each / (byTeam[0]?.each || 1)) * 100)}%`,
-                        animationDelay: `${i * 55 + 120}ms`,
-                      }}
-                    />
+                    <span className="bar-track mt-2 block h-2 w-full overflow-hidden bg-raised">
+                      <span
+                        className="lb-bar bar3d block h-full bg-brand-primary-glow"
+                        style={{
+                          width: `${Math.max(6, (t.each / (byTeam[0]?.each || 1)) * 100)}%`,
+                          animationDelay: `${i * 55 + 120}ms`,
+                        }}
+                      />
+                    </span>
                   </span>
                   <span className="text-right">
                     <CountUp
@@ -200,7 +221,7 @@ export default async function LeaderboardPage({
                     className="lb-row flex w-full max-w-[10rem] flex-col items-center"
                     style={{ animationDelay: `${i * 110}ms` }}
                   >
-                    <span className="text-2xl sm:text-3xl">{MEDALS[slot]}</span>
+                    <Medal place={slot + 1} size={gold ? 44 : 36} />
                     <span className="mt-1 w-full truncate text-center text-sm font-medium">
                       {r.userId === meId ? "You" : r.name ?? r.email}
                     </span>
@@ -213,12 +234,8 @@ export default async function LeaderboardPage({
                       <Movement row={r} />
                     </span>
                     <span
-                      className={`lb-podium mt-1.5 w-full rounded-t-lg border border-b-0 ${
-                        gold
-                          ? "lb-shine border-brand-accent/40 bg-brand-accent-tint"
-                          : r.userId === meId
-                          ? "border-brand-primary/40 bg-brand-primary-tint"
-                          : "border-line bg-raised"
+                      className={`lb-podium pod mt-2 w-full ${
+                        gold ? "pod-gold" : r.userId === meId ? "pod-mine" : "pod-plain"
                       }`}
                       style={{ height: `${h}px`, animationDelay: `${i * 110 + 90}ms` }}
                     />
@@ -241,9 +258,7 @@ export default async function LeaderboardPage({
                   }`}
                   style={{ animationDelay: `${300 + i * 45}ms` }}
                 >
-                  <span className="w-8 shrink-0 font-mono text-sm tabular-nums text-dim">
-                    {r.place}
-                  </span>
+                  <Medal place={r.place} size={30} />
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
                       <span className="min-w-0 truncate font-medium">
@@ -256,13 +271,15 @@ export default async function LeaderboardPage({
                       </span>
                       <Movement row={r} />
                     </span>
-                    <span
-                      className="lb-bar mt-1.5 block h-1 rounded-full bg-brand-primary-glow/60"
-                      style={{
-                        width: `${Math.max(4, (r.total / top) * 100)}%`,
-                        animationDelay: `${360 + i * 45}ms`,
-                      }}
-                    />
+                    <span className="bar-track mt-2 block h-2 w-full overflow-hidden bg-raised">
+                      <span
+                        className="lb-bar bar3d block h-full bg-brand-primary-glow"
+                        style={{
+                          width: `${Math.max(4, (r.total / top) * 100)}%`,
+                          animationDelay: `${360 + i * 45}ms`,
+                        }}
+                      />
+                    </span>
                     <span className="mt-1.5 flex flex-wrap gap-1.5">
                       {ORDER.filter((k) => r.byKind[k] > 0).map((k) => (
                         <span

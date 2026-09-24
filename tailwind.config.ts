@@ -83,13 +83,18 @@ export default {
         muted: "#254552",       //  9.71:1
         dim: "#3A5864",         //  6.67:1
 
-        // The inverted frame the sidebar sits on. These are the only light-on-
-        // dark values in the product, and the rail is the only dark ground.
-        chrome: "#07202C",
-        "chrome-2": "#1e313a",
-        "chrome-ink": "#eaf1f6",   // 14.71:1 on chrome
-        "chrome-muted": "#c0cbd1", // 10.15:1
-        "chrome-soft": "#95a0a7",  //  6.28:1
+        // The inverted frame the rail sits on — and it is Lab Hours' teal
+        // carried into the dark, not the estate's neutral ink. The rail sat on
+        // plain #07202C while the flavour band above it was teal, so the app's
+        // own colour stopped at the band. This is the hub's treatment: the
+        // app hue mixed 22% into the ink, which is far enough to read as teal
+        // and dark enough to keep chrome-ink above 12:1. `ink` itself stays
+        // neutral, because scrims and overlays should not be tinted.
+        chrome: "#072f51",
+        "chrome-2": "#143a5e",
+        "chrome-ink": "#eef4f8",   // 12.34:1 on chrome
+        "chrome-muted": "#c0cbd1", //  8.28:1 · hover ground 10.54:1
+        "chrome-soft": "#95a0a7",  //  5.13:1
       },
       fontFamily: {
         // The estate's three faces. `sans` is the reading face; headings and
