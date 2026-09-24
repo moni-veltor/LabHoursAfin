@@ -107,6 +107,7 @@ export default async function HomePage({
       capacity: initiatives.capacity,
       subscriptionsClosed: initiatives.subscriptionsClosed,
       createdAt: initiatives.createdAt,
+      startsAt: initiatives.startsAt,
       ownerName: users.name,
     })
     .from(initiatives)
@@ -240,6 +241,7 @@ function mapRow(
     capacity: r.capacity,
     participantCount: participantCount.get(r.id) ?? 0,
     createdAt: r.createdAt,
+    startsAt: r.startsAt,
     tags: tagsByInitiative.get(r.id) ?? [],
     coverImage: r.coverImage,
     crossTeam: r.crossTeam,
