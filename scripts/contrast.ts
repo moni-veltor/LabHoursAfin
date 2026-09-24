@@ -144,6 +144,46 @@ else {
   for (const h of pairs) console.log(`  ✗ ${h.ratio!.toFixed(2)}  ${h.what}  ${h.where}`);
 }
 
+/**
+ * Stale colour literals.
+ *
+ * The sweep that moved this product onto Voltage changed tokens and utility
+ * classes, and missed thirteen raw `rgba(...)` values in the stylesheet and
+ * the shadow definitions — because a literal belongs to no token and so no
+ * token check can see it. They sat there rendering the previous palette's
+ * ink, amber and mint underneath the new one.
+ *
+ * Every literal in these two files should be a current palette colour at some
+ * opacity. Anything else is either a leftover or a colour that should have
+ * been a token in the first place.
+ */
+const known = new Set(
+  Object.values(PAL).map((h) =>
+    [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",")
+  )
+);
+const stale: string[] = [];
+for (const file of ["src/app/globals.css", "tailwind.config.ts"]) {
+  const text = readFileSync(join(ROOT, file), "utf8");
+  text.split("\n").forEach((line, i) => {
+    // Skip the token definitions themselves.
+    if (/^\s*(--|["']?[a-z0-9-]+["']?:\s*"#)/.test(line)) return;
+    for (const m of line.matchAll(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g)) {
+      const rgb = `${m[1]},${m[2]},${m[3]}`;
+      if (rgb === "0,0,0" || rgb === "255,255,255") continue;
+      if (!known.has(rgb))
+        stale.push(`  ✗ rgb(${rgb}) is not in the palette   ${file}:${i + 1}`);
+    }
+  });
+}
+console.log("\nColour literals in the stylesheet and the shadows");
+if (stale.length === 0)
+  console.log("  ✓ every raw rgba() is a current palette colour");
+else {
+  fail += stale.length;
+  for (const l of stale) console.log(l);
+}
+
 console.log("\nFills used as text (amber, mint, coral and the teal glow)");
 if (fillsAsText.length === 0) console.log("  ✓ none — the fills are only ever fills");
 else {

@@ -9,7 +9,7 @@ import {
   subscriptions,
   users,
 } from "@/db/schema";
-import { termKey } from "@/lib/participation";
+import { previousTermKey, termKey } from "@/lib/participation";
 import { ensureAttendance } from "@/lib/ensure-attendance";
 
 /**
@@ -285,6 +285,60 @@ function rank(all: Scored[], term?: string): Scored[] {
   return rows.sort(
     (a, b) => b.total - a.total || (a.name ?? "").localeCompare(b.name ?? "")
   );
+}
+
+/** A row on the board, plus where it moved from. */
+export type Ranked = Scored & {
+  place: number;
+  /** Their place last quarter, or null if they did not score then. */
+  was: number | null;
+  /** Positive is a climb. null means there is nothing to compare against. */
+  moved: number | null;
+  isNew: boolean;
+};
+
+/**
+ * The board, with movement.
+ *
+ * A leaderboard that only shows today is a list. What makes one worth opening
+ * twice is whether anything CHANGED — who climbed, who is new, who slipped.
+ * That comparison is free here: every award already carries the quarter it
+ * belongs to, so last quarter's order is the same rows tallied differently.
+ *
+ * All-time has no previous period to compare against, so it reports no
+ * movement rather than inventing some.
+ */
+export async function boardWithMovement(term?: string): Promise<Ranked[]> {
+  const all = await allScored();
+  const now = rank(all, term);
+  if (!term) return now.map((r, i) => ({ ...r, place: i + 1, was: null, moved: null, isNew: false }));
+
+  const before = rank(all, previousTermKey(term));
+  const wasAt = new Map(before.map((r, i) => [r.userId, i + 1]));
+  const everScored = new Set(
+    all.filter((r) => r.awards.some((a) => a.term < term)).map((r) => r.userId)
+  );
+
+  return now.map((r, i) => {
+    const was = wasAt.get(r.userId) ?? null;
+    return {
+      ...r,
+      place: i + 1,
+      was,
+      moved: was == null ? null : was - (i + 1),
+      isNew: !everScored.has(r.userId),
+    };
+  });
+}
+
+/** The latest things anybody earned — the board's pulse. */
+export async function recentAwards(limit = 8) {
+  const all = await allScored();
+  const flat: { who: string; kind: PointKind; title: string; at: Date; href?: string }[] = [];
+  for (const p of all)
+    for (const a of p.awards)
+      flat.push({ who: p.name ?? p.email, kind: a.kind, title: a.title, at: a.at, href: a.href });
+  return flat.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, limit);
 }
 
 export type TeamScore = {

@@ -104,11 +104,11 @@ export default {
       boxShadow: {
         // Was a set of neon glows, which only work on a dark ground. Paper on
         // a light table instead — the Academy's elevation, same values.
-        card: "0 1px 2px 0 rgba(12,45,59,0.05), 0 1px 3px 0 rgba(12,45,59,0.04)",
-        glow: "0 4px 12px -2px rgba(12,45,59,0.10), 0 2px 5px -1px rgba(12,45,59,0.05)",
-        "glow-accent": "0 4px 12px -2px rgba(113,82,7,0.16), 0 0 0 1px rgba(255,191,0,0.45)",
-        "glow-success": "0 4px 12px -2px rgba(20,99,80,0.16), 0 0 0 1px rgba(49,184,151,0.45)",
-        "glow-soft": "0 16px 32px -12px rgba(12,45,59,0.18)",
+        card: "0 1px 2px 0 rgba(7,32,44,0.05), 0 1px 3px 0 rgba(7,32,44,0.04)",
+        glow: "0 4px 12px -2px rgba(7,32,44,0.10), 0 2px 5px -1px rgba(7,32,44,0.05)",
+        "glow-accent": "0 4px 12px -2px rgba(105,72,3,0.16), 0 0 0 1px rgba(255,179,0,0.45)",
+        "glow-success": "0 4px 12px -2px rgba(15,91,60,0.16), 0 0 0 1px rgba(0,214,143,0.45)",
+        "glow-soft": "0 16px 32px -12px rgba(7,32,44,0.18)",
       },
       transitionTimingFunction: {
         instrument: "cubic-bezier(0.2, 0.8, 0.2, 1)",
@@ -121,9 +121,9 @@ export default {
       keyframes: {
         "pulse-soft": { "0%, 100%": { opacity: "1" }, "50%": { opacity: "0.55" } },
         "pulse-glow": {
-          "0%": { boxShadow: "0 0 0 0 rgba(49, 184, 151, 0.55)" },
-          "70%": { boxShadow: "0 0 0 8px rgba(49, 184, 151, 0)" },
-          "100%": { boxShadow: "0 0 0 0 rgba(49, 184, 151, 0)" },
+          "0%": { boxShadow: "0 0 0 0 rgba(0, 214, 143, 0.55)" },
+          "70%": { boxShadow: "0 0 0 8px rgba(0, 214, 143, 0)" },
+          "100%": { boxShadow: "0 0 0 0 rgba(0, 214, 143, 0)" },
         },
         scanline: { "0%": { transform: "translateY(0)" }, "100%": { transform: "translateY(-100%)" } },
       },
