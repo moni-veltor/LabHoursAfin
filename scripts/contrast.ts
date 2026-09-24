@@ -114,8 +114,9 @@ for (const f of files) {
     .forEach((line, i) => {
       const at = `${rel}:${i + 1}`;
       for (const tok of FILL_ONLY) {
-        // The rail's hot item is the documented exception: amber on chrome.
-        if (rel.endsWith("sidebar-nav.tsx") && line.includes("it.hot")) continue;
+        // The bar's hot item is the documented exception: amber on chrome,
+        // which reads at 9.35:1 — the one place a fill is legible as text.
+        if (rel.endsWith("top-nav.tsx") && line.includes("it.hot")) continue;
         if (new RegExp(`text-${tok}(?![a-z0-9-])`).test(line))
           fillsAsText.push({ where: at, what: `text-${tok}` });
       }
@@ -163,20 +164,48 @@ const known = new Set(
   )
 );
 const stale: string[] = [];
-for (const file of ["src/app/globals.css", "tailwind.config.ts"]) {
+// Components too — a stale value hides just as well in a `shadow-[...]`
+// arbitrary value or an inline style as it does in the stylesheet, and one
+// did: the root layout's sheet shadow was still the previous palette's ink.
+const sources = [
+  "src/app/globals.css",
+  "tailwind.config.ts",
+  ...files.map((f) => f.slice(ROOT.length)),
+];
+const hex2rgb = (h: string) =>
+  [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)).join(",");
+for (const file of sources) {
   const text = readFileSync(join(ROOT, file), "utf8");
-  text.split("\n").forEach((line, i) => {
+  let inBlock = false;
+  text.split("\n").forEach((raw, i) => {
+    // Comments describe colours as often as they use them — this very file
+    // names #313c3f in an explanation of a bug. Blank them out first, keeping
+    // the line numbering intact so a real hit still points somewhere useful.
+    let line = "";
+    for (let c = 0; c < raw.length; c++) {
+      if (inBlock) {
+        if (raw.startsWith("*/", c)) { inBlock = false; c++; }
+        continue;
+      }
+      if (raw.startsWith("/*", c)) { inBlock = true; c++; continue; }
+      if (raw.startsWith("//", c)) break;
+      line += raw[c];
+    }
     // Skip the token definitions themselves.
     if (/^\s*(--|["']?[a-z0-9-]+["']?:\s*"#)/.test(line)) return;
-    for (const m of line.matchAll(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g)) {
-      const rgb = `${m[1]},${m[2]},${m[3]}`;
+    const found: string[] = [];
+    for (const m of line.matchAll(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g))
+      found.push(`${m[1]},${m[2]},${m[3]}`);
+    for (const m of line.matchAll(/#[0-9a-fA-F]{6}\b/g))
+      found.push(hex2rgb(m[0].toLowerCase()));
+    for (const rgb of found) {
       if (rgb === "0,0,0" || rgb === "255,255,255") continue;
       if (!known.has(rgb))
         stale.push(`  ✗ rgb(${rgb}) is not in the palette   ${file}:${i + 1}`);
     }
   });
 }
-console.log("\nColour literals in the stylesheet and the shadows");
+console.log("\nColour literals, across the stylesheet, the config and every component");
 if (stale.length === 0)
   console.log("  ✓ every raw rgba() is a current palette colour");
 else {

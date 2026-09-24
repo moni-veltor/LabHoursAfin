@@ -2,16 +2,15 @@ import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { unreadCount } from "@/lib/notifications-server";
-import { SidebarNav } from "@/components/sidebar-nav";
+import { TopNav } from "@/components/top-nav";
 import { navFor } from "@/lib/nav-items";
 import { isTech, ownsAnyInitiative } from "@/lib/can-create";
 
 /**
- * The rail, assembled server-side.
+ * The bar, assembled server-side.
  *
- * Was a horizontal bar carrying twelve things across the top of every page.
- * Everything it held is still reachable — see navFor — but a column has the
- * room to label things properly instead of squeezing "admin" into a mono chip.
+ * Everything navFor returns is reachable from it: the places people go sit in
+ * the row, and the role-gated long tail sits in the Manage menu beside it.
  */
 export async function Nav() {
   const session = await auth();
@@ -42,17 +41,15 @@ export async function Nav() {
   );
 
   const identity = user ? (
-    <div className="space-y-2">
-      <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-chrome-ink">
+    <div className="flex items-center gap-3">
+      <span className="hidden min-w-0 text-right lg:block">
+        <span className="block truncate text-sm font-medium text-chrome-ink">
           {user.name ?? user.email}
-        </p>
-        <p className="truncate text-xs capitalize text-chrome-soft">{user.role ?? "member"}</p>
-      </div>
-      {/* A fixed 28px action row — the estate's three rails size their feet
-          from this row, so it is pinned rather than content-driven. */}
-      <div className="flex h-7 items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1 rounded-md border border-white/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-chrome-soft">
+        </span>
+        <span className="block truncate text-[11px] capitalize text-chrome-soft">{user.role ?? "member"}</span>
+      </span>
+      <div className="flex items-center gap-2">
+        <span className="hidden items-center gap-1 rounded-md border border-white/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-chrome-soft lg:inline-flex">
           <kbd>⌘</kbd>
           <kbd>K</kbd>
         </span>
@@ -71,14 +68,14 @@ export async function Nav() {
   ) : (
     <Link
       href="/signin"
-      className="block rounded-md border border-white/20 px-3 py-2 text-center text-sm font-medium text-chrome-ink transition hover:bg-white/10"
+      className="rounded-md border border-white/20 px-3 py-1.5 text-sm font-medium text-chrome-ink transition hover:bg-white/10"
     >
       Sign in
     </Link>
   );
 
   return (
-    <SidebarNav
+    <TopNav
       groups={groups}
       primary={canPost ? { href: "/initiatives/new", label: "New initiative" } : undefined}
       brand={brand}

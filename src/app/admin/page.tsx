@@ -287,7 +287,7 @@ function Sparkline({ rows }: { rows: { label: string; value: number }[] }) {
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="none">
         <polyline
           fill="none"
-          stroke="#7C3AED"
+          stroke="var(--afin-teal)"
           strokeWidth={2}
           points={points}
         />
@@ -297,7 +297,7 @@ function Sparkline({ rows }: { rows: { label: string; value: number }[] }) {
             cx={i * step}
             cy={h - (r.value / max) * (h - 8) - 4}
             r={3}
-            fill="#7C3AED"
+            fill="var(--afin-teal)"
           />
         ))}
       </svg>
