@@ -9,6 +9,9 @@ import { getParticipationStatus } from "@/lib/participation";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { hourAwareGreeting } from "@/lib/greeting";
 import { computeStreak } from "@/lib/streaks";
+import Link from "next/link";
+import { RULES, currentTerm, pointsFor } from "@/lib/points";
+import { termLabel } from "@/lib/participation";
 
 export default async function MyBoardPage() {
   const session = await auth();
@@ -82,6 +85,9 @@ export default async function MyBoardPage() {
     mySubs.find((s) => s.id === r.id && s.role === "subscriber")
   );
 
+  const term = currentTerm();
+  const score = await pointsFor(me.id, term);
+
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -92,8 +98,17 @@ export default async function MyBoardPage() {
           <h1 className="text-2xl font-bold tracking-tight">My board</h1>
         </div>
         <div className="flex items-center gap-2">
+          {score.total > 0 && (
+            <Link
+              href="/leaderboard"
+              className="rounded-full border border-brand-primary/40 bg-brand-primary-tint px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-primary-ink hover:bg-brand-primary-tint-strong"
+            >
+              {score.total} pts
+              {score.rank && ` · #${score.rank} of ${score.of}`}
+            </Link>
+          )}
           {streak > 0 && (
-            <span className="rounded-full border border-brand-success/40 bg-brand-success-950 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-success">
+            <span className="rounded-full border border-brand-success/40 bg-brand-success-tint px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-success-ink">
               🔥 {streak} {streak === 1 ? "quarter" : "quarters"} streak
             </span>
           )}
@@ -134,7 +149,7 @@ function TermPanel({
   return (
     <section className="rounded-xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="rounded-md border border-brand-primary/40 bg-brand-primary-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
+        <span className="rounded-md border border-brand-primary/40 bg-brand-primary-tint px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-ink">
           Participation
         </span>
         <span className="font-mono text-[11px] uppercase tracking-wider text-muted">

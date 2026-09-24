@@ -9,7 +9,8 @@
 export type IconName =
   | "initiatives" | "hack" | "showcase" | "people"
   | "board" | "inbox" | "owner" | "templates"
-  | "admin" | "queue" | "categories" | "audit" | "settings";
+  | "admin" | "queue" | "categories" | "audit" | "settings"
+  | "leaderboard";
 
 export type NavItem = {
   href: string;
@@ -44,6 +45,7 @@ export function navFor(opts: {
         { href: "/", label: "Initiatives", icon: "initiatives" },
         { href: "/hack", label: "Hack", icon: "hack", hot: true },
         { href: "/showcase", label: "Showcase", icon: "showcase" },
+        { href: "/leaderboard", label: "Leaderboard", icon: "leaderboard" },
       ],
     },
   ];

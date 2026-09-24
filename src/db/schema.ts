@@ -317,6 +317,43 @@ export const interests = pgTable(
   (t) => [primaryKey({ columns: [t.userId, t.initiativeId] })]
 );
 
+/**
+ * The register: who actually turned up.
+ *
+ * Everything else in this product records an INTENTION — `interest` is "this
+ * looks good", `subscription` is "sign me up". Neither is evidence of an hour
+ * spent. The streak and the badges were built on `subscription.joined_at`,
+ * which means somebody who signed up for eight sessions and attended none
+ * carried an eight-quarter streak. This table is the fact those things should
+ * have been counting, and it is written by the person who ran the session.
+ *
+ * `present: false` is deliberately kept rather than deleted — "marked, did not
+ * come" and "never marked" are different, and only the first should stop a
+ * point being awarded twice if the owner re-opens the register.
+ */
+export const attendance = pgTable(
+  "attendance",
+  {
+    initiativeId: uuid("initiative_id")
+      .notNull()
+      .references(() => initiatives.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    present: boolean("present").notNull().default(true),
+    /** The owner or admin who took the register. */
+    markedById: text("marked_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    markedAt: timestamp("marked_at").notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.initiativeId, t.userId] }),
+    index("attendance_user_idx").on(t.userId),
+    index("attendance_present_idx").on(t.present),
+  ]
+);
+
 export const initiativeCitations = pgTable(
   "initiative_citation",
   {
@@ -581,4 +618,12 @@ export const initiativeTagsRelations = relations(initiativeTags, ({ one }) => ({
     references: [initiatives.id],
   }),
   tag: one(tags, { fields: [initiativeTags.tagId], references: [tags.id] }),
+}));
+
+export const attendanceRelations = relations(attendance, ({ one }) => ({
+  initiative: one(initiatives, {
+    fields: [attendance.initiativeId],
+    references: [initiatives.id],
+  }),
+  user: one(users, { fields: [attendance.userId], references: [users.id] }),
 }));

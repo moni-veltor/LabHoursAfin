@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Boxes, ClipboardList, FileText, Flame, House, Inbox, LayoutGrid, ListChecks, Menu,
+  Trophy,
   Plus, ScrollText, Settings, Shapes, Sparkles, UserRound, Users, X,
 } from "lucide-react";
 import type { IconName, NavGroup } from "@/lib/nav-items";
@@ -14,7 +15,7 @@ const ICONS: Record<IconName, React.ElementType> = {
   initiatives: LayoutGrid, hack: Flame, showcase: Sparkles, people: Users,
   board: UserRound, inbox: Inbox, owner: ClipboardList, templates: FileText,
   admin: Boxes, queue: ListChecks, categories: Shapes, audit: ScrollText,
-  settings: Settings,
+  settings: Settings, leaderboard: Trophy,
 };
 
 /**

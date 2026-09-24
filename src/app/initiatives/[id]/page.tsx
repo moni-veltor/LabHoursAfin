@@ -13,6 +13,8 @@ import {
 import { and, eq, desc, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { subscribe, unsubscribe } from "@/actions/subscriptions";
+import { AttendanceRegister } from "@/components/attendance-register";
+import { registerFor } from "@/lib/points";
 import { addComment } from "@/actions/comments";
 import { postUpdate } from "@/actions/updates";
 import { updateInitiativeStatus } from "@/actions/initiatives";
@@ -171,6 +173,12 @@ export default async function InitiativePage({
     (s) => s.role === "participant" || s.role === "owner"
   ).length;
   const pending = subs.filter((s) => s.role === "pending");
+  // Who could have been there, and who the owner says was. Only fetched for
+  // the people who can act on it — nobody else needs to see the register.
+  const roster = subs.filter((s) => s.role === "participant");
+  const marked = canEdit && roster.length > 0
+    ? await registerFor(initiative.id)
+    : new Map<string, boolean>();
   const visibleSubs = subs.filter((s) => s.role !== "pending");
   const subscribed = mySub.length > 0;
   const myRole = mySub[0]?.role;
@@ -248,17 +256,17 @@ export default async function InitiativePage({
               {closed ? "Closed" : initiative.status.replace("_", " ")}
             </span>
             {initiative.featured && (
-              <span className="rounded-full bg-brand-accent-950 px-2 py-0.5 font-medium text-brand-accent">
+              <span className="rounded-full bg-brand-accent-tint px-2 py-0.5 font-medium text-brand-accent-ink">
                 ★ Featured
               </span>
             )}
             {initiative.crossTeam && (
-              <span className="rounded-full bg-brand-success-950 px-2 py-0.5 font-medium text-brand-success">
+              <span className="rounded-full bg-brand-success-tint px-2 py-0.5 font-medium text-brand-success-ink">
                 Cross-team
               </span>
             )}
             {initiative.requiresApproval && (
-              <span className="rounded-full bg-brand-primary-950 px-2 py-0.5 text-brand-primary-glow">
+              <span className="rounded-full bg-brand-primary-tint px-2 py-0.5 text-brand-primary-ink">
                 Application required
               </span>
             )}
@@ -568,8 +576,8 @@ export default async function InitiativePage({
         </div>
 
         {canEdit && pending.length > 0 && (
-          <div className="rounded-xl border border-brand-accent/30 bg-brand-accent-950 p-4">
-            <h3 className="text-sm font-semibold text-brand-accent">
+          <div className="rounded-xl border border-brand-accent/30 bg-brand-accent-tint p-4">
+            <h3 className="text-sm font-semibold text-brand-accent-ink">
               Pending applications ({pending.length})
             </h3>
             <ul className="mt-3 space-y-2 text-sm">
@@ -583,7 +591,7 @@ export default async function InitiativePage({
                         await approveParticipant(initiative.id, p.userId);
                       }}
                     >
-                      <button className="rounded-md bg-brand-success px-2 py-1 text-xs font-medium text-white hover:bg-brand-success-dark">
+                      <button className="rounded-md bg-brand-success px-2 py-1 text-xs font-medium text-ink-text hover:bg-brand-success-dark">
                         Approve
                       </button>
                     </form>
@@ -598,13 +606,26 @@ export default async function InitiativePage({
           </div>
         )}
 
+        {canEdit && roster.length > 0 && (
+          <AttendanceRegister
+            initiativeId={initiative.id}
+            people={roster.map((r) => ({
+              userId: r.userId,
+              name: r.name,
+              email: r.email,
+            }))}
+            marked={marked}
+            startsAt={initiative.startsAt ? new Date(initiative.startsAt) : null}
+          />
+        )}
+
         <div className="rounded-xl border border-line bg-surface p-4">
           <h3 className="text-sm font-semibold">Tools</h3>
           <ul className="mt-3 space-y-2 text-sm">
             <li>
               <a
                 href={`/api/initiatives/${initiative.id}/ics`}
-                className="flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 hover:border-brand-primary/40 hover:text-brand-primary-glow"
+                className="flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 hover:border-brand-primary/40 hover:text-brand-primary-ink"
               >
                 <span className="inline-block h-2 w-2 rounded-full bg-brand-primary" />
                 Add to calendar (.ics)
@@ -614,7 +635,7 @@ export default async function InitiativePage({
               <li>
                 <a
                   href={`/initiatives/${initiative.id}/edit`}
-                  className="flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 hover:border-brand-accent/40 hover:text-brand-accent"
+                  className="flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 hover:border-brand-accent/40 hover:text-brand-accent-ink"
                 >
                   <span className="inline-block h-2 w-2 rounded-full bg-brand-accent" />
                   Edit initiative
@@ -671,8 +692,8 @@ export default async function InitiativePage({
         )}
 
         {adminAccess && (
-          <div className="rounded-xl border border-brand-accent/30 bg-brand-accent-950 p-4">
-            <h3 className="text-sm font-semibold text-brand-accent">Admin</h3>
+          <div className="rounded-xl border border-brand-accent/30 bg-brand-accent-tint p-4">
+            <h3 className="text-sm font-semibold text-brand-accent-ink">Admin</h3>
             <form
               className="mt-3"
               action={async () => {
@@ -680,7 +701,7 @@ export default async function InitiativePage({
                 await toggleFeatured(initiative.id);
               }}
             >
-              <button className="w-full rounded-md border border-brand-accent bg-surface px-3 py-1.5 text-sm font-medium text-brand-accent hover:bg-brand-accent-900">
+              <button className="w-full rounded-md border border-brand-accent bg-surface px-3 py-1.5 text-sm font-medium text-brand-accent-ink hover:bg-brand-accent-tint-strong">
                 {initiative.featured ? "Unfeature" : "★ Feature on home"}
               </button>
             </form>
@@ -710,8 +731,8 @@ export default async function InitiativePage({
 
 function RuleBlock({ message }: { message: string }) {
   return (
-    <div className="rounded-md border border-brand-accent/30 bg-brand-accent-950 p-3">
-      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+    <div className="rounded-md border border-brand-accent/30 bg-brand-accent-tint p-3">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
         Quarter rule
       </p>
       <p className="mt-1 text-xs text-muted">{message}</p>
@@ -796,9 +817,9 @@ function AiSummarySection({
   aiEnabled: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-brand-primary/30 bg-brand-primary-950 p-5">
+    <section className="rounded-xl border border-brand-primary/30 bg-brand-primary-tint p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-primary-glow">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-primary-ink">
           AI weekly summary
         </h2>
         <form
@@ -813,7 +834,7 @@ function AiSummarySection({
         </form>
       </div>
       {!aiEnabled && (
-        <p className="mt-2 text-xs text-brand-primary-glow">
+        <p className="mt-2 text-xs text-brand-primary-ink">
           AI is not configured. Set <code>ANTHROPIC_API_KEY</code> in Vercel.
         </p>
       )}
@@ -822,7 +843,7 @@ function AiSummarySection({
           {initiative.aiSummary}
         </p>
       ) : (
-        <p className="mt-3 text-sm text-brand-primary-glow/80">
+        <p className="mt-3 text-sm text-brand-primary-ink/80">
           Click to summarise the latest updates into one paragraph.
         </p>
       )}
@@ -849,9 +870,9 @@ function OutcomeSection({
   signedIn: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-brand-success/30 bg-brand-success-950 p-6">
+    <section className="rounded-xl border border-brand-success/30 bg-brand-success-tint p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-brand-success-ink">
           Outcomes
         </h2>
         {canEdit && aiEnabled && (
@@ -861,7 +882,7 @@ function OutcomeSection({
               await draftOutcomeWithAi(initiative.id);
             }}
           >
-            <button className="rounded-md border border-brand-success bg-surface px-2.5 py-1 text-xs font-medium text-brand-success hover:bg-brand-success-900">
+            <button className="rounded-md border border-brand-success bg-surface px-2.5 py-1 text-xs font-medium text-brand-success-ink hover:bg-brand-success-tint-strong">
               ✨ Draft with AI
             </button>
           </form>
@@ -886,7 +907,7 @@ function OutcomeSection({
                       href={l}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-brand-success underline hover:no-underline"
+                      className="text-brand-success-ink underline hover:no-underline"
                     >
                       {l}
                     </a>
@@ -909,7 +930,7 @@ function OutcomeSection({
           })()}
         </>
       ) : (
-        <p className="mt-2 text-sm text-brand-success">
+        <p className="mt-2 text-sm text-brand-success-ink">
           {canEdit
             ? "Wrap this up by posting what you shipped, learned, or produced."
             : "Awaiting outcome write-up."}
@@ -933,7 +954,7 @@ function OutcomeSection({
             className="w-full resize-y rounded-md border border-brand-success/30 bg-surface px-3 py-2 text-sm focus:border-brand-success focus:outline-none"
           />
           <div className="flex justify-end">
-            <button className="rounded-md bg-brand-success px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-success-dark">
+            <button className="rounded-md bg-brand-success px-3 py-1.5 text-sm font-medium text-ink-text hover:bg-brand-success-dark">
               Save outcome (marks as done)
             </button>
           </div>
