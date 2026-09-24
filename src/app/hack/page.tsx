@@ -122,7 +122,7 @@ function Section({
 
 function Grid({ rows }: { rows: any[] }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {rows.map((h) => (
         <Link
           key={h.id}

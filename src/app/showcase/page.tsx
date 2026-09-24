@@ -47,7 +47,7 @@ export default async function ShowcasePage() {
           Nothing on the wall yet — owners post outcomes when they wrap an initiative.
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
           {rows.map((r) => {
             const cat = catMap.get(categoryKeyOf(r)) ?? fallback;
             const links = (r.outcomeLinks ?? "")

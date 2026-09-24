@@ -257,3 +257,31 @@ input[type="checkbox"] {
   }
   .lb-bar, .lb-podium { transform: none !important; }
 }
+
+/* ── Skeletons ─────────────────────────────────────────────────────────────
+   A placeholder's job is to say "this is coming and it will be about this
+   shape", so these match the real thing's geometry rather than being grey
+   boxes. The sweep is the only moving part, and it stops for anyone who has
+   asked for less motion — a still placeholder still does the job. */
+
+@keyframes sk-sweep {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.sk {
+  border-radius: 6px;
+  background-color: var(--raised);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--surface) 70%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: sk-sweep 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk { animation: none; }
+}

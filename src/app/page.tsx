@@ -181,7 +181,7 @@ export default async function HomePage({
           <SectionHeader badge="featured" tone="accent">
             On the wall
           </SectionHeader>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {featured.map((r) => (
               <InitiativeCard
                 key={r.id}
@@ -199,7 +199,7 @@ export default async function HomePage({
           {featured.length > 0 && (
             <SectionHeader badge="all">Initiatives</SectionHeader>
           )}
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {rest.map((r) => (
               <InitiativeCard
                 key={r.id}

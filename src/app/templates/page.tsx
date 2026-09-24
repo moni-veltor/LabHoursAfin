@@ -57,7 +57,7 @@ export default async function TemplatesPage() {
           No templates yet. Open any initiative you've shipped and click "Save as template".
         </div>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {rows.map((r) => {
             const cat = CATEGORIES[r.category as Category];
             return (
