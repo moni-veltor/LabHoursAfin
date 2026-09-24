@@ -121,7 +121,7 @@ export function tally(awards: Award[], term?: string) {
  * of registers would drop every one of those points into this quarter.
  */
 async function allAwards(): Promise<Map<string, Award[]>> {
-  await ensureAttendance();
+  const ready = await ensureAttendance();
   const out = new Map<string, Award[]>();
   const add = (userId: string, a: Award) => {
     const list = out.get(userId);
@@ -138,7 +138,9 @@ async function allAwards(): Promise<Map<string, Award[]>> {
   });
 
   // Attendance, and — from the same rows — who ran a session that was attended.
-  const present = await db
+  // Without the table there is simply nothing to score from it yet; the rest
+  // of the rules still apply.
+  const present = !ready ? [] : await db
     .select({
       userId: attendance.userId,
       markedAt: attendance.markedAt,
@@ -390,7 +392,7 @@ export const currentTerm = () => termKey(new Date());
  * is the only reason anyone remembers to do it.
  */
 export async function registerTaken(initiativeId: string) {
-  await ensureAttendance();
+  if (!(await ensureAttendance())) return { marked: false, count: 0 };
   const rows = await db
     .select({ userId: attendance.userId })
     .from(attendance)
@@ -400,7 +402,7 @@ export async function registerTaken(initiativeId: string) {
 
 /** Who the owner marked present, for rendering the register. */
 export async function registerFor(initiativeId: string) {
-  await ensureAttendance();
+  if (!(await ensureAttendance())) return new Map<string, boolean>();
   const rows = await db
     .select({ userId: attendance.userId, present: attendance.present })
     .from(attendance)

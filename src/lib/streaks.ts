@@ -19,7 +19,7 @@ import { ensureAttendance } from "@/lib/ensure-attendance";
  * mattering, and the number means what it says.
  */
 export async function computeStreak(userId: string) {
-  await ensureAttendance();
+  const ready = await ensureAttendance();
 
   const [joined, present, registers] = await Promise.all([
     // Sessions you were part of, and when they ran.
@@ -41,13 +41,21 @@ export async function computeStreak(userId: string) {
         )
       ),
     // Sessions you were marked present at.
-    db
-      .select({ initiativeId: attendance.initiativeId })
-      .from(attendance)
-      .where(and(eq(attendance.userId, userId), eq(attendance.present, true))),
+    !ready
+      ? []
+      : db
+          .select({ initiativeId: attendance.initiativeId })
+          .from(attendance)
+          .where(
+            and(eq(attendance.userId, userId), eq(attendance.present, true))
+          ),
     // Every session that has a register at all, so we can tell "you did not
     // come" apart from "nobody checked".
-    db.selectDistinct({ initiativeId: attendance.initiativeId }).from(attendance),
+    !ready
+      ? []
+      : db
+          .selectDistinct({ initiativeId: attendance.initiativeId })
+          .from(attendance),
   ]);
 
   const wasThere = new Set(present.map((p) => p.initiativeId));

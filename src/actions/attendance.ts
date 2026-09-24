@@ -18,7 +18,7 @@ import { ensureAttendance } from "@/lib/ensure-attendance";
  * themselves are not worth having.
  */
 async function guard(initiativeId: string) {
-  await ensureAttendance();
+  if (!(await ensureAttendance())) throw new Error("ATTENDANCE_TABLE_MISSING");
   const me = await requireUser();
   const [init] = await db
     .select({ id: initiatives.id, ownerId: initiatives.ownerId, title: initiatives.title })

@@ -57,7 +57,7 @@ export default async function PortfolioPage() {
         and(eq(initiatives.ownerId, user.id), isNotNull(initiatives.outcomeBody))
       ),
     (async () => {
-      await ensureAttendance();
+      if (!(await ensureAttendance())) return [{ c: 0 }];
       return db
         .select({ c: count() })
         .from(attendance)

@@ -38,9 +38,14 @@ const DDL = [
   `CREATE INDEX IF NOT EXISTS "attendance_present_idx" ON "attendance" USING btree ("present")`,
 ];
 
-let once: Promise<void> | null = null;
+let once: Promise<boolean> | null = null;
 
-export function ensureAttendance(): Promise<void> {
+/**
+ * Returns whether the table is actually there. Callers use it to skip the
+ * attendance queries rather than let them throw: a deploy where this could not
+ * run should show a product without points, not a My Board that 500s.
+ */
+export function ensureAttendance(): Promise<boolean> {
   if (!once) {
     once = (async () => {
       for (const stmt of DDL) {
@@ -60,6 +65,20 @@ export function ensureAttendance(): Promise<void> {
           if (code !== "42P07" && code !== "42710")
             console.error("[ensureAttendance] could not assert schema:", e);
         }
+      }
+      // Assert the end state rather than assume it: the DDL above may have
+      // been refused, and a caller needs to know before it queries.
+      try {
+        const r = await db.execute(
+          sql`SELECT to_regclass('public.attendance') IS NOT NULL AS ok`
+        );
+        const row = (r as unknown as { ok: boolean }[])[0];
+        const ok = Boolean(row?.ok);
+        if (!ok) console.error("[ensureAttendance] attendance table is absent");
+        return ok;
+      } catch (e) {
+        console.error("[ensureAttendance] could not check for the table:", e);
+        return false;
       }
     })();
   }

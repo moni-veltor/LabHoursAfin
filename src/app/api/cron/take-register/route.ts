@@ -29,7 +29,8 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: Request) {
   if (!authoriseCron(req)) return new Response("Unauthorized", { status: 401 });
-  await ensureAttendance();
+  if (!(await ensureAttendance()))
+    return Response.json({ error: "attendance table absent" }, { status: 503 });
 
   const now = new Date();
   const fortnightAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
