@@ -97,7 +97,7 @@ export function CmdK({ items }: { items: Item[] }) {
       >
         <div className="border-b border-line bg-raised px-3">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs text-brand-primary-glow">$</span>
+            <span className="font-mono text-xs text-brand-primary-ink">$</span>
             <input
               ref={inputRef}
               value={q}
@@ -112,7 +112,7 @@ export function CmdK({ items }: { items: Item[] }) {
             <Group title="commands">
               {filteredCommands.map((c) => (
                 <Row key={c.id} onSelect={() => runCommand(c)}>
-                  <span className="font-mono text-xs text-brand-accent">▸</span>
+                  <span className="font-mono text-xs text-brand-accent-ink">▸</span>
                   <span>{c.label}</span>
                 </Row>
               ))}
@@ -159,7 +159,7 @@ export function CmdK({ items }: { items: Item[] }) {
         </div>
         <div className="flex items-center justify-between border-t border-line bg-raised px-3 py-2 font-mono text-[10px] uppercase tracking-wider text-dim">
           <span>↑↓ navigate · ↵ open · esc close</span>
-          <span className="text-brand-primary-glow">⌘K</span>
+          <span className="text-brand-primary-ink">⌘K</span>
         </div>
       </div>
     </div>
@@ -188,7 +188,7 @@ function Row({
     <li>
       <button
         onClick={onSelect}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted hover:bg-brand-primary-950 hover:text-ink-text"
+        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-muted hover:bg-brand-primary-tint hover:text-ink-text"
       >
         {children}
       </button>

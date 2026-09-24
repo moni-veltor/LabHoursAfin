@@ -66,12 +66,12 @@ export function InitiativeCard(p: Props) {
             {cat.label}
           </span>
           {p.featured && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-brand-accent/40 bg-brand-accent-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-accent">
+            <span className="inline-flex items-center gap-1 rounded-full border border-brand-accent/40 bg-brand-accent-tint px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-accent-ink">
               ★ featured
             </span>
           )}
           {p.crossTeam && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-brand-success/30 bg-brand-success-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-success">
+            <span className="inline-flex items-center gap-1 rounded-full border border-brand-success/30 bg-brand-success-tint px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-success-ink">
               cross-team
             </span>
           )}
@@ -101,7 +101,7 @@ export function InitiativeCard(p: Props) {
           </span>
         </div>
 
-        <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-ink-text group-hover:text-brand-primary-glow">
+        <h3 className="mt-3 line-clamp-2 text-lg font-semibold tracking-tight text-ink-text group-hover:text-brand-primary-ink">
           {p.title}
         </h3>
         <p className="mt-1 line-clamp-2 text-sm text-muted">{p.summary}</p>

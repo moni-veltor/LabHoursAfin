@@ -133,7 +133,7 @@ export default async function AdminPage() {
           href="/admin/categories"
           className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-accent/40 hover:shadow-glow-accent"
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
             ★ shortcut
           </p>
           <h3 className="mt-1 text-base font-semibold tracking-tight">
@@ -147,7 +147,7 @@ export default async function AdminPage() {
           href="/admin/queue"
           className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-primary/40 hover:shadow-glow-soft"
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-ink">
             ★ shortcut
           </p>
           <h3 className="mt-1 text-base font-semibold tracking-tight">
@@ -161,7 +161,7 @@ export default async function AdminPage() {
           href="/admin/settings"
           className="rounded-xl border border-line bg-surface p-4 transition hover:border-brand-success/40 hover:shadow-glow-success"
         >
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-success">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-success-ink">
             ★ shortcut
           </p>
           <h3 className="mt-1 text-base font-semibold tracking-tight">
@@ -257,7 +257,7 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-xl border border-line bg-surface p-4">
       <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-brand-primary-glow">{value}</div>
+      <div className="mt-1 text-2xl font-semibold text-brand-primary-ink">{value}</div>
     </div>
   );
 }

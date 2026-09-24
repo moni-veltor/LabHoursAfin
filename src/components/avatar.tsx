@@ -8,9 +8,9 @@ export function initials(name?: string | null, email?: string | null) {
 }
 
 const palette = [
-  "bg-brand-primary/15 text-brand-primary-glow ring-1 ring-brand-primary/30",
-  "bg-brand-success/15 text-brand-success ring-1 ring-brand-success/30",
-  "bg-brand-accent/15 text-brand-accent ring-1 ring-brand-accent/30",
+  "bg-brand-primary/15 text-brand-primary-ink ring-1 ring-brand-primary/30",
+  "bg-brand-success/15 text-brand-success-ink ring-1 ring-brand-success/30",
+  "bg-brand-accent/15 text-brand-accent-ink ring-1 ring-brand-accent/30",
   "bg-rose-500/15 text-rose-300 ring-1 ring-rose-500/30",
   "bg-fuchsia-500/15 text-fuchsia-300 ring-1 ring-fuchsia-500/30",
   "bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/30",

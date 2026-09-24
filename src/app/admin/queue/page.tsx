@@ -83,7 +83,7 @@ export default async function AdminQueuePage() {
                 <div className="min-w-0">
                   <Link
                     href={`/initiatives/${i.id}`}
-                    className="font-medium text-ink-text hover:text-brand-primary-glow"
+                    className="font-medium text-ink-text hover:text-brand-primary-ink"
                   >
                     {i.title}
                   </Link>
@@ -102,7 +102,7 @@ export default async function AdminQueuePage() {
                     await approveInitiative(i.id);
                   }}
                 >
-                  <button className="rounded-md bg-brand-success px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-success-dark">
+                  <button className="rounded-md bg-brand-success px-3 py-1.5 text-sm font-medium text-ink-text hover:bg-brand-success-dark">
                     Approve & publish
                   </button>
                 </form>
@@ -138,7 +138,7 @@ export default async function AdminQueuePage() {
                       applied to{" "}
                       <Link
                         href={`/initiatives/${p.initiativeId}`}
-                        className="text-ink-text hover:text-brand-primary-glow"
+                        className="text-ink-text hover:text-brand-primary-ink"
                       >
                         {p.title}
                       </Link>
@@ -151,7 +151,7 @@ export default async function AdminQueuePage() {
                         await approveParticipant(p.initiativeId, p.userId);
                       }}
                     >
-                      <button className="rounded-md bg-brand-success px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-success-dark">
+                      <button className="rounded-md bg-brand-success px-2.5 py-1 text-xs font-medium text-ink-text hover:bg-brand-success-dark">
                         Approve
                       </button>
                     </form>

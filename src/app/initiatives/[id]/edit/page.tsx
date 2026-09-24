@@ -35,7 +35,7 @@ export default async function EditInitiativePage({
         </p>
         <Link
           href={`/initiatives/${id}`}
-          className="mt-3 inline-block text-sm text-brand-primary-glow hover:underline"
+          className="mt-3 inline-block text-sm text-brand-primary-ink hover:underline"
         >
           ← Back to initiative
         </Link>

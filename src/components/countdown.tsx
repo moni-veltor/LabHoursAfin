@@ -19,7 +19,7 @@ export function Countdown({ to }: { to: string }) {
   const pad = (n: number) => String(n).padStart(2, "0");
 
   return (
-    <span className="inline-flex items-center gap-1 font-mono text-lg tracking-wider text-brand-accent">
+    <span className="inline-flex items-center gap-1 font-mono text-lg tracking-wider text-brand-accent-ink">
       <Cell label="d">{pad(days)}</Cell>
       <Sep />
       <Cell label="h">{pad(hours)}</Cell>
@@ -33,9 +33,9 @@ export function Countdown({ to }: { to: string }) {
 
 function Cell({ children, label }: { children: React.ReactNode; label: string }) {
   return (
-    <span className="inline-flex flex-col items-center rounded-md border border-brand-accent/40 bg-brand-accent-950 px-2 py-1">
-      <span className="text-base font-semibold text-brand-accent">{children}</span>
-      <span className="text-[8px] uppercase tracking-[0.2em] text-brand-accent/70">
+    <span className="inline-flex flex-col items-center rounded-md border border-brand-accent/40 bg-brand-accent-tint px-2 py-1">
+      <span className="text-base font-semibold text-brand-accent-ink">{children}</span>
+      <span className="text-[8px] uppercase tracking-[0.2em] text-brand-accent-ink/70">
         {label}
       </span>
     </span>
@@ -43,5 +43,5 @@ function Cell({ children, label }: { children: React.ReactNode; label: string })
 }
 
 function Sep() {
-  return <span className="text-brand-accent/70">:</span>;
+  return <span className="text-brand-accent-ink/70">:</span>;
 }

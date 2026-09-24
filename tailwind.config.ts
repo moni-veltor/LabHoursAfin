@@ -27,57 +27,69 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Voltage — the same values globals.css carries, so a utility class and
+        // a custom property can never disagree about what "teal" is. Every
+        // family is a fill, a tint to sit text on, and an ink to write in.
         brand: {
-          // Was violet #7C3AED. The Academy's accent is teal — its darker voice.
-          primary: "#1a4a54",
-          "primary-dark": "#0c2d3b",
-          "primary-glow": "#3f5c64",
-          "primary-50": "#e8eef0",
-          "primary-100": "#d7e2e5",
-          "primary-900": "#0c2d3b",
-          "primary-950": "#08202a",
-          // Already identical to the Academy's --afin-amber. Kept.
-          accent: "#ffbf00",
-          "accent-dark": "#d9a300",
-          "accent-50": "#fbf1d8",
-          "accent-100": "#f6e4b4",
-          // Amber cannot be read as text on a light ground; goldenrod is the
-          // Academy's answer to exactly that problem.
-          "accent-ink": "#715207",
-          "accent-900": "#715207",
-          "accent-950": "#4a3604",
-          // Already identical to the Academy's --afin-mint. Kept.
-          success: "#31b897",
-          "success-dark": "#26977b",
-          "success-50": "#e4f4ef",
-          "success-100": "#c9e9df",
-          "success-ink": "#1a6250",
-          "success-900": "#146350",
-          "success-950": "#0d4234",
-          coral: "#ff6b61",
-          "coral-50": "#fdeae8",
-          "coral-ink": "#b10c00",
+          // `primary` is a FILL: it is deep enough that white reads on it at
+          // 7:1. `primary-glow` is the Voltage teal itself — the estate's
+          // accent, for links, dots and rules, never for body text on a fill.
+          primary: "#0352c3",
+          "primary-dark": "#104599",
+          "primary-glow": "#0B63E5",
+          "primary-ink": "#104aa7",
+          "primary-tint": "#e3eefe",
+          "primary-tint-strong": "#c4daff",
+          "primary-50": "#e3eefe",
+          "primary-100": "#c4daff",
+
+          // Amber and mint are fills only. Neither can be read as text on any
+          // light ground — 1.9:1 and 1.8:1 on white. Their text voices are the
+          // `-ink` values, which clear 7:1 on their own tint and 8:1 on white.
+          accent: "#FFB300",
+          "accent-dark": "#E6A200",
+          "accent-ink": "#694803",
+          "accent-tint": "#feeacc",
+          "accent-tint-strong": "#f3d4a5",
+          "accent-50": "#feeacc",
+          "accent-100": "#f3d4a5",
+
+          success: "#00D68F",
+          "success-dark": "#07c987",
+          "success-ink": "#0f5b3c",
+          "success-tint": "#d4f7e3",
+          "success-tint-strong": "#b1e8ca",
+          "success-50": "#d4f7e3",
+          "success-100": "#b1e8ca",
+
+          // Coral takes ink, not white: white on coral is 3.24:1.
+          coral: "#FF4D5E",
+          "coral-ink": "#981a2c",
+          "coral-tint": "#ffe6e5",
+          "coral-tint-strong": "#ffcac9",
+          "coral-50": "#ffe6e5",
         },
 
         // Structure. `ink` is the dark; `canvas` is the page.
-        ink: "#0c2d3b",
-        canvas: "#f5f4f1",
+        ink: "#07202C",
+        canvas: "#F3F7FA",
         surface: "#ffffff",
-        raised: "#ecebe6",
-        line: "#dedbd3",
-        "line-strong": "#c5c1b6",
+        raised: "#E6EEF3",
+        line: "#D8E1E7",
+        "line-strong": "#BCCAD2",
 
-        // Text, at the ratios the Academy's contrast check enforces.
-        "ink-text": "#0c2d3b",  // 12.10:1 on surface
-        muted: "#313c3f",       //  9.52:1
-        dim: "#454f52",         //  7.06:1
+        // Text, at the ratios scripts/contrast.ts enforces.
+        "ink-text": "#07202C",  // 15.55:1 on surface
+        muted: "#254552",       //  9.71:1
+        dim: "#3A5864",         //  6.67:1
 
-        // The inverted frame the sidebar sits on.
-        chrome: "#0c2d3b",
-        "chrome-2": "#123847",
-        "chrome-ink": "#eef2f2",   // 12.80:1 on chrome
-        "chrome-muted": "#c0cfd3", //  9.01:1
-        "chrome-soft": "#9fb1b8",  //  6.50:1
+        // The inverted frame the sidebar sits on. These are the only light-on-
+        // dark values in the product, and the rail is the only dark ground.
+        chrome: "#07202C",
+        "chrome-2": "#1e313a",
+        "chrome-ink": "#eaf1f6",   // 14.71:1 on chrome
+        "chrome-muted": "#c0cbd1", // 10.15:1
+        "chrome-soft": "#95a0a7",  //  6.28:1
       },
       fontFamily: {
         // The estate's three faces. `sans` is the reading face; headings and

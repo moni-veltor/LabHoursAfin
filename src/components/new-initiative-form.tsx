@@ -98,7 +98,7 @@ export function NewInitiativeForm({
         <div className="lh-mesh absolute inset-0 opacity-30" />
         <div className="relative">
           <div className="flex items-center gap-2">
-            <span className="rounded-md border border-brand-primary/40 bg-brand-primary-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
+            <span className="rounded-md border border-brand-primary/40 bg-brand-primary-tint px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-ink">
               ✦ ai assist
             </span>
             <h2 className="text-sm font-semibold text-ink-text">
@@ -123,7 +123,7 @@ export function NewInitiativeForm({
           </div>
           {!aiEnabled && (
             <p className="mt-2 font-mono text-[11px] text-dim">
-              AI not configured. Set <code className="rounded border border-line bg-raised px-1 py-0.5 text-brand-primary-glow">ANTHROPIC_API_KEY</code> to enable.
+              AI not configured. Set <code className="rounded border border-line bg-raised px-1 py-0.5 text-brand-primary-ink">ANTHROPIC_API_KEY</code> to enable.
             </p>
           )}
           {draftError && (

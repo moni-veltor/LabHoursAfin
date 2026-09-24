@@ -60,7 +60,7 @@ export async function RecommendStrip({ userId }: { userId: string }) {
       <div className="lh-mesh absolute inset-0 opacity-30" />
       <div className="relative">
         <div className="flex items-center justify-between">
-          <span className="inline-flex items-center gap-2 rounded-md border border-brand-primary/40 bg-brand-primary-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-glow">
+          <span className="inline-flex items-center gap-2 rounded-md border border-brand-primary/40 bg-brand-primary-tint px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-primary-ink">
             ✦ for you
           </span>
           <span className="font-mono text-[10px] uppercase tracking-wider text-dim">
@@ -80,7 +80,7 @@ export async function RecommendStrip({ userId }: { userId: string }) {
                   <span className={`inline-block h-1.5 w-1.5 rounded-full ${cat.dot}`} />
                   {cat.label}
                 </span>
-                <h3 className="mt-2 line-clamp-2 text-sm font-semibold tracking-tight text-ink-text group-hover:text-brand-primary-glow">
+                <h3 className="mt-2 line-clamp-2 text-sm font-semibold tracking-tight text-ink-text group-hover:text-brand-primary-ink">
                   {r.title}
                 </h3>
                 <p className="mt-1 line-clamp-2 text-xs text-muted">{r.summary}</p>

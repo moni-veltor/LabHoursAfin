@@ -73,7 +73,7 @@ function Tab({
       onClick={onClick}
       className={`rounded-md px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${
         active
-          ? "bg-brand-primary-950 text-brand-primary-glow"
+          ? "bg-brand-primary-tint text-brand-primary-ink"
           : "text-muted hover:text-ink-text"
       }`}
     >

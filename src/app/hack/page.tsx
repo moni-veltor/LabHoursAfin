@@ -18,12 +18,12 @@ const STAGE_LABEL: Record<string, string> = {
 
 const STAGE_TONE: Record<string, string> = {
   draft: "border-line bg-raised text-muted",
-  idea: "border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow",
+  idea: "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink",
   team_forming:
-    "border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow",
-  build: "border-brand-accent/40 bg-brand-accent-950 text-brand-accent",
-  demo: "border-brand-accent/40 bg-brand-accent-950 text-brand-accent",
-  voting: "border-brand-success/40 bg-brand-success-950 text-brand-success",
+    "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink",
+  build: "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink",
+  demo: "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink",
+  voting: "border-brand-success/40 bg-brand-success-tint text-brand-success-ink",
   done: "border-line bg-raised text-muted",
 };
 
@@ -50,7 +50,7 @@ export default async function HackIndexPage() {
         <div className="lh-mesh absolute inset-0 opacity-90" />
         <div className="lh-grid-bg absolute inset-0 opacity-30" />
         <div className="relative px-5 py-8 sm:px-7 sm:py-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-brand-accent/40 bg-brand-accent-950 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full border border-brand-accent/40 bg-brand-accent-tint px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink backdrop-blur">
             🔥 hack arena
           </div>
           <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -93,7 +93,7 @@ export default async function HackIndexPage() {
         <div className="rounded-xl border border-dashed border-line bg-surface py-16 text-center text-muted">
           No hackathons yet.{" "}
           {adminAccess && (
-            <Link href="/hack/new" className="text-brand-accent hover:underline">
+            <Link href="/hack/new" className="text-brand-accent-ink hover:underline">
               Create the first one →
             </Link>
           )}
@@ -141,7 +141,7 @@ function Grid({ rows }: { rows: any[] }) {
             >
               {STAGE_LABEL[h.stage]}
             </span>
-            <h3 className="mt-2 text-lg font-semibold tracking-tight group-hover:text-brand-accent">
+            <h3 className="mt-2 text-lg font-semibold tracking-tight group-hover:text-brand-accent-ink">
               {h.name}
             </h3>
             {h.theme && (

@@ -25,7 +25,7 @@ export function Recordings({ raw }: { raw: string | null }) {
               href={l}
               target="_blank"
               rel="noreferrer"
-              className="group flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 text-sm transition hover:border-brand-primary/40 hover:bg-brand-primary-950"
+              className="group flex items-center gap-2 rounded-md border border-line bg-raised px-3 py-2 text-sm transition hover:border-brand-primary/40 hover:bg-brand-primary-tint"
             >
               <span className="inline-block h-2 w-2 rounded-full bg-brand-primary group-hover:bg-brand-primary-glow" />
               <span className="font-medium text-ink-text">{hostname(l)}</span>

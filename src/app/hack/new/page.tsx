@@ -17,7 +17,7 @@ export default async function NewHackathonPage() {
         </p>
         <Link
           href="/hack"
-          className="mt-3 inline-block text-sm text-brand-accent hover:underline"
+          className="mt-3 inline-block text-sm text-brand-accent-ink hover:underline"
         >
           ← Back to hack arena
         </Link>

@@ -135,7 +135,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   return (
     <div>
       <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
-      <div className="mt-1 text-2xl font-semibold text-brand-primary-glow">{value}</div>
+      <div className="mt-1 text-2xl font-semibold text-brand-primary-ink">{value}</div>
     </div>
   );
 }
@@ -179,8 +179,8 @@ function Section({
               <p className="mt-1 font-medium text-ink-text">{r.title}</p>
               <p className="mt-0.5 text-sm text-muted">{r.summary}</p>
               {showOutcome && r.outcomeBody && (
-                <p className="mt-2 rounded-md bg-brand-success-950 px-3 py-2 text-sm text-ink-text">
-                  <span className="font-medium text-brand-success">Outcome: </span>
+                <p className="mt-2 rounded-md bg-brand-success-tint px-3 py-2 text-sm text-ink-text">
+                  <span className="font-medium text-brand-success-ink">Outcome: </span>
                   {r.outcomeBody}
                 </p>
               )}

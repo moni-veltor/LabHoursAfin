@@ -171,7 +171,7 @@ export default async function HomePage({
       )}
 
       {sp.surprise === "1" && rows.length > 0 && (
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
           random pick — refresh for another
         </p>
       )}
@@ -284,9 +284,9 @@ function Pill({
   children: React.ReactNode;
 }) {
   const map = {
-    primary: "border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow",
-    accent: "border-brand-accent/40 bg-brand-accent-950 text-brand-accent",
-    success: "border-brand-success/40 bg-brand-success-950 text-brand-success",
+    primary: "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink",
+    accent: "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink",
+    success: "border-brand-success/40 bg-brand-success-tint text-brand-success-ink",
   };
   return (
     <span className={`rounded-full border px-2.5 py-0.5 ${map[color]}`}>
@@ -306,7 +306,7 @@ function SectionHeader({
 }) {
   const cls =
     tone === "accent"
-      ? "border-brand-accent/40 bg-brand-accent-950 text-brand-accent"
+      ? "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink"
       : "border-line bg-raised text-muted";
   return (
     <div className="flex items-center gap-3">
@@ -391,7 +391,7 @@ function ControlBar({ current }: { current: Search }) {
         href={current.category ? `/?category=${current.category}` : "/"}
         className={`rounded-full px-3 py-1 ${
           !current.status
-            ? "border border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow"
+            ? "border border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink"
             : "border border-line bg-raised text-muted hover:text-ink-text"
         }`}
       >
@@ -403,7 +403,7 @@ function ControlBar({ current }: { current: Search }) {
           href={`/?status=${s}${base}`}
           className={`rounded-full px-3 py-1 ${
             current.status === s
-              ? "border border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow"
+              ? "border border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink"
               : "border border-line bg-raised text-muted hover:text-ink-text"
           }`}
         >
@@ -424,7 +424,7 @@ function ControlBar({ current }: { current: Search }) {
             href={`/?${params.toString()}`}
             className={`rounded-full px-3 py-1 ${
               active
-                ? "border border-brand-accent/40 bg-brand-accent-950 text-brand-accent"
+                ? "border border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink"
                 : "border border-line bg-raised text-muted hover:text-ink-text"
             }`}
           >
@@ -434,7 +434,7 @@ function ControlBar({ current }: { current: Search }) {
       })}
       <Link
         href="/?surprise=1"
-        className="ml-auto rounded-full border border-line bg-raised px-3 py-1 text-muted hover:border-brand-accent/40 hover:text-brand-accent"
+        className="ml-auto rounded-full border border-line bg-raised px-3 py-1 text-muted hover:border-brand-accent/40 hover:text-brand-accent-ink"
       >
         ✦ surprise me
       </Link>

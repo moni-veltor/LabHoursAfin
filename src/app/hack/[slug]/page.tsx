@@ -286,7 +286,7 @@ export default async function HackathonPage({
               You're already in{" "}
               <Link
                 href={`/hack/${otherHack.slug}`}
-                className="text-brand-accent hover:underline"
+                className="text-brand-accent-ink hover:underline"
               >
                 {otherHack.name}
               </Link>{" "}
@@ -334,7 +334,7 @@ export default async function HackathonPage({
               {sharks.map((j) => (
                 <li
                   key={j.userId}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-accent/40 bg-brand-accent-950 px-3 py-1 text-sm text-brand-accent"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-brand-accent/40 bg-brand-accent-tint px-3 py-1 text-sm text-brand-accent-ink"
                 >
                   <span>🦈</span>
                   <UserChip id={j.userId} name={j.name} email={j.email} />
@@ -402,7 +402,7 @@ export default async function HackathonPage({
                   You're already judging{" "}
                   <Link
                     href={`/hack/${otherJudging.slug}`}
-                    className="text-brand-accent hover:underline"
+                    className="text-brand-accent-ink hover:underline"
                   >
                     {otherJudging.name}
                   </Link>{" "}
@@ -426,7 +426,7 @@ export default async function HackathonPage({
 
         {adminAccess && (
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
               Admin
             </span>
             <form
@@ -437,7 +437,7 @@ export default async function HackathonPage({
             >
               <button
                 disabled={judges.length === 0}
-                className="rounded-md border border-brand-accent/40 bg-brand-accent-950 px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-accent hover:bg-brand-accent hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+                className="rounded-md border border-brand-accent/40 bg-brand-accent-tint px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-accent-ink hover:bg-brand-accent hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
               >
                 🦈 {judgesDrawn ? "Re-draw" : "Draw"} {JUDGE_PANEL} judges
               </button>
@@ -570,7 +570,7 @@ export default async function HackathonPage({
                     !demo && (
                       <form
                         action={postDemo}
-                        className="mt-3 space-y-2 rounded-md border border-brand-accent/30 bg-brand-accent-950 p-3"
+                        className="mt-3 space-y-2 rounded-md border border-brand-accent/30 bg-brand-accent-tint p-3"
                       >
                         <input type="hidden" name="teamId" value={t.id} />
                         <textarea
@@ -592,7 +592,7 @@ export default async function HackathonPage({
                       </form>
                     )}
                   {demo && (
-                    <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-brand-success">
+                    <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-brand-success-ink">
                       ✓ demo submitted
                     </p>
                   )}
@@ -632,7 +632,7 @@ export default async function HackathonPage({
                             href={l}
                             target="_blank"
                             rel="noreferrer"
-                            className="font-mono text-[11px] text-brand-accent hover:underline"
+                            className="font-mono text-[11px] text-brand-accent-ink hover:underline"
                           >
                             {new URL(l).hostname}
                           </a>
@@ -659,7 +659,7 @@ export default async function HackathonPage({
                                 className={`rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${
                                   mine
                                     ? "border-brand-accent bg-brand-accent text-ink shadow-glow-accent"
-                                    : "border-line bg-raised text-muted hover:border-brand-accent/40 hover:text-brand-accent"
+                                    : "border-line bg-raised text-muted hover:border-brand-accent/40 hover:text-brand-accent-ink"
                                 }`}
                               >
                                 {cat} {count > 0 && count}
@@ -676,7 +676,7 @@ export default async function HackathonPage({
                       .map((a) => (
                         <span
                           key={a.id}
-                          className="inline-flex items-center gap-1 rounded-full border border-brand-accent/40 bg-brand-accent-950 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-accent"
+                          className="inline-flex items-center gap-1 rounded-full border border-brand-accent/40 bg-brand-accent-tint px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brand-accent-ink"
                         >
                           🏆 {a.kind}
                         </span>
@@ -689,8 +689,8 @@ export default async function HackathonPage({
       )}
 
       {adminAccess && (
-        <section className="rounded-xl border border-brand-accent/30 bg-brand-accent-950 p-4">
-          <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+        <section className="rounded-xl border border-brand-accent/30 bg-brand-accent-tint p-4">
+          <h3 className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
             Admin · stage
           </h3>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -706,7 +706,7 @@ export default async function HackathonPage({
                   className={`rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-wider ${
                     hack.stage === s
                       ? "bg-brand-accent text-ink"
-                      : "border border-line bg-raised text-muted hover:text-brand-accent"
+                      : "border border-line bg-raised text-muted hover:text-brand-accent-ink"
                   }`}
                 >
                   {s.replace("_", " ")}
@@ -720,7 +720,7 @@ export default async function HackathonPage({
           >
             <input type="hidden" name="hackathonId" value={hack.id} />
             <label className="flex flex-col gap-1">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-brand-accent">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-brand-accent-ink">
                 Sign-ups open at (UK time) · blank = open now
               </span>
               <input
@@ -795,7 +795,7 @@ function Hero({ hack, adminAccess }: { hack: any; adminAccess: boolean }) {
         >
           ← hack arena
         </Link>
-        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-brand-accent/40 bg-brand-accent-950 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+        <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-brand-accent/40 bg-brand-accent-tint px-3 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
           🔥 {hack.stage.replace("_", " ")}
         </div>
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -814,7 +814,7 @@ function Hero({ hack, adminAccess }: { hack: any; adminAccess: boolean }) {
         </p>
         {hack.subscriptionsOpenAt &&
           new Date(hack.subscriptionsOpenAt).getTime() > Date.now() && (
-            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+            <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
               🔒 Sign-ups open {formatLondon(new Date(hack.subscriptionsOpenAt))}
             </p>
           )}

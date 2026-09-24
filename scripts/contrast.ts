@@ -1,27 +1,40 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 /**
- * Does every colour Lab Hours writes text in survive being read?
+ * Can every colour Lab Hours writes text in actually be read?
  *
- * The same check the Bank Academy runs, on the same palette, at the same
- * thresholds — that is most of what "the two products share a design" means
- * in practice. AA's 4.5:1 is the floor at which text stops being a failure,
- * not the point at which it is comfortable, so the tokens carrying the bulk
- * of the interface are held higher.
+ * Two halves, because intention and practice are different things:
+ *
+ *   1. The token pairs the palette promises — body text on each ground, each
+ *      ink on its own tint, the rail, the fills.
+ *   2. Every pair the SOURCE actually produces. A palette can be immaculate
+ *      and still be assembled wrongly; this half found 53 near-black chips
+ *      left over from the dark theme, carrying near-black text at 1.25:1.
+ *
+ * Tailwind's config is the palette of record — a utility class is what ships.
+ * globals.css mirrors it for the handful of rules that need a custom property.
  *
  *   npm run contrast
  */
-const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
+const ROOT = new URL("..", import.meta.url).pathname;
+const cfg = readFileSync(join(ROOT, "tailwind.config.ts"), "utf8");
 
-function token(name: string, depth = 0): string {
-  const m = css.match(new RegExp(`${name}:\\s*([^;]+);`));
-  if (!m) throw new Error(`no such colour token: ${name}`);
-  const value = m[1].trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(value)) return value;
-  const ref = value.match(/var\((--[a-z0-9-]+)\)/);
-  if (ref && depth < 4) return token(ref[1], depth + 1);
-  throw new Error(`${name} does not resolve to a hex: ${value}`);
+/** The palette, flattened to the names a utility class can spell. */
+function palette(): Record<string, string> {
+  const block = cfg.slice(cfg.indexOf("colors: {"), cfg.indexOf("fontFamily:"));
+  const out: Record<string, string> = { white: "#ffffff", black: "#000000" };
+  const brandStart = block.indexOf("brand: {");
+  const brandEnd = block.indexOf("\n        },", brandStart);
+  const brand = block.slice(brandStart, brandEnd);
+  for (const m of brand.matchAll(/["']?([a-z0-9-]+)["']?:\s*"(#[0-9a-fA-F]{6})"/g))
+    out[`brand-${m[1]}`] = m[2].toLowerCase();
+  out["brand"] = out["brand-primary"];
+  for (const m of block.slice(brandEnd).matchAll(/["']?([a-z0-9-]+)["']?:\s*"(#[0-9a-fA-F]{6})"/g))
+    out[m[1]] = m[2].toLowerCase();
+  return out;
 }
+const PAL = palette();
 
 const lin = (c: number) => (c / 255 <= 0.03928 ? c / 255 / 12.92 : ((c / 255 + 0.055) / 1.055) ** 2.4);
 function luminance(hex: string): number {
@@ -32,62 +45,111 @@ function contrast(a: string, b: string): number {
   const [x, y] = [luminance(a), luminance(b)];
   return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 }
-
-const SURFACE = token("--surface");
-const CANVAS = token("--canvas");
-const RAISED = token("--raised");
-const CHROME = "#0c2d3b";
-
-/** Chrome values live in the Tailwind config, not the stylesheet. */
-const CHROME_TOKENS = { "chrome-ink": "#eef2f2", "chrome-muted": "#c0cfd3", "chrome-soft": "#9fb1b8" };
-
-type Case = { name: string; fg: string; bg: string; min: number };
-
-const CASES: Case[] = [
-  // Body text, on each of the three light grounds it can land on.
-  { name: "--ink-text on surface", fg: token("--ink-text"), bg: SURFACE, min: 10 },
-  { name: "--ink-text on canvas",  fg: token("--ink-text"), bg: CANVAS,  min: 10 },
-  { name: "--ink-text on raised",  fg: token("--ink-text"), bg: RAISED,  min: 9 },
-  { name: "--muted on surface",    fg: token("--muted"),    bg: SURFACE, min: 7 },
-  { name: "--muted on raised",     fg: token("--muted"),    bg: RAISED,  min: 6.5 },
-  { name: "--dim on surface",      fg: token("--dim"),      bg: SURFACE, min: 6 },
-  { name: "--dim on raised",       fg: token("--dim"),      bg: RAISED,  min: 5 },
-
-  // Links and the accent's text voice.
-  { name: "--brand-primary on surface", fg: token("--brand-primary"), bg: SURFACE, min: 7 },
-  { name: "--brand-primary on canvas",  fg: token("--brand-primary"), bg: CANVAS,  min: 7 },
-  { name: "--afin-goldenrod on surface", fg: token("--afin-goldenrod"), bg: SURFACE, min: 5.5 },
-
-  // Text on the tints, which is where a status is read.
-  { name: "--ink-text on mint tint",  fg: token("--ink-text"), bg: token("--mint-tint"),  min: 10 },
-  { name: "--ink-text on coral tint", fg: token("--ink-text"), bg: token("--coral-tint"), min: 10 },
-  { name: "--ink-text on amber tint", fg: token("--ink-text"), bg: token("--amber-tint"), min: 10 },
-
-  // The rail. Its text sits on ink, so it is checked against ink.
-  { name: "chrome-ink on the rail",   fg: CHROME_TOKENS["chrome-ink"],   bg: CHROME, min: 10 },
-  { name: "chrome-muted on the rail", fg: CHROME_TOKENS["chrome-muted"], bg: CHROME, min: 7 },
-  { name: "chrome-soft on the rail",  fg: CHROME_TOKENS["chrome-soft"],  bg: CHROME, min: 4.5 },
-
-  // Dark text on the bright brand fills — the buttons.
-  { name: "--afin-ink on mint fill",  fg: token("--afin-ink"), bg: token("--afin-mint"),  min: 4.5 },
-  { name: "--afin-ink on amber fill", fg: token("--afin-ink"), bg: token("--afin-amber"), min: 4.5 },
-  { name: "white on teal fill",       fg: "#ffffff",           bg: token("--afin-teal"),  min: 7 },
-];
+const p = (name: string) => {
+  const v = PAL[name];
+  if (!v) throw new Error(`no such colour token: ${name}`);
+  return v;
+};
 
 let fail = 0;
-for (const c of CASES) {
-  const ratio = contrast(c.fg, c.bg);
-  const ok = ratio >= c.min;
+const check = (name: string, fg: string, bg: string, min: number) => {
+  const r = contrast(fg, bg);
+  const ok = r >= min;
   if (!ok) fail++;
-  console.log(
-    `  ${ok ? "✓" : "✗"} ${c.name.padEnd(32)} ${c.fg}  ${ratio.toFixed(2).padStart(6)}` +
-      (ok ? "" : `   needs ${c.min}`),
+  console.log(`  ${ok ? "✓" : "✗"} ${name.padEnd(38)} ${r.toFixed(2).padStart(6)}${ok ? "" : `   needs ${min}`}`);
+};
+
+// ─── 1. what the palette promises ────────────────────────────────────────────
+console.log("\nBody text, on each of the three light grounds");
+for (const [tok, mins] of [["ink-text", [12, 12, 11]], ["muted", [8, 7.5, 7]], ["dim", [6, 5.5, 5]]] as const)
+  (["surface", "canvas", "raised"] as const).forEach((g, i) =>
+    check(`--${tok} on ${g}`, p(tok), p(g), mins[i]),
   );
+
+console.log("\nEach ink on its own tint, and on paper");
+for (const fam of ["primary", "success", "accent", "coral"]) {
+  check(`${fam}-ink on ${fam}-tint`, p(`brand-${fam}-ink`), p(`brand-${fam}-tint`), 7);
+  check(`${fam}-ink on ${fam}-tint-strong`, p(`brand-${fam}-ink`), p(`brand-${fam}-tint-strong`), 4.5);
+  check(`${fam}-ink on surface`, p(`brand-${fam}-ink`), p("surface"), 7);
+  check(`--ink-text on ${fam}-tint`, p("ink-text"), p(`brand-${fam}-tint`), 11);
 }
 
-console.log(
-  fail
-    ? `\n${fail} of ${CASES.length} below the ratio they need\n`
-    : `\n${CASES.length}/${CASES.length} pass, at or above their required ratio\n`,
-);
+console.log("\nThe rail — the one dark ground in the product");
+check("chrome-ink on chrome", p("chrome-ink"), p("chrome"), 12);
+check("chrome-muted on chrome", p("chrome-muted"), p("chrome"), 7);
+check("chrome-soft on chrome", p("chrome-soft"), p("chrome"), 4.5);
+check("chrome-ink on chrome-2 (hover)", p("chrome-ink"), p("chrome-2"), 10);
+check("accent on chrome (the hot item)", p("brand-accent"), p("chrome"), 7);
+
+console.log("\nText on the bright fills — the buttons");
+check("white on primary", "#ffffff", p("brand-primary"), 7);
+check("white on primary-dark (hover)", "#ffffff", p("brand-primary-dark"), 7);
+check("ink on accent", p("ink-text"), p("brand-accent"), 7);
+check("ink on accent-dark (hover)", p("ink-text"), p("brand-accent-dark"), 7);
+check("ink on success", p("ink-text"), p("brand-success"), 7);
+  check("ink on success-dark (hover)", p("ink-text"), p("brand-success-dark"), 7);
+check("ink on coral", p("ink-text"), p("brand-coral"), 4.5);
+
+// ─── 2. what the source actually assembles ───────────────────────────────────
+const files: string[] = [];
+(function walk(d: string) {
+  for (const e of readdirSync(d)) {
+    if (e === "node_modules" || e === ".next") continue;
+    const q = join(d, e);
+    if (statSync(q).isDirectory()) walk(q);
+    else if (/\.tsx$/.test(q)) files.push(q);
+  }
+})(join(ROOT, "src"));
+
+/** Amber, mint and coral are fills. Writing in them is the mistake this catches. */
+const FILL_ONLY = ["brand-accent", "brand-success", "brand-coral", "brand-primary-glow"];
+type Hit = { where: string; what: string; ratio?: number };
+const pairs: Hit[] = [];
+const fillsAsText: Hit[] = [];
+
+for (const f of files) {
+  const rel = f.slice(ROOT.length);
+  readFileSync(f, "utf8")
+    .split("\n")
+    .forEach((line, i) => {
+      const at = `${rel}:${i + 1}`;
+      for (const tok of FILL_ONLY) {
+        // The rail's hot item is the documented exception: amber on chrome.
+        if (rel.endsWith("sidebar-nav.tsx") && line.includes("it.hot")) continue;
+        if (new RegExp(`text-${tok}(?![a-z0-9-])`).test(line))
+          fillsAsText.push({ where: at, what: `text-${tok}` });
+      }
+      for (const m of line.matchAll(/"([^"]*)"|`([^`]*)`/g)) {
+        const cls = m[1] ?? m[2] ?? "";
+        const bgs = [...cls.matchAll(/(?:^|\s)bg-([a-z0-9-]+)(?:\/(\d+))?(?=\s|$)/g)];
+        const txs = [...cls.matchAll(/(?:^|\s)text-([a-z0-9-]+)(?:\/(\d+))?(?=\s|$)/g)];
+        for (const b of bgs) {
+          const bg = PAL[b[1]];
+          if (!bg || (b[2] && Number(b[2]) < 90)) continue;
+          for (const t of txs) {
+            const fg = PAL[t[1]];
+            if (!fg) continue;
+            const r = contrast(fg, bg);
+            if (r < 4.5) pairs.push({ where: at, what: `text-${t[1]} on bg-${b[1]}`, ratio: r });
+          }
+        }
+      }
+    });
+}
+
+console.log(`\nPairs the source assembles (${files.length} components scanned)`);
+if (pairs.length === 0) console.log("  ✓ every background/text pair in the source clears 4.5:1");
+else {
+  fail += pairs.length;
+  for (const h of pairs) console.log(`  ✗ ${h.ratio!.toFixed(2)}  ${h.what}  ${h.where}`);
+}
+
+console.log("\nFills used as text (amber, mint, coral and the teal glow)");
+if (fillsAsText.length === 0) console.log("  ✓ none — the fills are only ever fills");
+else {
+  fail += fillsAsText.length;
+  for (const h of fillsAsText) console.log(`  ✗ ${h.what}  ${h.where}`);
+}
+
+console.log(fail ? `\n${fail} problem${fail === 1 ? "" : "s"}\n` : `\nAll clear.\n`);
 process.exit(fail ? 1 : 0);

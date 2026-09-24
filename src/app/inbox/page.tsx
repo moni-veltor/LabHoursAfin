@@ -57,7 +57,7 @@ export default async function InboxPage() {
                 key={n.id}
                 className={`rounded-xl border p-4 transition ${
                   unread
-                    ? "border-brand-primary/30 bg-brand-primary-950"
+                    ? "border-brand-primary/30 bg-brand-primary-tint"
                     : "border-line bg-surface"
                 }`}
               >

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function NotFound() {
   return (
     <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-8 text-center">
-      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent">
+      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-brand-accent-ink">
         404
       </p>
       <h1 className="mt-2 text-xl font-semibold">This page is off the map.</h1>

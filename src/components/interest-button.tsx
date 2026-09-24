@@ -20,8 +20,8 @@ export function InterestButton({
       <button
         className={`w-full rounded-md border px-3 py-2 text-sm transition ${
           isInterested
-            ? "border-brand-accent/40 bg-brand-accent-950 text-brand-accent"
-            : "border-line bg-raised text-muted hover:border-brand-accent/40 hover:text-brand-accent"
+            ? "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink"
+            : "border-line bg-raised text-muted hover:border-brand-accent/40 hover:text-brand-accent-ink"
         }`}
       >
         {isInterested ? "★ Interested · saved" : "☆ I'm interested"}

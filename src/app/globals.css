@@ -28,10 +28,18 @@
   --muted: #254552;
   --dim: #3A5864;
 
-  --mint-tint: #CBE2D5;
-  --coral-tint: #F7D5D4;
-  --amber-tint: #E8DBC7;
-  --mist-tint: #D4DFE2;
+  --mint-tint: #d4f7e3;
+  --coral-tint: #ffe6e5;
+  --amber-tint: #feeacc;
+  --mist-tint: #e3eefe;
+
+  /* The text voices. Amber, mint and coral are fills; these are what you
+     write in when the words sit on a tint or on paper. Each clears 7:1 on
+     its own tint and 8:1 on white. */
+  --teal-ink: #104aa7;
+  --mint-ink: #0f5b3c;
+  --amber-ink: #694803;
+  --coral-ink: #981a2c;
 
   --brand-primary: var(--afin-teal);
   --brand-accent: var(--afin-amber);
@@ -87,16 +95,16 @@ input[type="checkbox"] {
   .prose-tight ul { margin: 0.4rem 0; padding-left: 1.2rem; }
   .prose-tight code {
     background: var(--raised);
-    color: var(--afin-teal);
+    color: var(--teal-ink);
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 0.9em;
     border: 1px solid var(--line);
   }
   .prose-tight a {
-    color: var(--brand-primary);
+    color: var(--teal-ink);
     text-decoration: underline;
-    text-decoration-color: rgba(26, 74, 84, 0.4);
+    text-decoration-color: color-mix(in oklab, var(--teal-ink) 40%, transparent);
   }
   .prose-tight h1, .prose-tight h2, .prose-tight h3 { color: var(--ink-text); }
 }

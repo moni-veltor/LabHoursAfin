@@ -112,7 +112,7 @@ export default async function OwnerPage() {
       {owned.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line bg-surface py-12 text-center text-muted">
           You don't own any initiatives yet.{canCreate && (
-            <> <Link href="/initiatives/new" className="text-brand-primary-glow hover:underline">Post one</Link>.</>
+            <> <Link href="/initiatives/new" className="text-brand-primary-ink hover:underline">Post one</Link>.</>
           )}
         </div>
       ) : (
@@ -160,7 +160,7 @@ export default async function OwnerPage() {
                 <h3 className="mt-2 text-lg font-semibold tracking-tight">
                   <Link
                     href={`/initiatives/${i.id}`}
-                    className="hover:text-brand-primary-glow"
+                    className="hover:text-brand-primary-ink"
                   >
                     {i.title}
                   </Link>
@@ -189,7 +189,7 @@ export default async function OwnerPage() {
                   )}
                 </p>
                 {suggestion && (
-                  <div className="mt-3 rounded-md border border-brand-primary/30 bg-brand-primary-950 px-3 py-2 text-sm text-brand-primary-glow">
+                  <div className="mt-3 rounded-md border border-brand-primary/30 bg-brand-primary-tint px-3 py-2 text-sm text-brand-primary-ink">
                     {suggestion}
                   </div>
                 )}
@@ -230,7 +230,7 @@ function Stat({
 }) {
   const cls =
     tone === "accent"
-      ? "border-brand-accent/40 bg-brand-accent-950 text-brand-accent"
+      ? "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink"
       : "border-line bg-raised text-ink-text";
   return (
     <div className={`rounded-md border ${cls} p-2`}>

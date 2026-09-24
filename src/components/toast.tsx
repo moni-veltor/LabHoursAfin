@@ -33,8 +33,8 @@ export function Toaster() {
             t.tone === "error"
               ? "border-rose-500/40 bg-rose-500/10 text-rose-300"
               : t.tone === "info"
-              ? "border-brand-primary/40 bg-brand-primary-950 text-brand-primary-glow"
-              : "border-brand-success/40 bg-brand-success-950 text-brand-success"
+              ? "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink"
+              : "border-brand-success/40 bg-brand-success-tint text-brand-success-ink"
           }`}
         >
           {t.message}

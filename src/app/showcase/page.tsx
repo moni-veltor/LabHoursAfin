@@ -78,13 +78,13 @@ export default async function ShowcasePage() {
                 </h3>
                 <p className="text-sm text-muted line-clamp-3">{r.summary}</p>
                 {r.outcomeBody && (
-                  <p className="rounded-md border-l-2 border-brand-success bg-brand-success-950 px-3 py-2 text-xs text-ink-text line-clamp-4">
+                  <p className="rounded-md border-l-2 border-brand-success bg-brand-success-tint px-3 py-2 text-xs text-ink-text line-clamp-4">
                     {r.outcomeBody}
                   </p>
                 )}
                 {r.lessonsLearned && (
-                  <p className="rounded-md border-l-2 border-brand-accent bg-brand-accent-950 px-3 py-2 text-xs text-ink-text line-clamp-3">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-brand-accent">
+                  <p className="rounded-md border-l-2 border-brand-accent bg-brand-accent-tint px-3 py-2 text-xs text-ink-text line-clamp-3">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-brand-accent-ink">
                       lessons
                     </span>{" "}
                     {r.lessonsLearned}

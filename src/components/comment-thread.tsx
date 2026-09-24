@@ -15,7 +15,7 @@ export function ReplyBox({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="font-mono text-[10px] uppercase tracking-wider text-dim hover:text-brand-primary-glow"
+        className="font-mono text-[10px] uppercase tracking-wider text-dim hover:text-brand-primary-ink"
       >
         ↩ reply
       </button>

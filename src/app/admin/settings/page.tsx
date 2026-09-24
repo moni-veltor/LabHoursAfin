@@ -54,7 +54,7 @@ export default async function AdminSettingsPage() {
         </h2>
         <p className="mt-2 text-sm text-muted">
           When enabled, new initiatives published with status "open" go into a
-          review queue at <code className="rounded border border-line bg-raised px-1 py-0.5 text-xs text-brand-primary-glow">/admin/queue</code> and aren't visible
+          review queue at <code className="rounded border border-line bg-raised px-1 py-0.5 text-xs text-brand-primary-ink">/admin/queue</code> and aren't visible
           on the home page until an admin approves them.
         </p>
         <form action={setPrePublishReview} className="mt-4 flex items-center gap-3">

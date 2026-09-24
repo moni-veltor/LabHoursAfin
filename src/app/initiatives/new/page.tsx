@@ -81,7 +81,7 @@ export default async function NewInitiativePage({
         Share what the team is exploring, building, or could use help with.
       </p>
       {templateNotice && (
-        <p className="mt-3 rounded-md border border-brand-accent/30 bg-brand-accent-950 px-3 py-2 text-sm text-brand-accent">
+        <p className="mt-3 rounded-md border border-brand-accent/30 bg-brand-accent-tint px-3 py-2 text-sm text-brand-accent-ink">
           Cloning from template: <strong>{templateNotice.title}</strong>
         </p>
       )}

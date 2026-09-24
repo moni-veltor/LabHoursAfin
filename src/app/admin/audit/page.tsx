@@ -60,7 +60,7 @@ export default async function AdminAuditPage() {
             className="rounded-xl border border-line bg-surface p-4"
           >
             <div className="flex flex-wrap items-center gap-2 font-mono text-[11px]">
-              <span className="rounded-md border border-line bg-raised px-2 py-0.5 uppercase tracking-wider text-brand-primary-glow">
+              <span className="rounded-md border border-line bg-raised px-2 py-0.5 uppercase tracking-wider text-brand-primary-ink">
                 {r.action}
               </span>
               {r.targetType && (

@@ -52,7 +52,7 @@ export function MobileNav({ links }: { links: Link[] }) {
                       l.emphasis === "primary"
                         ? "bg-brand-primary text-white shadow-glow"
                         : l.emphasis === "accent"
-                        ? "border border-brand-accent/40 bg-brand-accent-950 text-brand-accent"
+                        ? "border border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink"
                         : "text-muted hover:bg-raised hover:text-ink-text"
                     }`}
                   >
