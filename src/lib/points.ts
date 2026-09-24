@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
@@ -232,12 +233,19 @@ export async function leaderboard(term?: string): Promise<Scored[]> {
 }
 
 /**
- * Everyone's whole history, in one pass. Narrowing to a quarter is arithmetic
- * on what comes back, not another trip to the database — which matters because
- * the board, the team board and your own card are all the same data seen three
- * ways, and a page that showed all three should not query six times over.
+ * Everyone's whole history, in one pass.
+ *
+ * Narrowing to a quarter is arithmetic on what comes back, not another trip to
+ * the database. But "one pass" is only true if the page asks once, and the
+ * leaderboard asks three times over — the board, the team board and the
+ * activity feed are the same rows seen three ways. Wrapped in React's `cache`,
+ * those three become one: the work is done on the first call of a request and
+ * handed to the rest. Five queries per view instead of fifteen, and the three
+ * callers can stay readable rather than passing a payload between them.
+ *
+ * `cache` is per-request, so it never serves one reader's data to another.
  */
-async function allScored(): Promise<Scored[]> {
+const allScored = cache(async function allScored(): Promise<Scored[]> {
   const [awards, people] = await Promise.all([
     allAwards(),
     db
@@ -263,7 +271,7 @@ async function allScored(): Promise<Scored[]> {
       awards: mine,
     };
   });
-}
+});
 
 /**
  * Order a board, dropping anyone with nothing. People with no points are left
@@ -474,7 +482,7 @@ export type RegisterEntry = {
   present: boolean | null;
 };
 
-export async function registerRoster(
+export const registerRoster = cache(async function registerRoster(
   initiativeId: string
 ): Promise<RegisterEntry[]> {
   const ready = await ensureAttendance();
@@ -533,7 +541,7 @@ export async function registerRoster(
   return Array.from(byId.values()).sort((a, b) =>
     (a.name ?? a.email).localeCompare(b.name ?? b.email)
   );
-}
+});
 
 /** Everyone the owner could still add — active people not already listed. */
 export async function attendanceCandidates(initiativeId: string) {
