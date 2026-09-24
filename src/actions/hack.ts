@@ -14,10 +14,9 @@ import {
   hackAwards,
   hackJudges,
   hackParticipants,
-  users,
 } from "@/db/schema";
 import { requireAdmin, requireUser } from "@/lib/auth";
-import { eq, ne, and, isNotNull, isNull, sql as dsql, count } from "drizzle-orm";
+import { eq, ne, and, sql as dsql, count } from "drizzle-orm";
 import { JUDGE_POOL, JUDGE_PANEL, hackCapacity } from "@/lib/hack";
 import { isAdmin } from "@/lib/admin";
 import { parseLondonLocal, formatLondon } from "@/lib/tz";

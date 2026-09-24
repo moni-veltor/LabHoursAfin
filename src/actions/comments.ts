@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { comments, initiatives, users } from "@/db/schema";
+import { comments, initiatives } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import {

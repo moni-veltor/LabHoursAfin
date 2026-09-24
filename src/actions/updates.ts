@@ -3,9 +3,9 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { initiatives, subscriptions, updates, users } from "@/db/schema";
+import { initiatives, subscriptions, updates } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
-import { eq, ne } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { notify } from "@/lib/notifications-server";
 
 const UpdateSchema = z.object({

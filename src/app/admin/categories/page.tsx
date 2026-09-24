@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { customCategories, initiatives } from "@/db/schema";
-import { count, eq, desc } from "drizzle-orm";
+import { count, desc } from "drizzle-orm";
 import { CATEGORIES, CATEGORY_KEYS } from "@/lib/categories";
 import { AdminSubNav } from "@/components/admin-subnav";
 import {

@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { initiatives, initiativeTags, tags, users } from "@/db/schema";
-import { eq, inArray, or } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { loadAllCategories } from "@/lib/categories-server";
 import { EditInitiativeForm } from "@/components/edit-initiative-form";
 import { formatLondonInput } from "@/lib/tz";

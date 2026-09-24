@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { initiatives, updates } from "@/db/schema";
-import { and, eq, ne, or, sql } from "drizzle-orm";
+import { and, ne, sql } from "drizzle-orm";
 import { authoriseCron } from "@/lib/cron";
 import { notify } from "@/lib/notifications-server";
 

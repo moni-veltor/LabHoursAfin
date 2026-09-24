@@ -35,6 +35,10 @@ export default function GlobalError({
         >
           Try again
         </button>
+        {/* Deliberately an <a>, not a <Link>: this is the error boundary, so
+            the client router may be the thing that is broken. A full document
+            load is the one navigation guaranteed to get somebody out. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/"
           className="rounded-md border border-line bg-raised px-3 py-1.5 text-sm text-ink-text hover:bg-line"

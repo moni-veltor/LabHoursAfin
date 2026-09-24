@@ -5,7 +5,7 @@ import {
   notifications,
   subscriptions,
 } from "@/db/schema";
-import { and, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
+import { and, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { authoriseCron } from "@/lib/cron";
 import { notify } from "@/lib/notifications-server";
 import { RULES } from "@/lib/points";

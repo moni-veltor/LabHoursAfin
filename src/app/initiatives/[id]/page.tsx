@@ -20,27 +20,23 @@ import { postUpdate } from "@/actions/updates";
 import { updateInitiativeStatus } from "@/actions/initiatives";
 import { CloseToggle } from "@/components/close-toggle";
 import {
-  requestToJoin,
   approveParticipant,
-  declineParticipant,
 } from "@/actions/approvals";
 import { postOutcome } from "@/actions/outcomes";
 import { toggleFeatured } from "@/actions/admin";
 import { formatDate, timeAgo } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
 import {
-  CATEGORIES,
   DIFFICULTIES,
   EFFORTS,
   FORMATS,
-  type Category,
   type Difficulty,
   type Effort,
   type Format,
 } from "@/lib/categories";
 import { isAdmin, isTech } from "@/lib/admin";
 import { UserChip } from "@/components/avatar";
-import { Reactions, REACTION_EMOJIS } from "@/components/reactions";
+import { Reactions } from "@/components/reactions";
 import { CoverImage } from "@/components/cover-image";
 import { Recordings } from "@/components/recordings";
 import { saveAsTemplate, unsaveAsTemplate } from "@/actions/templates";

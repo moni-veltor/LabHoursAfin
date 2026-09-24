@@ -12,7 +12,7 @@ import Link from "next/link";
 import { SearchInput } from "@/components/search-input";
 import { RecommendStrip } from "@/components/recommend";
 import { auth } from "@/lib/auth";
-import { loadAllCategories, categoryKeyOf } from "@/lib/categories-server";
+import { loadAllCategories } from "@/lib/categories-server";
 
 const PAGE_SIZE = 20;
 

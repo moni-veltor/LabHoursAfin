@@ -2,15 +2,14 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { initiatives, subscriptions, users } from "@/db/schema";
-import { and, eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { InitiativeCard } from "@/components/initiative-card";
 import { isAdmin, isTech } from "@/lib/admin";
 import { getParticipationStatus } from "@/lib/participation";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { hourAwareGreeting } from "@/lib/greeting";
 import { computeStreak } from "@/lib/streaks";
-import { RULES, currentTerm, pointsFor } from "@/lib/points";
-import { termLabel } from "@/lib/participation";
+import { currentTerm, pointsFor } from "@/lib/points";
 import { YourQuarter } from "@/components/your-quarter";
 
 export default async function MyBoardPage() {

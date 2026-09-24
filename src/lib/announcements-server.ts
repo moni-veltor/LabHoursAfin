@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { announcements } from "@/db/schema";
-import { and, desc, eq, gt, isNull, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, or } from "drizzle-orm";
 
 export async function getActiveAnnouncement() {
   const now = new Date();

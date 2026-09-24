@@ -13,7 +13,7 @@ import {
   hackParticipants,
   users,
 } from "@/db/schema";
-import { and, desc, eq, ne, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, ne, inArray } from "drizzle-orm";
 import { isAdmin } from "@/lib/admin";
 import { UserChip } from "@/components/avatar";
 import {

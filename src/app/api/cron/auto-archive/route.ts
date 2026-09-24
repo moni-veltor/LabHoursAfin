@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { initiatives, updates } from "@/db/schema";
-import { and, eq, lt, ne, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { authoriseCron } from "@/lib/cron";
 
 export const runtime = "nodejs";

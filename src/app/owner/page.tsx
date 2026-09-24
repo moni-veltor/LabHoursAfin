@@ -8,10 +8,8 @@ import {
   initiatives,
   subscriptions,
   updates,
-  users,
 } from "@/db/schema";
-import { count, desc, eq, inArray, sql } from "drizzle-orm";
-import { CATEGORIES, type Category } from "@/lib/categories";
+import { count, desc, eq, sql } from "drizzle-orm";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { timeAgo } from "@/lib/utils";
 

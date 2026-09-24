@@ -15,8 +15,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Ordered cheapest-first so a failure reports the smallest useful thing.
+      # `lint` was silently fatal for months: next lint found no config, asked
+      # an interactive question, and exited 1 — so test and build never ran.
       - run: npm run lint --if-present
       - run: npm run test --if-present
+      - run: npm run contrast
       - run: npm run build
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/labboard

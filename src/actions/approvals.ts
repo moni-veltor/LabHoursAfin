@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { initiatives, subscriptions, users } from "@/db/schema";
+import { initiatives, subscriptions } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
 import { and, eq, asc, count } from "drizzle-orm";
 import { isAdmin, isTech } from "@/lib/admin";

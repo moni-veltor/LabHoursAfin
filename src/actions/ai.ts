@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { initiatives, updates, users } from "@/db/schema";
-import { requireTech, requireUser } from "@/lib/auth";
+import { requireUser } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 import { aiSummariseUpdates, aiDraftOutcome } from "@/lib/ai";
 

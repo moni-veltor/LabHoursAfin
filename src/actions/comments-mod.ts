@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { comments, initiatives } from "@/db/schema";
+import { initiatives } from "@/db/schema";
 import { requireUser } from "@/lib/auth";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { isAdmin } from "@/lib/admin";
 import { logAudit } from "@/lib/audit";
 

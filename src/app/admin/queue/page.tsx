@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { db } from "@/lib/db";
 import { initiatives, subscriptions, users } from "@/db/schema";
-import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { UserChip } from "@/components/avatar";
 import { approveParticipant } from "@/actions/approvals";
 import { approveInitiative } from "@/actions/settings";
