@@ -109,14 +109,22 @@ const fillsAsText: Hit[] = [];
 
 for (const f of files) {
   const rel = f.slice(ROOT.length);
-  readFileSync(f, "utf8")
-    .split("\n")
-    .forEach((line, i) => {
+  const lines = readFileSync(f, "utf8").split("\n");
+  lines.forEach((line, i) => {
       const at = `${rel}:${i + 1}`;
       for (const tok of FILL_ONLY) {
-        // The bar's hot item is the documented exception: amber on chrome,
-        // which reads at 9.35:1 — the one place a fill is legible as text.
-        if (rel.endsWith("top-nav.tsx") && line.includes("it.hot")) continue;
+        // An exemption travels with the code, not with a filename: this was
+        // keyed to the component the nav happened to live in, and broke the
+        // moment the nav was rewritten. A line marked `contrast-ok` — on
+        // itself or the line above — is a deliberate exception, and the
+        // reason for it sits right there to be read.
+        // Look back a few lines so the marker can sit at the top of the
+        // comment that explains it, which is where anyone would write it.
+        if (
+          line.includes("contrast-ok") ||
+          lines.slice(Math.max(0, i - 3), i).some((l) => l.includes("contrast-ok"))
+        )
+          continue;
         if (new RegExp(`text-${tok}(?![a-z0-9-])`).test(line))
           fillsAsText.push({ where: at, what: `text-${tok}` });
       }
@@ -135,7 +143,7 @@ for (const f of files) {
           }
         }
       }
-    });
+  });
 }
 
 console.log(`\nPairs the source assembles (${files.length} components scanned)`);

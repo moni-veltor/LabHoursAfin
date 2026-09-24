@@ -23,18 +23,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${sora.variable} ${spaceGrotesk.variable} ${sourceSans.variable}`}>
       <body className="min-h-screen bg-canvas font-sans text-ink-text antialiased">
-        <div className="flex min-h-screen flex-col">
+        <div className="flex min-h-screen">
           <Nav />
-          <FlavourBand />
-          {/* The sheet rides up over the band, as before. What changed is the
-              width: this was capped at max-w-5xl, which left a third of a
-              laptop screen empty on pages that are mostly wide tables and
-              card grids. It is the window now, with gutters. */}
-          <div className="relative -mt-5 flex flex-1 flex-col rounded-t-2xl bg-canvas pb-24 shadow-[0_-8px_24px_-16px_rgba(7,32,44,.35)] md:pb-4">
-            <AnnouncementBanner />
-            <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-10 lg:px-10">
-              {children}
-            </main>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <FlavourBand />
+            {/* The sheet rides up over the band. The width cap that used to be
+                here — max-w-5xl, on top of a 16rem rail — left a third of a
+                laptop empty on pages that are mostly wide tables and card
+                grids. The content is the window now, with gutters, and the
+                rail collapses when it is in the way. */}
+            <div className="relative -mt-5 flex flex-1 flex-col rounded-t-2xl bg-canvas pb-10 shadow-[0_-8px_24px_-16px_rgba(7,32,44,.35)]">
+              <AnnouncementBanner />
+              <main className="w-full flex-1 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+                {children}
+              </main>
+            </div>
           </div>
         </div>
         <CmdKHost />
