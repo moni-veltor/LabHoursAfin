@@ -14,7 +14,7 @@ import { and, eq, desc, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { subscribe, unsubscribe } from "@/actions/subscriptions";
 import { AttendanceRegister } from "@/components/attendance-register";
-import { RULES, registerFor } from "@/lib/points";
+import { RULES, attendanceCandidates, registerRoster } from "@/lib/points";
 import { addComment } from "@/actions/comments";
 import { postUpdate } from "@/actions/updates";
 import { updateInitiativeStatus } from "@/actions/initiatives";
@@ -171,10 +171,14 @@ export default async function InitiativePage({
   const pending = subs.filter((s) => s.role === "pending");
   // Who could have been there, and who the owner says was. Only fetched for
   // the people who can act on it — nobody else needs to see the register.
-  const roster = subs.filter((s) => s.role === "participant");
-  const marked = canEdit && roster.length > 0
-    ? await registerFor(initiative.id)
-    : new Map<string, boolean>();
+  // Who was in the room, which is not the same list as who booked: the roster
+  // carries walk-ins, and the owner can add anybody who is not on it yet.
+  const [roster, candidates] = canEdit
+    ? await Promise.all([
+        registerRoster(initiative.id),
+        attendanceCandidates(initiative.id),
+      ])
+    : [[], []];
   const visibleSubs = subs.filter((s) => s.role !== "pending");
   const subscribed = mySub.length > 0;
   const myRole = mySub[0]?.role;
@@ -613,15 +617,11 @@ export default async function InitiativePage({
           </div>
         )}
 
-        {canEdit && roster.length > 0 && (
+        {canEdit && (
           <AttendanceRegister
             initiativeId={initiative.id}
-            people={roster.map((r) => ({
-              userId: r.userId,
-              name: r.name,
-              email: r.email,
-            }))}
-            marked={marked}
+            roster={roster}
+            candidates={candidates}
             startsAt={initiative.startsAt ? new Date(initiative.startsAt) : null}
           />
         )}

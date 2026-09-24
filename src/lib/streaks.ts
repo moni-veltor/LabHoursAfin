@@ -44,8 +44,13 @@ export async function computeStreak(userId: string) {
     !ready
       ? []
       : db
-          .select({ initiativeId: attendance.initiativeId })
+          .select({
+            initiativeId: attendance.initiativeId,
+            startsAt: initiatives.startsAt,
+            markedAt: attendance.markedAt,
+          })
           .from(attendance)
+          .innerJoin(initiatives, eq(initiatives.id, attendance.initiativeId))
           .where(
             and(eq(attendance.userId, userId), eq(attendance.present, true))
           ),
@@ -67,6 +72,10 @@ export async function computeStreak(userId: string) {
     if (!counts) continue;
     terms.add(termKey(new Date(j.startsAt ?? j.joinedAt)));
   }
+  // Walk-ins: marked present at something they never signed up for, so the
+  // loop above — which starts from subscriptions — cannot see them at all.
+  // They were in the room; the quarter counts.
+  for (const p of present) terms.add(termKey(new Date(p.startsAt ?? p.markedAt)));
 
   let streak = 0;
   let cursor = termKey(new Date());

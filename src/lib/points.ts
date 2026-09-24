@@ -1,4 +1,4 @@
-import { eq, isNotNull, isNull, or } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   attendance,
@@ -6,6 +6,7 @@ import {
   hackDemos,
   hackTeamMembers,
   initiatives,
+  subscriptions,
   users,
 } from "@/db/schema";
 import { termKey } from "@/lib/participation";
@@ -400,12 +401,95 @@ export async function registerTaken(initiativeId: string) {
   return { marked: rows.length > 0, count: rows.length };
 }
 
-/** Who the owner marked present, for rendering the register. */
-export async function registerFor(initiativeId: string) {
-  if (!(await ensureAttendance())) return new Map<string, boolean>();
-  const rows = await db
-    .select({ userId: attendance.userId, present: attendance.present })
-    .from(attendance)
-    .where(eq(attendance.initiativeId, initiativeId));
-  return new Map(rows.map((r) => [r.userId, r.present]));
+/**
+ * The register's roster: everyone who might have been in the room.
+ *
+ * Not the sign-up list. People turn up to things they never signed up for —
+ * a colleague pulled in at the last minute, somebody who saw it on a screen
+ * and wandered over — and an attendance record that can only describe people
+ * who booked is not a record of who attended. So this is the union of the
+ * participants and anyone already marked, and the owner can add to it.
+ */
+export type RegisterEntry = {
+  userId: string;
+  name: string | null;
+  email: string;
+  /** False for a walk-in: they were marked, but never signed up. */
+  signedUp: boolean;
+  /** null means "not yet marked" — different from "marked absent". */
+  present: boolean | null;
+};
+
+export async function registerRoster(
+  initiativeId: string
+): Promise<RegisterEntry[]> {
+  const ready = await ensureAttendance();
+
+  const [signed, marked] = await Promise.all([
+    db
+      .select({
+        userId: subscriptions.userId,
+        name: users.name,
+        email: users.email,
+      })
+      .from(subscriptions)
+      .innerJoin(users, eq(users.id, subscriptions.userId))
+      .where(
+        and(
+          eq(subscriptions.initiativeId, initiativeId),
+          eq(subscriptions.role, "participant")
+        )
+      ),
+    !ready
+      ? []
+      : db
+          .select({
+            userId: attendance.userId,
+            present: attendance.present,
+            name: users.name,
+            email: users.email,
+          })
+          .from(attendance)
+          .innerJoin(users, eq(users.id, attendance.userId))
+          .where(eq(attendance.initiativeId, initiativeId)),
+  ]);
+
+  const byId = new Map<string, RegisterEntry>();
+  for (const s of signed)
+    byId.set(s.userId, {
+      userId: s.userId,
+      name: s.name,
+      email: s.email,
+      signedUp: true,
+      present: null,
+    });
+  for (const m of marked) {
+    const existing = byId.get(m.userId);
+    if (existing) existing.present = m.present;
+    else
+      byId.set(m.userId, {
+        userId: m.userId,
+        name: m.name,
+        email: m.email,
+        signedUp: false,
+        present: m.present,
+      });
+  }
+
+  return Array.from(byId.values()).sort((a, b) =>
+    (a.name ?? a.email).localeCompare(b.name ?? b.email)
+  );
+}
+
+/** Everyone the owner could still add — active people not already listed. */
+export async function attendanceCandidates(initiativeId: string) {
+  const roster = await registerRoster(initiativeId);
+  const already = new Set(roster.map((r) => r.userId));
+  const all = await db
+    .select({ id: users.id, name: users.name, email: users.email })
+    .from(users)
+    .where(isNull(users.deletedAt));
+  return all
+    .filter((u) => !already.has(u.id))
+    .sort((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email));
 }
