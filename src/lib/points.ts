@@ -9,6 +9,7 @@ import {
   users,
 } from "@/db/schema";
 import { termKey } from "@/lib/participation";
+import { ensureAttendance } from "@/lib/ensure-attendance";
 
 /**
  * Points, and where they come from.
@@ -120,6 +121,7 @@ export function tally(awards: Award[], term?: string) {
  * of registers would drop every one of those points into this quarter.
  */
 async function allAwards(): Promise<Map<string, Award[]>> {
+  await ensureAttendance();
   const out = new Map<string, Award[]>();
   const add = (userId: string, a: Award) => {
     const list = out.get(userId);
@@ -223,6 +225,16 @@ async function allAwards(): Promise<Map<string, Award[]>> {
  * that names everyone who has not turned up is a different, unkinder product.
  */
 export async function leaderboard(term?: string): Promise<Scored[]> {
+  return rank(await allScored(), term);
+}
+
+/**
+ * Everyone's whole history, in one pass. Narrowing to a quarter is arithmetic
+ * on what comes back, not another trip to the database — which matters because
+ * the board, the team board and your own card are all the same data seen three
+ * ways, and a page that showed all three should not query six times over.
+ */
+async function allScored(): Promise<Scored[]> {
   const [awards, people] = await Promise.all([
     allAwards(),
     db
@@ -235,34 +247,138 @@ export async function leaderboard(term?: string): Promise<Scored[]> {
       .from(users)
       .where(isNull(users.deletedAt)),
   ]);
-
-  const rows: Scored[] = [];
-  for (const p of people) {
-    const { total, byKind, awards: mine } = tally(awards.get(p.id) ?? [], term);
-    if (mine.length === 0) continue;
-    rows.push({
+  return people.map((p) => {
+    const mine = awards.get(p.id) ?? [];
+    const { total, byKind } = tally(mine);
+    return {
       userId: p.id,
       name: p.name,
       email: p.email,
       image: p.image,
       total,
       byKind,
-      awards: mine.sort((a, b) => b.at.getTime() - a.at.getTime()),
-    });
-  }
-  return rows.sort((a, b) => b.total - a.total || (a.name ?? "").localeCompare(b.name ?? ""));
+      awards: mine,
+    };
+  });
 }
 
-/** One person's score, their breakdown, and where they sit on the board. */
+/**
+ * Order a board, dropping anyone with nothing. People with no points are left
+ * off rather than listed at zero — a leaderboard that names everyone who has
+ * not turned up is a different, unkinder product.
+ */
+function rank(all: Scored[], term?: string): Scored[] {
+  const rows: Scored[] = [];
+  for (const p of all) {
+    const { total, byKind, awards } = tally(p.awards, term);
+    if (awards.length === 0) continue;
+    rows.push({
+      ...p,
+      total,
+      byKind,
+      awards: awards.sort((a, b) => b.at.getTime() - a.at.getTime()),
+    });
+  }
+  return rows.sort(
+    (a, b) => b.total - a.total || (a.name ?? "").localeCompare(b.name ?? "")
+  );
+}
+
+export type TeamScore = {
+  team: string;
+  total: number;
+  people: number;
+  /** Points per scoring member — what the board is actually ranked on. */
+  each: number;
+  top: string | null;
+};
+
+/**
+ * The same points, by department.
+ *
+ * Ranked on points PER PERSON, not total. Ranked on total, the largest
+ * department wins every quarter by existing, which is neither interesting nor
+ * something a small team can do anything about. Per person, a team of four who
+ * all turn up can beat a team of thirty where six do — and that is a contest
+ * worth having.
+ *
+ * Only people who scored count toward the divisor. Dividing by headcount would
+ * punish a department for having members who have not found Lab Hours yet,
+ * which is a recruitment problem, not a participation one.
+ */
+export async function teamBoard(term?: string): Promise<TeamScore[]> {
+  const [board, people] = await Promise.all([
+    leaderboard(term),
+    db
+      .select({ id: users.id, department: users.department })
+      .from(users)
+      .where(isNull(users.deletedAt)),
+  ]);
+  const dept = new Map(people.map((p) => [p.id, p.department?.trim() || null]));
+
+  const groups = new Map<string, { total: number; people: number; top: Scored }>();
+  for (const r of board) {
+    const team = dept.get(r.userId);
+    if (!team) continue; // no department recorded — cannot be placed on a team
+    const g = groups.get(team);
+    if (!g) groups.set(team, { total: r.total, people: 1, top: r });
+    else {
+      g.total += r.total;
+      g.people += 1;
+      if (r.total > g.top.total) g.top = r;
+    }
+  }
+
+  return Array.from(groups.entries())
+    .map(([team, g]) => ({
+      team,
+      total: g.total,
+      people: g.people,
+      each: Math.round(g.total / g.people),
+      top: g.top.name ?? g.top.email,
+    }))
+    .sort((a, b) => b.each - a.each || b.total - a.total);
+}
+
+/**
+ * One person's card: where they are this quarter, and where they have been.
+ *
+ * A leaderboard motivates the top three and quietly tells everybody else they
+ * are losing. This is the other ninety per cent's view of the same data —
+ * their own total, their own best quarter, what they put back — which is worth
+ * more to most people than a rank they will never hold.
+ */
 export async function pointsFor(userId: string, term?: string) {
-  const board = await leaderboard(term);
+  const all = await allScored();
+  const me = all.find((r) => r.userId === userId);
+  const board = rank(all, term);
   const i = board.findIndex((r) => r.userId === userId);
+  const here = i === -1 ? null : board[i];
+
+  const byTerm = new Map<string, number>();
+  for (const a of me?.awards ?? [])
+    byTerm.set(a.term, (byTerm.get(a.term) ?? 0) + a.points);
+  let best: { term: string; points: number } | null = null;
+  for (const [t, points] of byTerm)
+    if (!best || points > best.points) best = { term: t, points };
+
+  const attended = (me?.awards ?? []).filter(
+    (a) => a.kind === "attended" && (!term || a.term === term)
+  ).length;
+
   return {
-    total: i === -1 ? 0 : board[i].total,
+    total: here?.total ?? 0,
+    allTime: me?.total ?? 0,
     rank: i === -1 ? null : i + 1,
     of: board.length,
-    awards: i === -1 ? [] : board[i].awards,
-    byKind: i === -1 ? emptyByKind() : board[i].byKind,
+    awards: here?.awards ?? [],
+    byKind: here?.byKind ?? emptyByKind(),
+    attended,
+    best,
+    /** Every quarter they have scored in, most recent first. */
+    history: Array.from(byTerm.entries())
+      .map(([t, points]) => ({ term: t, points }))
+      .sort((a, b) => (a.term < b.term ? 1 : -1)),
   };
 }
 
@@ -274,6 +390,7 @@ export const currentTerm = () => termKey(new Date());
  * is the only reason anyone remembers to do it.
  */
 export async function registerTaken(initiativeId: string) {
+  await ensureAttendance();
   const rows = await db
     .select({ userId: attendance.userId })
     .from(attendance)
@@ -283,6 +400,7 @@ export async function registerTaken(initiativeId: string) {
 
 /** Who the owner marked present, for rendering the register. */
 export async function registerFor(initiativeId: string) {
+  await ensureAttendance();
   const rows = await db
     .select({ userId: attendance.userId, present: attendance.present })
     .from(attendance)

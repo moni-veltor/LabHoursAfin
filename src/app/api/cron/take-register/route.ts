@@ -9,6 +9,7 @@ import { and, eq, gte, isNotNull, lt, sql } from "drizzle-orm";
 import { authoriseCron } from "@/lib/cron";
 import { notify } from "@/lib/notifications-server";
 import { RULES } from "@/lib/points";
+import { ensureAttendance } from "@/lib/ensure-attendance";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +29,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST(req: Request) {
   if (!authoriseCron(req)) return new Response("Unauthorized", { status: 401 });
+  await ensureAttendance();
 
   const now = new Date();
   const fortnightAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);

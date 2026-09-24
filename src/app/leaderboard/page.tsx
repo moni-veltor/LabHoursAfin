@@ -5,6 +5,7 @@ import {
   type PointKind,
   currentTerm,
   leaderboard,
+  teamBoard,
 } from "@/lib/points";
 import { termLabel, previousTermKey } from "@/lib/participation";
 
@@ -18,13 +19,18 @@ const MEDALS = ["🥇", "🥈", "🥉"];
 export default async function LeaderboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ term?: string }>;
+  searchParams: Promise<{ term?: string; view?: string }>;
 }) {
-  const { term: raw } = await searchParams;
+  const { term: raw, view } = await searchParams;
+  const teams = view === "teams";
   const now = currentTerm();
   const term = raw === "all" ? undefined : raw ?? now;
 
-  const [board, session] = await Promise.all([leaderboard(term), auth()]);
+  const [board, byTeam, session] = await Promise.all([
+    leaderboard(term),
+    teamBoard(term),
+    auth(),
+  ]);
   const meId = session?.user?.id;
   const mine = board.findIndex((r) => r.userId === meId);
 
@@ -50,7 +56,7 @@ export default async function LeaderboardPage({
         {tabs.map((t) => (
           <Link
             key={t.key}
-            href={t.key === now ? "/leaderboard" : `/leaderboard?term=${t.key}`}
+            href={`/leaderboard?term=${t.key}${teams ? "&view=teams" : ""}`}
             className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition ${
               active === t.key
                 ? "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink"
@@ -62,7 +68,69 @@ export default async function LeaderboardPage({
         ))}
       </div>
 
-      {board.length === 0 ? (
+      <div className="flex gap-1.5">
+        {[
+          { key: "people", label: "People" },
+          { key: "teams", label: "Teams" },
+        ].map((v) => (
+          <Link
+            key={v.key}
+            href={`/leaderboard?term=${active}${v.key === "teams" ? "&view=teams" : ""}`}
+            className={`rounded-md border px-3 py-1.5 text-sm transition ${
+              (v.key === "teams") === teams
+                ? "border-line-strong bg-surface font-medium shadow-card"
+                : "border-transparent text-muted hover:text-ink-text"
+            }`}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </div>
+
+      {teams ? (
+        byTeam.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-line bg-surface px-6 py-16 text-center">
+            <p className="text-muted">No teams on the board yet.</p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-dim">
+              A person counts toward a team once their department is set on
+              their profile.
+            </p>
+          </div>
+        ) : (
+          <>
+            <ol className="space-y-1.5">
+              {byTeam.map((t, i) => (
+                <li
+                  key={t.team}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-line bg-surface px-4 py-3 shadow-card"
+                >
+                  <span className="w-8 shrink-0 font-mono text-sm tabular-nums text-dim">
+                    {MEDALS[i] ?? i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{t.team}</span>
+                    <span className="text-xs text-muted">
+                      {t.people} scoring · {t.total} between them · {t.top} leading
+                    </span>
+                  </span>
+                  <span className="text-right">
+                    <span className="block font-display text-xl font-bold tabular-nums">
+                      {t.each}
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-dim">
+                      each
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-dim">
+              Ranked on points per person, not total — otherwise the largest
+              department wins every quarter by existing.
+            </p>
+          </>
+        )
+      ) : board.length === 0 ? (
         <div className="rounded-xl border border-dashed border-line bg-surface px-6 py-16 text-center">
           <p className="text-muted">
             No points this quarter yet.
@@ -118,7 +186,7 @@ export default async function LeaderboardPage({
         </ol>
       )}
 
-      {meId && mine === -1 && board.length > 0 && (
+      {!teams && meId && mine === -1 && board.length > 0 && (
         <p className="rounded-xl border border-dashed border-line bg-surface px-4 py-3 text-sm text-muted">
           You are not on this board yet. Attend a session — or run one — and you
           will be.

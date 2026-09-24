@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { notify } from "@/lib/notifications-server";
 import { RULES } from "@/lib/points";
+import { ensureAttendance } from "@/lib/ensure-attendance";
 
 /**
  * Taking the register.
@@ -17,6 +18,7 @@ import { RULES } from "@/lib/points";
  * themselves are not worth having.
  */
 async function guard(initiativeId: string) {
+  await ensureAttendance();
   const me = await requireUser();
   const [init] = await db
     .select({ id: initiatives.id, ownerId: initiatives.ownerId, title: initiatives.title })

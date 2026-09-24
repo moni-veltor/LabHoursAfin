@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import {
+  attendance,
   initiatives,
   subscriptions,
   users,
@@ -10,6 +11,7 @@ import {
 } from "@/db/schema";
 import { and, count, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { Avatar } from "@/components/avatar";
+import { ensureAttendance } from "@/lib/ensure-attendance";
 import { SkillBadges } from "@/components/skill-badges";
 import { PrintButton } from "@/components/print-button";
 import { CATEGORIES, type Category } from "@/lib/categories";
@@ -45,7 +47,7 @@ export default async function PortfolioPage() {
         .orderBy(desc(initiatives.createdAt))
     : [];
 
-  const [commentCount, updateCount, outcomeCount] = await Promise.all([
+  const [commentCount, updateCount, outcomeCount, attendedCount] = await Promise.all([
     db.select({ c: count() }).from(comments).where(eq(comments.authorId, user.id)),
     db.select({ c: count() }).from(updates).where(eq(updates.authorId, user.id)),
     db
@@ -54,6 +56,13 @@ export default async function PortfolioPage() {
       .where(
         and(eq(initiatives.ownerId, user.id), isNotNull(initiatives.outcomeBody))
       ),
+    (async () => {
+      await ensureAttendance();
+      return db
+        .select({ c: count() })
+        .from(attendance)
+        .where(and(eq(attendance.userId, user.id), eq(attendance.present, true)));
+    })(),
   ]);
 
   const owned = items.filter((i) =>
@@ -68,6 +77,7 @@ export default async function PortfolioPage() {
 
   const stats = {
     joined: participating.length,
+    attended: Number(attendedCount[0]?.c ?? 0),
     owned: owned.length,
     outcomesPosted: Number(outcomeCount[0]?.c ?? 0),
     comments: Number(commentCount[0]?.c ?? 0),
@@ -118,6 +128,7 @@ export default async function PortfolioPage() {
       <section className="grid gap-3 rounded-xl border border-line bg-surface p-6 sm:grid-cols-4">
         <Stat label="Owned" value={stats.owned} />
         <Stat label="Joined" value={stats.joined} />
+        <Stat label="Attended" value={stats.attended} />
         <Stat label="Outcomes shipped" value={stats.outcomesPosted} />
         <Stat label="Comments" value={stats.comments} />
       </section>

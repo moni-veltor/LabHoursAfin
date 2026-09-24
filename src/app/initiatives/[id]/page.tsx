@@ -14,7 +14,7 @@ import { and, eq, desc, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { subscribe, unsubscribe } from "@/actions/subscriptions";
 import { AttendanceRegister } from "@/components/attendance-register";
-import { registerFor } from "@/lib/points";
+import { RULES, registerFor } from "@/lib/points";
 import { addComment } from "@/actions/comments";
 import { postUpdate } from "@/actions/updates";
 import { updateInitiativeStatus } from "@/actions/initiatives";
@@ -518,6 +518,17 @@ export default async function InitiativePage({
                     }
                     requiresApproval={!!initiative.requiresApproval}
                   />
+                )}
+              {/* The incentive belongs where the decision is made, not on a
+                  leaderboard somebody visits afterwards. */}
+              {myRole === "subscriber" &&
+                !closed &&
+                !capacityFull &&
+                ruleVerdict.ok &&
+                canJoinWindow && (
+                  <p className="text-center font-mono text-[10px] uppercase tracking-wider text-dim">
+                    +{RULES.attended.points} points if you turn up
+                  </p>
                 )}
               {myRole === "subscriber" && closed && (
                 <p className="rounded-md border border-line bg-raised px-3 py-2 text-xs text-muted">

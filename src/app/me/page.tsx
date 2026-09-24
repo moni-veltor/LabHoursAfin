@@ -9,9 +9,9 @@ import { getParticipationStatus } from "@/lib/participation";
 import { categoryKeyOf, getCategoryMap } from "@/lib/categories-server";
 import { hourAwareGreeting } from "@/lib/greeting";
 import { computeStreak } from "@/lib/streaks";
-import Link from "next/link";
 import { RULES, currentTerm, pointsFor } from "@/lib/points";
 import { termLabel } from "@/lib/participation";
+import { YourQuarter } from "@/components/your-quarter";
 
 export default async function MyBoardPage() {
   const session = await auth();
@@ -34,11 +34,14 @@ export default async function MyBoardPage() {
     .where(eq(subscriptions.userId, me.id));
   const ids = mySubs.map((s) => s.id);
 
+  const term = currentTerm();
+  const score = await pointsFor(me.id, term);
+
   if (ids.length === 0) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold tracking-tight">My board</h1>
-        {status && <TermPanel status={status} />}
+        <YourQuarter score={score} term={term} />
         <p className="text-muted">You haven't subscribed to anything yet.</p>
       </div>
     );
@@ -85,9 +88,6 @@ export default async function MyBoardPage() {
     mySubs.find((s) => s.id === r.id && s.role === "subscriber")
   );
 
-  const term = currentTerm();
-  const score = await pointsFor(me.id, term);
-
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -98,15 +98,6 @@ export default async function MyBoardPage() {
           <h1 className="text-2xl font-bold tracking-tight">My board</h1>
         </div>
         <div className="flex items-center gap-2">
-          {score.total > 0 && (
-            <Link
-              href="/leaderboard"
-              className="rounded-full border border-brand-primary/40 bg-brand-primary-tint px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-primary-ink hover:bg-brand-primary-tint-strong"
-            >
-              {score.total} pts
-              {score.rank && ` · #${score.rank} of ${score.of}`}
-            </Link>
-          )}
           {streak > 0 && (
             <span className="rounded-full border border-brand-success/40 bg-brand-success-tint px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-brand-success-ink">
               🔥 {streak} {streak === 1 ? "quarter" : "quarters"} streak
@@ -120,6 +111,8 @@ export default async function MyBoardPage() {
           </a>
         </div>
       </div>
+
+      <YourQuarter score={score} term={term} />
 
       {status && <TermPanel status={status} />}
 

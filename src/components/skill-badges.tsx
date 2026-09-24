@@ -1,5 +1,14 @@
+/**
+ * Badges reward what you did, not what you booked.
+ *
+ * `joined` — the number of sessions you signed up for — used to decide three of
+ * these six badges, which meant they could all be earned without attending
+ * anything. They are on `attended` now. `joined` is still here because the
+ * portfolio shows it as a figure; it just no longer earns anything.
+ */
 type Stats = {
   joined: number;
+  attended: number;
   owned: number;
   outcomesPosted: number;
   comments: number;
@@ -19,19 +28,19 @@ const TIERS: { test: (s: Stats) => boolean; label: string; emoji: string; cls: s
     cls: "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink",
   },
   {
-    test: (s) => s.joined >= 5,
+    test: (s) => s.attended >= 5,
     label: "Lab Rat",
     emoji: "🧪",
     cls: "border-brand-accent/40 bg-brand-accent-tint text-brand-accent-ink",
   },
   {
-    test: (s) => s.joined >= 3,
+    test: (s) => s.attended >= 3,
     label: "Regular",
     emoji: "✨",
     cls: "border-brand-primary/40 bg-brand-primary-tint text-brand-primary-ink",
   },
   {
-    test: (s) => s.joined >= 1,
+    test: (s) => s.attended >= 1,
     label: "Curious",
     emoji: "👀",
     cls: "border-line bg-raised text-muted",
@@ -49,7 +58,7 @@ export function SkillBadges({ stats }: { stats: Stats }) {
   if (badges.length === 0)
     return (
       <p className="text-xs text-muted">
-        No badges yet — join an initiative to earn your first.
+        No badges yet — attend a session to earn your first.
       </p>
     );
   return (
