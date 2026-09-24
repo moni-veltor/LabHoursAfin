@@ -14,6 +14,10 @@
   --afin-ink: #07202C;
   --afin-mint: #00D68F;
   --afin-teal: #0B63E5;
+  /* Lab Hours' own hue, as the estate's palette assigns it. The teal above
+     is the shared Afin token; this is the colour the hub paints this app's
+     tile with, and it is what this app should wear. */
+  --afin-cyan: #00BFE9;
   --afin-amber: #FFB300;
   --afin-coral: #FF4D5E;
   --afin-goldenrod: #944E00;
@@ -31,17 +35,17 @@
   --mint-tint: #d4f7e3;
   --coral-tint: #ffe6e5;
   --amber-tint: #feeacc;
-  --mist-tint: #e3eefe;
+  --mist-tint: #d3f3ff;
 
   /* The text voices. Amber, mint and coral are fills; these are what you
      write in when the words sit on a tint or on paper. Each clears 7:1 on
      its own tint and 8:1 on white. */
-  --teal-ink: #104aa7;
+  --cyan-ink: #175668;
   --mint-ink: #0f5b3c;
   --amber-ink: #694803;
   --coral-ink: #981a2c;
 
-  --brand-primary: var(--afin-teal);
+  --brand-primary: var(--afin-cyan);
   --brand-accent: var(--afin-amber);
   --brand-success: var(--afin-mint);
 
@@ -95,16 +99,16 @@ input[type="checkbox"] {
   .prose-tight ul { margin: 0.4rem 0; padding-left: 1.2rem; }
   .prose-tight code {
     background: var(--raised);
-    color: var(--teal-ink);
+    color: var(--cyan-ink);
     padding: 1px 5px;
     border-radius: 4px;
     font-size: 0.9em;
     border: 1px solid var(--line);
   }
   .prose-tight a {
-    color: var(--teal-ink);
+    color: var(--cyan-ink);
     text-decoration: underline;
-    text-decoration-color: color-mix(in oklab, var(--teal-ink) 40%, transparent);
+    text-decoration-color: color-mix(in oklab, var(--cyan-ink) 40%, transparent);
   }
   .prose-tight h1, .prose-tight h2, .prose-tight h3 { color: var(--ink-text); }
 }
@@ -148,7 +152,7 @@ input[type="checkbox"] {
    paper rather than on a screen in a dark room. */
 .lh-mesh {
   background:
-    radial-gradient(60% 80% at 20% 0%, rgba(3, 82, 195, 0.10), transparent 70%),
+    radial-gradient(60% 80% at 20% 0%, color-mix(in oklab, var(--afin-cyan) 14%, transparent), transparent 70%),
     radial-gradient(50% 60% at 90% 10%, rgba(255, 179, 0, 0.12), transparent 60%),
     radial-gradient(60% 70% at 60% 90%, rgba(0, 214, 143, 0.10), transparent 65%);
 }
@@ -334,9 +338,9 @@ input[type="checkbox"] {
 .pod-mine {
   background: linear-gradient(
     180deg,
-    color-mix(in oklab, var(--afin-teal) 26%, white) 0%,
+    color-mix(in oklab, var(--afin-cyan) 30%, white) 0%,
     var(--mist-tint) 58%,
-    color-mix(in oklab, var(--afin-teal) 22%, var(--mist-tint)) 100%
+    color-mix(in oklab, var(--afin-cyan) 26%, var(--mist-tint)) 100%
   );
 }
 
@@ -393,4 +397,41 @@ input[type="checkbox"] {
 .bar-track {
   border-radius: 9999px;
   box-shadow: inset 0 1px 2px color-mix(in oklab, var(--afin-ink) 22%, transparent);
+}
+
+/* ── The Wire's motion, brought across ─────────────────────────────────────
+   Three things, each with a job, as they were written for The Wire:
+   kenburns is the slow documentary drift on a still picture; wire-line is
+   the telegraph pulse standing in where there is no picture to drift; and
+   live-dot is the blink on anything new enough to still be worth hurrying
+   for. All three stop under prefers-reduced-motion. */
+
+@keyframes kenburns {
+  from { transform: scale(1.02) translate(0, 0); }
+  to   { transform: scale(1.16) translate(-2.5%, -2%); }
+}
+.kenburns { animation: kenburns 16s ease-in-out infinite alternate; }
+
+@keyframes wire-move {
+  from { background-position-x: 0; }
+  to   { background-position-x: 340px; }
+}
+.wire-line {
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    color-mix(in oklab, white 42%, transparent) 0 16px,
+    transparent 16px 48px
+  );
+  animation: wire-move 3.2s linear infinite;
+}
+
+@keyframes live-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.7); }
+}
+.live-dot { animation: live-dot 2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .kenburns, .wire-line, .live-dot { animation: none; }
 }

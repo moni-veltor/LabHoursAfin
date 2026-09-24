@@ -27,7 +27,62 @@ type Props = {
   crossTeam?: boolean;
   locked?: boolean;
   closedToMembers?: boolean;
+  /**
+   * How the card is set on the page.
+   *
+   * The Wire's idea, and the reason its front page reads like one: a page is
+   * made of sizes. One thing leads, a few are worth a picture, the rest are
+   * lines you skim. Thirty identical cards is a feed, not a front page.
+   */
+  setting?: Setting;
 };
+
+export type Setting = "lead" | "tile" | "row";
+
+/**
+ * The tail of the page: a line you skim, not a card you study.
+ */
+function InitiativeRow(p: Props) {
+  const when = startsLabel(p.startsAt);
+  const full = p.capacity != null && p.participantCount >= p.capacity;
+  return (
+    <article className="group relative flex items-center gap-3 border-b border-line py-2.5 last:border-0">
+      <span
+        aria-hidden
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${statusDot[p.status]?.dot ?? "bg-dim"}`}
+      />
+      <span className="min-w-0 flex-1">
+        <Link
+          href={`/initiatives/${p.id}`}
+          className="truncate text-sm font-medium after:absolute after:inset-0 after:content-[''] group-hover:text-brand-primary-ink"
+        >
+          {p.title}
+        </Link>
+        <span className="mt-0.5 flex flex-wrap items-center gap-x-2 font-mono text-[10px] uppercase tracking-wider text-dim">
+          <span>{p.category.label}</span>
+          <span className="text-line-strong">·</span>
+          <span>{FORMATS[p.format].label.toLowerCase()}</span>
+          {p.ownerName && (
+            <>
+              <span className="text-line-strong">·</span>
+              <span>{p.ownerName}</span>
+            </>
+          )}
+        </span>
+      </span>
+      {full && (
+        <span className="shrink-0 rounded-full bg-raised px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-dim">
+          full
+        </span>
+      )}
+      {when && (
+        <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-brand-primary-ink">
+          {when}
+        </span>
+      )}
+    </article>
+  );
+}
 
 /** "tomorrow", "in 3 days", "Tue 14 Oct" — or nothing, if it has no date. */
 function startsLabel(at: Date | string | null | undefined): string | null {
@@ -51,6 +106,8 @@ const statusDot: Record<string, { dot: string; live?: boolean }> = {
 };
 
 export function InitiativeCard(p: Props) {
+  if ((p.setting ?? "tile") === "row") return <InitiativeRow {...p} />;
+  const lead = p.setting === "lead";
   const cat = p.category;
   const s = statusDot[p.status] ?? { dot: "bg-dim" };
   const taken = p.capacity ? p.participantCount / p.capacity : 0;
@@ -59,6 +116,7 @@ export function InitiativeCard(p: Props) {
   // When it runs beats when it was posted: a session next Tuesday is a
   // different proposition from one that was posted last Tuesday.
   const when = startsLabel(p.startsAt);
+  const soon = when === "today" || when === "tomorrow" || (when ?? "").startsWith("in ");
   return (
     <article
       className={`group relative overflow-hidden rounded-xl border bg-surface transition ${
@@ -68,16 +126,28 @@ export function InitiativeCard(p: Props) {
       } ${p.locked ? "opacity-50" : ""}`}
       title={p.locked ? "Category locked for you this term" : undefined}
     >
-      {p.coverImage && (
-        <div className="relative h-32 w-full overflow-hidden">
+      {p.coverImage ? (
+        <div className={`relative w-full overflow-hidden ${lead ? "h-56" : "h-32"}`}>
           <div
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
+            className={`absolute inset-0 bg-cover bg-center ${lead ? "kenburns" : "transition-transform duration-500 group-hover:scale-105"}`}
             style={{ backgroundImage: `url(${p.coverImage})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-surface via-surface/60 to-transparent" />
         </div>
-      )}
-      <div className="p-5">
+      ) : lead ? (
+        // No picture to drift, so the telegraph runs instead — the same
+        // substitution The Wire makes for a story that arrives without one.
+        <div
+          className="relative h-20 w-full overflow-hidden"
+          style={{
+            background:
+              "linear-gradient(118deg, color-mix(in oklab, var(--afin-cyan) 92%, var(--afin-ink)), var(--afin-cyan))",
+          }}
+        >
+          <span className="wire-line absolute inset-x-0 top-1/2 block" aria-hidden />
+        </div>
+      ) : null}
+      <div className={lead ? "p-6" : "p-5"}>
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider ${cat.badge}`}
@@ -118,10 +188,16 @@ export function InitiativeCard(p: Props) {
               )}
             </span>
             {p.closedToMembers ? "Closed" : p.status.replace("_", " ")}
+            {soon && (
+              <span
+                aria-hidden
+                className="live-dot ml-1 inline-block h-1.5 w-1.5 rounded-full bg-brand-primary-glow"
+              />
+            )}
           </span>
         </div>
 
-        <h3 className="mt-3 text-lg font-semibold tracking-tight text-ink-text group-hover:text-brand-primary-ink">
+        <h3 className={`mt-3 font-semibold tracking-tight text-ink-text group-hover:text-brand-primary-ink ${lead ? "font-display text-2xl" : "text-lg"}`}>
           {/* The card used to be one big <a> with the tag links inside it —
               nested anchors, which is invalid and which browsers resolve
               however they like. The link lives on the title now and stretches
@@ -135,7 +211,9 @@ export function InitiativeCard(p: Props) {
             {p.title}
           </Link>
         </h3>
-        <p className="mt-1 line-clamp-2 text-sm text-muted">{p.summary}</p>
+        <p className={`mt-1 text-muted ${lead ? "line-clamp-3 text-base" : "line-clamp-2 text-sm"}`}>
+          {p.summary}
+        </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-dim">
           <span>{FORMATS[p.format].label.toLowerCase()}</span>

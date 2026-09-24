@@ -31,17 +31,23 @@ export default {
         // a custom property can never disagree about what "teal" is. Every
         // family is a fill, a tint to sit text on, and an ink to write in.
         brand: {
-          // `primary` is a FILL: it is deep enough that white reads on it at
-          // 7:1. `primary-glow` is the Voltage teal itself — the estate's
-          // accent, for links, dots and rules, never for body text on a fill.
-          primary: "#0352c3",
-          "primary-dark": "#104599",
-          "primary-glow": "#0B63E5",
-          "primary-ink": "#104aa7",
-          "primary-tint": "#e3eefe",
-          "primary-tint-strong": "#c4daff",
-          "primary-50": "#e3eefe",
-          "primary-100": "#c4daff",
+          // Lab Hours' assigned hue in the estate palette is #00BFE9 — the
+          // cyan the hub paints its tile with. This app had been wearing the
+          // generic Afin teal instead, so the launcher promised one colour
+          // and the app delivered another.
+          //
+          // `primary-glow` IS that hue. `primary` is a fill deep enough that
+          // white reads on it at 7:1, because the hue itself cannot hold
+          // white — 2.18:1 — and is a fill that carries ink, like amber and
+          // mint. `primary-ink` is its text voice.
+          primary: "#076178",
+          "primary-dark": "#0c4f61",
+          "primary-glow": "#00BFE9",
+          "primary-ink": "#175668",
+          "primary-tint": "#d3f3ff",
+          "primary-tint-strong": "#a5e4fa",
+          "primary-50": "#d3f3ff",
+          "primary-100": "#a5e4fa",
 
           // Amber and mint are fills only. Neither can be read as text on any
           // light ground — 1.9:1 and 1.8:1 on white. Their text voices are the
@@ -83,18 +89,18 @@ export default {
         muted: "#254552",       //  9.71:1
         dim: "#3A5864",         //  6.67:1
 
-        // The inverted frame the rail sits on — and it is Lab Hours' teal
+        // The inverted frame the rail sits on — and it is Lab Hours' cyan
         // carried into the dark, not the estate's neutral ink. The rail sat on
-        // plain #07202C while the flavour band above it was teal, so the app's
+        // plain #07202C while the flavour band above it was the hue, so the app's
         // own colour stopped at the band. This is the hub's treatment: the
-        // app hue mixed 22% into the ink, which is far enough to read as teal
+        // app hue mixed 16% into the ink, which is far enough to read as cyan
         // and dark enough to keep chrome-ink above 12:1. `ink` itself stays
         // neutral, because scrims and overlays should not be tinted.
-        chrome: "#072f51",
-        "chrome-2": "#143a5e",
-        "chrome-ink": "#eef4f8",   // 12.34:1 on chrome
-        "chrome-muted": "#c0cbd1", //  8.28:1 · hover ground 10.54:1
-        "chrome-soft": "#95a0a7",  //  5.13:1
+        chrome: "#0b3646",
+        "chrome-2": "#1a4354",
+        "chrome-ink": "#f6fafc",   // 12.27:1 on chrome
+        "chrome-muted": "#c0cbd1", //  7.79:1 · hover ground 10.13:1
+        "chrome-soft": "#95a0a7",  //  4.82:1
       },
       fontFamily: {
         // The estate's three faces. `sans` is the reading face; headings and

@@ -205,8 +205,17 @@ export default async function HomePage({
           <SectionHeader badge="featured" tone="accent">
             On the wall
           </SectionHeader>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {featured.map((r) => (
+          {/* A page is made of sizes — The Wire's rule. The first featured
+              initiative leads at full width with its picture drifting; the
+              others are tiles beside it. */}
+          <div className="mt-3 grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <InitiativeCard
+                setting="lead"
+                {...mapRow(featured[0], participantCount, tagsByInitiative, catMap, fallbackCat, lockedSet)}
+              />
+            </div>
+            {featured.slice(1, 3).map((r) => (
               <InitiativeCard
                 key={r.id}
                 {...mapRow(r, participantCount, tagsByInitiative, catMap, fallbackCat, lockedSet)}
@@ -223,14 +232,27 @@ export default async function HomePage({
           {featured.length > 0 && (
             <SectionHeader badge="all">Initiatives</SectionHeader>
           )}
+          {/* The first six are worth a card. The rest are lines to skim —
+              thirty identical cards is a feed, not a front page. */}
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-            {rest.map((r) => (
+            {rest.slice(0, 6).map((r) => (
               <InitiativeCard
                 key={r.id}
                 {...mapRow(r, participantCount, tagsByInitiative, catMap, fallbackCat, lockedSet)}
               />
             ))}
           </div>
+          {rest.length > 6 && (
+            <div className="mt-5 rounded-xl border border-line bg-surface px-4 shadow-card">
+              {rest.slice(6).map((r) => (
+                <InitiativeCard
+                  key={r.id}
+                  setting="row"
+                  {...mapRow(r, participantCount, tagsByInitiative, catMap, fallbackCat, lockedSet)}
+                />
+              ))}
+            </div>
+          )}
         </section>
       ) : null}
 
