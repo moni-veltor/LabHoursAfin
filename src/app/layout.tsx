@@ -1,6 +1,6 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { Sora, Space_Grotesk, Source_Sans_3 } from "next/font/google";
+import localFont from "next/font/local";
 import { Nav } from "@/components/nav";
 import { FlavourBand } from "@/components/flavour-band";
 import { CmdKHost } from "@/components/cmdk-host";
@@ -10,9 +10,14 @@ import { AnnouncementBanner } from "@/components/announcement-banner";
 // The estate's three faces: Sora for titles and the nav, Space Grotesk for
 // eyebrows and labels, Source Sans 3 for the reading — the same three the
 // Academy and the hub wear, replacing the Inter this ran alone on.
-const sora = Sora({ variable: "--font-display-primary", subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap" });
-const spaceGrotesk = Space_Grotesk({ variable: "--font-label-primary", subsets: ["latin"], weight: ["500", "600", "700"], display: "swap" });
-const sourceSans = Source_Sans_3({ variable: "--font-body-primary", subsets: ["latin"], weight: ["300", "400", "600"], display: "swap" });
+// Self-hosted, for the reason the Academy's are: next/font/google fetches from
+// fonts.gstatic.com while the app is being built, which makes a clean CI run
+// depend on the network. It failed there once and passed unchanged on a re-run,
+// and this app has the same fonts and the same CI. 84KB for all three, because
+// each family is one variable font rather than a file per weight.
+const sora = localFont({ src: "./fonts/sora.woff2", variable: "--font-display-primary", weight: "400 700", display: "swap" });
+const spaceGrotesk = localFont({ src: "./fonts/space-grotesk.woff2", variable: "--font-label-primary", weight: "500 700", display: "swap" });
+const sourceSans = localFont({ src: "./fonts/source-sans-3.woff2", variable: "--font-body-primary", weight: "300 600", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Lab Hours",
