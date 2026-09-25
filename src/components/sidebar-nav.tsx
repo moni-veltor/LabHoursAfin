@@ -106,7 +106,7 @@ export function SidebarNav({
   const panel = (opts: { thin: boolean; close?: boolean }) => (
     <>
       <div
-        className={`flex items-center gap-2 border-b border-white/10 py-4 ${
+        className={`flex items-center gap-2 border-b border-ink/10 py-4 ${
           opts.thin ? "justify-center px-2" : "px-4"
         }`}
       >
@@ -134,7 +134,7 @@ export function SidebarNav({
         <a
           href={HUB}
           title="All apps"
-          className={`mb-4 flex items-center gap-2.5 rounded-lg border border-white/15 py-2 text-sm font-medium text-chrome-muted transition hover:border-white/30 hover:bg-white/[0.06] hover:text-chrome-ink ${
+          className={`mb-4 flex items-center gap-2.5 rounded-lg border border-ink/20 py-2 text-sm font-medium text-chrome-muted transition hover:border-ink/40 hover:bg-ink/[0.07] hover:text-chrome-ink ${
             opts.thin ? "justify-center px-0" : "px-2.5"
           }`}
         >
@@ -151,7 +151,7 @@ export function SidebarNav({
           <Link
             href={primary.href}
             title={primary.label}
-            className={`btn-press mb-5 flex items-center justify-center gap-2 rounded-lg bg-brand-success py-2.5 text-sm font-semibold text-ink transition hover:bg-brand-success-dark ${
+            className={`btn-press mb-5 flex items-center justify-center gap-2 rounded-lg bg-ink py-2.5 text-sm font-semibold text-white transition hover:bg-chrome-muted ${
               opts.thin ? "px-0" : "px-3"
             }`}
           >
@@ -183,23 +183,27 @@ export function SidebarNav({
                         opts.thin ? "justify-center px-0" : "px-2.5"
                       } ${
                         on
-                          ? "bg-white/10 font-medium text-chrome-ink"
-                          : "text-chrome-muted hover:bg-white/[0.05] hover:text-chrome-ink"
+                          ? "bg-surface font-semibold text-chrome-ink shadow-card"
+                          : "text-chrome-muted hover:bg-ink/[0.06] hover:text-chrome-ink"
                       }`}
                     >
                       {on && (
                         <span
                           aria-hidden
-                          className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-brand-success"
+                          className="absolute inset-y-1 left-0 w-0.5 rounded-full bg-ink"
                         />
                       )}
                       <span className="relative shrink-0">
                         <Icon
                           size={17}
                           aria-hidden
-                          // contrast-ok: amber on the chrome rail is 9.35:1 —
-                          // the one ground in the product where a fill reads.
-                          className={it.hot ? "text-brand-accent" : undefined}
+                          // Coral, not amber: on a cyan ground amber is
+                          // 1.22:1 and simply is not there. This is an icon,
+                          // not text, so it answers to WCAG's 3:1 for
+                          // non-text content rather than 4.5 — it clears
+                          // 3.82:1 — and being cyan's complement it is what
+                          // actually draws the eye here.
+                          className={it.hot ? "text-brand-coral-ink" : undefined}
                         />
                         {opts.thin && it.badge ? (
                           <span
@@ -227,7 +231,7 @@ export function SidebarNav({
         ))}
       </nav>
 
-      <div className={`border-t border-white/10 py-3 ${opts.thin ? "hidden" : "px-4"}`}>
+      <div className={`border-t border-ink/10 py-3 ${opts.thin ? "hidden" : "px-4"}`}>
         {identity}
       </div>
     </>
@@ -256,7 +260,7 @@ export function SidebarNav({
             onClick={toggle}
             aria-label={collapsed ? "Pin the menu open" : "Collapse the menu"}
             title={collapsed ? "Pin the menu open" : "Collapse the menu"}
-            className={`flex items-center gap-2 border-t border-white/10 py-2 text-chrome-soft transition hover:bg-white/[0.05] hover:text-chrome-ink ${
+            className={`flex items-center gap-2 border-t border-ink/10 py-2 text-chrome-soft transition hover:bg-ink/[0.06] hover:text-chrome-ink ${
               narrow ? "justify-center px-0" : "px-4"
             }`}
           >
@@ -277,14 +281,14 @@ export function SidebarNav({
           <a
             href={HUB}
             aria-label="All apps"
-            className="rounded-md p-2 text-chrome-muted transition hover:bg-white/5 hover:text-chrome-ink"
+            className="rounded-md p-2 text-chrome-muted transition hover:bg-ink/[0.06] hover:text-chrome-ink"
           >
             <Grid3x3 size={19} aria-hidden />
           </a>
           <button
             onClick={() => setDrawer(true)}
             aria-label="Open menu"
-            className="rounded-md p-2 text-chrome-muted transition hover:bg-white/5 hover:text-chrome-ink"
+            className="rounded-md p-2 text-chrome-muted transition hover:bg-ink/[0.06] hover:text-chrome-ink"
           >
             <Menu size={20} aria-hidden />
           </button>

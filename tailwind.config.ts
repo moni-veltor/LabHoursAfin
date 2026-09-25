@@ -89,18 +89,25 @@ export default {
         muted: "#254552",       //  9.71:1
         dim: "#3A5864",         //  6.67:1
 
-        // The inverted frame the rail sits on — and it is Lab Hours' cyan
-        // carried into the dark, not the estate's neutral ink. The rail sat on
-        // plain #07202C while the flavour band above it was the hue, so the app's
-        // own colour stopped at the band. This is the hub's treatment: the
-        // app hue mixed 16% into the ink, which is far enough to read as cyan
-        // and dark enough to keep chrome-ink above 12:1. `ink` itself stays
-        // neutral, because scrims and overlays should not be tinted.
-        chrome: "#0b3646",
-        "chrome-2": "#1a4354",
-        "chrome-ink": "#f6fafc",   // 12.27:1 on chrome
-        "chrome-muted": "#c0cbd1", //  7.79:1 · hover ground 10.13:1
-        "chrome-soft": "#95a0a7",  //  4.82:1
+        // The rail IS the hue, and it is written in ink.
+        //
+        // Three attempts got this wrong the same way. Lab Hours' assigned
+        // colour is #00BFE9 — a LIGHT hue — and I kept mixing it into the ink
+        // to make a dark frame. At 16% the ground had chroma 0.053 against
+        // cyan's 0.137, which is why it read as a murky dark green rather than
+        // as cyan. Pushing the mix further does not rescue it: at 44% a
+        // near-white label is down to 7.07:1 with no headroom, muted and soft
+        // collapse into one value, and the amber hot-marker falls to 3.94:1 —
+        // below AA. A dark frame cannot carry a light hue.
+        //
+        // So the rail is the hue at full chroma and the text is dark, exactly
+        // as amber and mint fills carry ink. Ink reads 7.69:1 on it, and there
+        // is room for three voices instead of one.
+        chrome: "#00BFE9",
+        "chrome-2": "#07aad0",     // hover ground · ink 6.13:1
+        "chrome-ink": "#07202C",   //  7.69:1 on chrome
+        "chrome-muted": "#173b46", //  5.50:1
+        "chrome-soft": "#234652",  //  4.65:1
       },
       fontFamily: {
         // The estate's three faces. `sans` is the reading face; headings and

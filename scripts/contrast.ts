@@ -74,12 +74,24 @@ for (const fam of ["primary", "success", "accent", "coral"]) {
   check(`--ink-text on ${fam}-tint`, p("ink-text"), p(`brand-${fam}-tint`), 11);
 }
 
-console.log("\nThe rail — the one dark ground in the product");
-check("chrome-ink on chrome", p("chrome-ink"), p("chrome"), 12);
-check("chrome-muted on chrome", p("chrome-muted"), p("chrome"), 7);
+/**
+ * The rail, which is no longer dark.
+ *
+ * These thresholds were written for light text on near-black and were held
+ * deliberately high, because there was headroom to spare. The rail is now the
+ * app's own hue — a light one — carrying dark text, so the ceiling is 7.69:1
+ * rather than 15:1 and the numbers below are what a light ground can actually
+ * give. They are still at or above AA for every voice, and the two that carry
+ * the bulk of the rail are above 5.5.
+ */
+console.log("\nThe rail — the app's hue, written in ink");
+check("chrome-ink on chrome", p("chrome-ink"), p("chrome"), 7);
+check("chrome-muted on chrome", p("chrome-muted"), p("chrome"), 5.4);
 check("chrome-soft on chrome", p("chrome-soft"), p("chrome"), 4.5);
-check("chrome-ink on chrome-2 (hover)", p("chrome-ink"), p("chrome-2"), 10);
-check("accent on chrome (the hot item)", p("brand-accent"), p("chrome"), 7);
+check("chrome-ink on chrome-2 (hover)", p("chrome-ink"), p("chrome-2"), 6);
+// An icon, so WCAG's 3:1 for non-text content, not 4.5.
+check("coral-ink on chrome (hot icon)", p("brand-coral-ink"), p("chrome"), 3);
+check("white on ink (the create button)", "#ffffff", p("ink"), 12);
 
 console.log("\nText on the bright fills — the buttons");
 check("white on primary", "#ffffff", p("brand-primary"), 7);

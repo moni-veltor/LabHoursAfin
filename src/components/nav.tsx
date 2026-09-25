@@ -49,7 +49,7 @@ export async function Nav() {
         <p className="truncate text-xs capitalize text-chrome-soft">{user.role ?? "member"}</p>
       </div>
       <div className="flex h-7 items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1 rounded-md border border-white/20 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-chrome-soft">
+        <span className="inline-flex items-center gap-1 rounded-md border border-ink/25 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-chrome-soft">
           <kbd>⌘</kbd>
           <kbd>K</kbd>
         </span>
@@ -68,7 +68,7 @@ export async function Nav() {
   ) : (
     <Link
       href="/signin"
-      className="block rounded-md border border-white/20 px-3 py-2 text-center text-sm font-medium text-chrome-ink transition hover:bg-white/10"
+      className="block rounded-md border border-ink/25 px-3 py-2 text-center text-sm font-medium text-chrome-ink transition hover:bg-ink/10"
     >
       Sign in
     </Link>
@@ -87,9 +87,9 @@ export async function Nav() {
 
 function BrandMark() {
   return (
-    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-success">
-      <span className="h-2 w-2 rounded-full bg-ink" />
-      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-brand-accent ring-2 ring-chrome" />
+    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ink">
+      <span className="h-2 w-2 rounded-full bg-chrome" />
+      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-brand-accent ring-2 ring-ink" />
     </span>
   );
 }
